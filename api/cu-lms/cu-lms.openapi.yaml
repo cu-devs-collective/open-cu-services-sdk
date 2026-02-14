@@ -20,12 +20,12 @@ servers:
         description: Server port.
         default: "8080"
 security:
-  - BffCookie: []
+  - BffCookie: [ ]
 tags:
   - name: courses
     description: Endpoints for accessing courses data.
 paths:
-  /micro-lms/students/me: {} # TODO
+  /micro-lms/students/me: {}  # TODO
   /micro-lms/courses/student:
     get:
       operationId: listStudentCourses
@@ -33,7 +33,7 @@ paths:
       description: >
         Returns the courses the authenticated student is enrolled in.
       security:
-        - BffCookie: []
+        - BffCookie: [ ]
       tags: [ courses ]
       parameters:
         - in: query
@@ -72,8 +72,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ListStudentCoursesResponse"
-  /micro-lms/courses/{id}: {} # TODO
-  /micro-lms/courses/{id}/overview: {} # TODO
+  /micro-lms/courses/{id}: {}  # TODO
+  /micro-lms/courses/{id}/overview: {}  # TODO
 components:
   securitySchemes:
     BffCookie:
@@ -103,7 +103,7 @@ components:
       type: object
       additionalProperties: false
       required: [ id, name, state, publishDate, publishedAt, settings,
-        subjectId, isArchived, category, categoryCover ]
+                  subjectId, isArchived, category, categoryCover ]
       properties:
         id:
           type: integer
