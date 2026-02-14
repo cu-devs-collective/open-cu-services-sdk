@@ -6,7 +6,6 @@ rules:
   line-length:
     max: 80
     allow-non-breakable-words: true
-    allow-non-breakable-inline-mappings: true
 
   brackets:
     max-spaces-inside: 1
@@ -15,3 +14,8 @@ rules:
   indentation:
     spaces: 2
     indent-sequences: consistent
+
+  quoted-strings:
+    quote-type: double
+    required: false
+    allow-quoted-quotes: true
