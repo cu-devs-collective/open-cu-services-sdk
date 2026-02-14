@@ -1,0 +1,232 @@
+openapi: 3.0.3
+info:
+  title: CU LMS API
+  description: >
+    Reverse engineered OpenAPI specification for the CU LMS API.
+  version: 0.1.0
+servers:
+  - url: https://my.centraluniversity.ru/api
+    description: Production CU LMS API server.
+  - url: "{proto}://{host}:{port}/api"
+    description: Custom CU LMS API server.
+    variables:
+      proto:
+        description: Server protocol.
+        default: "http"
+      host:
+        description: Server host.
+        default: "127.0.0.1"
+      port:
+        description: Server port.
+        default: "8080"
+security:
+  - BffCookie: []
+paths:
+  /micro-lms/students/me: {}
+  /micro-lms/courses/student:
+    get:
+      operationId: listStudentCourses
+      summary: List courses for the current student.
+      description: >
+        Returns the courses the authenticated student is enrolled in.
+      security:
+        - BffCookie: []
+      parameters:
+        - in: query
+          name: limit
+          description: Maximum number of items to return.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            default: 25
+        - in: query
+          name: offset
+          description: Number of items to skip before collecting result items.
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - in: query
+          name: state
+          style: form
+          explode: true
+          description: >
+            Include only courses whose state matches any of the specified
+            values.
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/CourseState"
+      responses:
+        "200":
+          description: >
+            Successful response with a list of courses for the
+            authenticated student.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListStudentCoursesResponse"
+components:
+  securitySchemes:
+    BffCookie:
+      type: apiKey
+      in: cookie
+      name: bff.cookie
+  schemas:
+    CourseState:
+      type: string
+      description: >
+        Course state is used to filter courses based on their status.
+      x-re-notes: >
+        Known values are the following:
+        - publushed - filters non-archived non-draft courses
+        - archived - filsters archived courses
+        - draft - filters draft courses (those are courses which were
+        not published yet, this option is almost useless as such courses are
+        hidden for regular students)
+      enum:
+        - published
+        - archived
+        - draft
+      example: "published"
+    CourseListItem:
+      type: object
+      additionalProperties: false
+      required: [ id, name, state, publishDate, publishedAt, settings,
+        subjectId, isArchived, category, categoryCover ]
+      properties:
+        id:
+          type: integer
+          minimum: 0
+          example: 897
+        name:
+          type: string
+          example: "Английский язык 204S4"
+        state:
+          $ref: "#/components/schemas/CourseState"
+        publishDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: >
+            Scheduled course publication timestamp, if set.
+            Can be unset, also can be earlier or later than publishedAt
+            field value.
+          example: "2026-01-26T07:00:00+00:00"
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Actual course publication timestamp.
+          x-re-notes: >
+            It looks like this field is null for courses with state "draft".
+          example: "2026-01-26T07:00:44.919045+00:00"
+        settings:
+          type: object
+          additionalProperties: false
+          required: [ skillLevel, isSkillLevelEnabled ]
+          properties:
+            skillLevel:
+              type: string
+              description: Skill level label configured for the course.
+              x-re-notes: >
+                Unknown usage, as the only seen value is "none".
+                This field appears inactive/unused for now.
+              enum:
+                - none
+              example: "none"
+            isSkillLevelEnabled:
+              type: boolean
+              x-re-notes: >
+                Observed settings.skillLevel only with value "none", so this
+                flag currently appears to have no effect.
+                This field is sometimes set to true, sometimes to false across
+                courses.
+              example: false
+        subjectId:
+          type: integer
+          nullable: true
+          description: >
+            Identifier of the subject this course belongs to.
+          x-re-notes: >
+            Courses covering the same subject typically share the same
+            subjectId, f.e. courses with names
+            "Архитектура компьютера и операционные системы I"
+            and "Архитектура компьютера и операционные системы 2"
+            have the same value.
+            This field is not guaranteed to be set: f.e. courses with names
+            "English 104" and "English 104. Semester 2" have subjectId unset.
+          example: 32
+        isArchived:
+          type: boolean
+          description: >
+            Indicates if the course is archived. Typically set at the end
+            of a semester to mark the course as finished.
+          example: false
+        category:
+          type: string
+          description: Course category.
+          x-re-notes: >
+            # TODO
+          oneOf:
+            - type: string
+              enum:
+                - withoutCategory
+                - general
+                - career
+                - stem
+                - softSkills
+                - mathematics
+                - development
+            - type: string
+          example: "general"
+        categoryCover:
+          type: string
+          description: Course card icon style identifier.
+          x-re-notes: >
+            # TODO
+          oneOf:
+            - type: string
+              enum:
+                - spiralLoops
+                - sineWave
+                - curvesGrid
+                - geometricTriangle
+                - verticalLines
+                - symmetricCircles
+                - ellipsesOverlap
+            - type: string
+          example: "symmetricCircles"
+    Paging:
+      type: object
+      additionalProperties: false
+      required: [ limit, offset, totalCount ]
+      properties:
+        limit:
+          type: integer
+          format: int32
+          minimum: 1
+          example: 25
+        offset:
+          type: integer
+          format: int32
+          minimum: 0
+          example: 0
+        totalCount:
+          type: integer
+          format: int32
+          minimum: 0
+          example: 1
+    ListStudentCoursesResponse:
+      type: object
+      additionalProperties: false
+      required: [ items, paging ]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CourseListItem"
+        paging:
+          $ref: "#/components/schemas/Paging"
