@@ -1,0 +1,28 @@
+extends: "spectral:oas"
+rules:
+  # spectral rules
+  oas3-missing-example: off
+  # vacuum rules
+  component-description: off
+  # custom rules
+  component-description-except-schemas:
+    description: >
+      Require descriptions for components (excluding components.schemas).
+      The last one is excluded, as it's too verbose.
+    message: "Component is missing a description"
+    severity: warn
+    recommended: true
+    formats: [ oas3, oas3_1 ]
+    given:
+      - $.components.parameters.*
+      - $.components.requestBodies.*
+      - $.components.responses.*
+      - $.components.examples.*
+      - $.components.headers.*
+      - $.components.links.*
+      - $.components.callbacks.*
+      - $.components.securitySchemes.*
+      - $.components.pathItems.* # OAS 3.1
+    then:
+      field: description
+      function: truthy

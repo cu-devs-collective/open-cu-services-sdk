@@ -3,8 +3,9 @@ PATH      := $(PATH):$(LOCAL_BIN)
 
 VACUUM         := $(LOCAL_BIN)/vacuum
 VACUUM_VERSION := v0.23.8
+VACUUM_RULESET := .spectral.yaml
 
-OPENAPI_SPEC_FILES := "./api/cu-lms/cu-lms.openapi.yaml"
+OPENAPI_SPEC_FILES := api/**/*openapi.yaml
 
 ifneq (,$(wildcard .env))
 	include .env
@@ -22,4 +23,4 @@ install: install-bins
 
 .PHONY: lint
 lint:
-	$(VACUUM) lint -b -d --no-clip $(OPENAPI_SPEC_FILES)
+	@$(VACUUM) lint -b -d --no-clip -r ./.spectral.yaml $(OPENAPI_SPEC_FILES)
