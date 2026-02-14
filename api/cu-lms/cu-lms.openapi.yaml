@@ -21,8 +21,11 @@ servers:
         default: "8080"
 security:
   - BffCookie: []
+tags:
+  - name: courses
+    description: Endpoints for accessing courses data.
 paths:
-  /micro-lms/students/me: {}
+  /micro-lms/students/me: {} # TODO
   /micro-lms/courses/student:
     get:
       operationId: listStudentCourses
@@ -31,6 +34,7 @@ paths:
         Returns the courses the authenticated student is enrolled in.
       security:
         - BffCookie: []
+      tags: [ courses ]
       parameters:
         - in: query
           name: limit
@@ -62,18 +66,22 @@ paths:
       responses:
         "200":
           description: >
-            Successful response with a list of courses for the
-            authenticated student.
+            Successful response with a list of courses for the authenticated
+            student.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ListStudentCoursesResponse"
+  /micro-lms/courses/{id}: {} # TODO
+  /micro-lms/courses/{id}/overview: {} # TODO
 components:
   securitySchemes:
     BffCookie:
       type: apiKey
       in: cookie
       name: bff.cookie
+      description: >
+        Session cookie used to authenticate the user when calling the LMS API.
   schemas:
     CourseState:
       type: string
@@ -169,8 +177,18 @@ components:
           type: string
           description: Course category.
           x-re-notes: >
-            # TODO
-          oneOf:
+            Those are clearly not all of the values that exist, so other values
+            should be added as they are found.
+
+            Known values are the following:
+            - withoutCategory - not categorized stuff
+            - general - general courses, f.e. English
+            - career - career stuff, f.e. Mock Interview intensive
+            - stem - STEM courses
+            - softSkills - soft skills category courses
+            - mathematics - math courses
+            - development - courses for devs
+          anyOf:
             - type: string
               enum:
                 - withoutCategory
@@ -186,8 +204,10 @@ components:
           type: string
           description: Course card icon style identifier.
           x-re-notes: >
-            # TODO
-          oneOf:
+            It seems those are not all of the values that exist, also it seems
+            there is some algorithm on frontend which decides which color to
+            use for the course card.
+          anyOf:
             - type: string
               enum:
                 - spiralLoops
