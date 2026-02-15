@@ -29,4 +29,4 @@ install: install-bins
 .PHONY: lint
 lint:
 	@$(YAMLLINT) $(OPENAPI_SPEC_FILES)
-	@$(VACUUM) lint -b -d --no-clip -r ./.spectral.yaml $(OPENAPI_SPEC_FILES)
+	@$(VACUUM) lint -b -d --no-clip -n warn --remote=false --min-score 100 -r ./.spectral.yaml $(OPENAPI_SPEC_FILES)
