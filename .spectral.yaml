@@ -26,3 +26,13 @@ rules:
     then:
       field: description
       function: truthy
+  description-ends-with-dot:
+    description: All descriptions must end with a period.
+    message: "Component's description must end with a '.'"
+    severity: warn
+    recommended: true
+    given: "$..description"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[\\s\\S]*\\.\\s*$"
