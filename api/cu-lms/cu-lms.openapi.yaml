@@ -22,10 +22,12 @@ servers:
 security:
   - BffCookie: [ ]
 tags:
+  - name: student
+    description: Endpoints for accessing authenticated student data.
   - name: courses
     description: Endpoints for accessing courses data.
 paths:
-  /micro-lms/students/me: {}  # TODO
+  /micro-lms/students/me: {}  # TODO: get
   /micro-lms/courses/student:
     get:
       operationId: listStudentCourses
@@ -72,8 +74,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ListStudentCoursesResponse"
-  /micro-lms/courses/{id}: {}  # TODO
-  /micro-lms/courses/{id}/overview: {}  # TODO
+  /micro-lms/courses/{id}: {}  # TODO: get
+  /micro-lms/courses/{id}/overview: {}  # TODO: get
 components:
   securitySchemes:
     BffCookie:
@@ -118,8 +120,8 @@ components:
           type: string
           format: date-time
           nullable: true
-          description: >
-            Scheduled course publication timestamp, if set.
+          description: Scheduled course publication timestamp, if set.
+          x-re-notes:
             Can be unset, also can be earlier or later than publishedAt
             field value.
           example: "2026-01-26T07:00:00+00:00"
@@ -147,6 +149,7 @@ components:
               example: "none"
             isSkillLevelEnabled:
               type: boolean
+              description: Indicates if skill level is enabled for the course.
               x-re-notes: >
                 Observed settings.skillLevel only with value "none", so this
                 flag currently appears to have no effect.
@@ -156,8 +159,7 @@ components:
         subjectId:
           type: integer
           nullable: true
-          description: >
-            Identifier of the subject this course belongs to.
+          description: Identifier of the subject this course belongs to.
           x-re-notes: >
             Courses covering the same subject typically share the same
             subjectId, f.e. courses with names
@@ -169,9 +171,10 @@ components:
           example: 32
         isArchived:
           type: boolean
-          description: >
-            Indicates if the course is archived. Typically set at the end
-            of a semester to mark the course as finished.
+          description: Indicates if the course is archived.
+          x-re-notes:
+            Typically set at the end of a semester to mark the course as
+            finished.
           example: false
         category:
           type: string
