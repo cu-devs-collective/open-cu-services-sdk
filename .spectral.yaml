@@ -28,7 +28,7 @@ rules:
       function: truthy
   description-ends-with-dot:
     description: All descriptions must end with a period.
-    message: "Component's description must end with a '.'"
+    message: "Schema description must end with a '.'"
     severity: warn
     recommended: true
     given: "$..description"
@@ -36,3 +36,15 @@ rules:
       function: pattern
       functionOptions:
         match: "^[\\s\\S]*\\.\\s*$"
+  object-additionalProperties-defined:
+    description: Object schemas should explicitly declare additionalProperties.
+    message: "Schema is an object but does not declare additionalProperties."
+    severity: warn
+    recommended: true
+    resolved: false
+    given:
+      - "$..[?(@.type == 'object' && !@['$ref'])]"
+      - "$..[?(@.properties && !@['$ref'])]"
+    then:
+      field: additionalProperties
+      function: defined
