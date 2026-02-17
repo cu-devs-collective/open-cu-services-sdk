@@ -48,7 +48,7 @@ paths:
       operationId: listStudentCourses
       summary: List courses for the current student.
       description: >
-        Returns the courses the authenticated student is enrolled in.
+        Returns courses summary the authenticated student is enrolled in.
       security:
         - BffCookie: [ ]
       tags: [ courses ]
@@ -83,14 +83,30 @@ paths:
       responses:
         "200":
           description: >
-            Successful response with a list of courses for the authenticated
-            student.
+            Successful response with a list of courses summary for the
+            authenticated student.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ListStudentCoursesResponse"
-  /micro-lms/courses/{id}: {}  # TODO: get
-  /micro-lms/courses/{id}/overview: {}  # TODO: get
+  /micro-lms/courses/{courseId}:
+    get:
+      operationId: courseSummary
+      summary: Get course summary by its ID.
+      description: Returns summary information about a course by courseId.
+      security:
+        - BffCookie: [ ]
+      tags: [ courses ]
+      parameters:
+        - $ref: "#/components/parameters/CourseIdPath"
+      responses:
+        "200":
+          description: Successful response with course summary by its ID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseSummaryResponse"
+  /micro-lms/courses/{courseId}/overview: {}  # TODO: get
 components:
   securitySchemes:
     BffCookie:
@@ -99,6 +115,15 @@ components:
       name: bff.cookie
       description: >
         Session cookie used to authenticate the user when calling the LMS API.
+  parameters:
+    CourseIdPath:
+      name: courseId
+      in: path
+      required: true
+      description: Numeric identifier of the course specified in URL path.
+      schema:
+        $ref: "#/components/schemas/CourseId"
+      example: 897
   schemas:
     CourseState:
       type: string
@@ -116,16 +141,20 @@ components:
         - archived
         - draft
       example: "published"
-    CourseListItem:
+    CourseId:
+      type: integer
+      minimum: 0
+      description: Numeric identifier of the course.
+      example: 897
+    CourseSummaryItem:
       type: object
       additionalProperties: false
+      description: Summary information about a course, used for course listing.
       required: [ id, name, state, publishDate, publishedAt, settings,
                   subjectId, isArchived, category, categoryCover ]
       properties:
         id:
-          type: integer
-          minimum: 0
-          example: 897
+          $ref: "#/components/schemas/CourseId"
         name:
           type: string
           example: "Английский язык 204S4"
@@ -267,10 +296,10 @@ components:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/CourseListItem"
+            $ref: "#/components/schemas/CourseSummaryItem"
         paging:
           $ref: "#/components/schemas/Paging"
-    UserID:
+    UserId:
       type: string
       format: uuid
       description: Unique identifier of the user.
@@ -315,7 +344,7 @@ components:
                   timeAccount, studyStartYear, studyLevel, lateDaysBalance ]
       properties:
         id:
-          $ref: "#/components/schemas/UserID"
+          $ref: "#/components/schemas/UserId"
         lastName:
           type: string
           example: "Иванов"
@@ -354,3 +383,5 @@ components:
           minimum: 0
           description: Number of late days remaining for the student.
           example: 50
+    CourseSummaryResponse:
+      $ref: "#/components/schemas/CourseSummaryItem"
