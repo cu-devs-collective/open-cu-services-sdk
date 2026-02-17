@@ -6,8 +6,9 @@ VACUUM_VERSION   := v0.23.8
 
 YAMLLINT := $(LOCAL_BIN)/yamllint
 
-VACUUM         := $(LOCAL_BIN)/vacuum
-VACUUM_RULESET := .spectral.yaml
+VACUUM           := $(LOCAL_BIN)/vacuum
+VACUUM_RULESET   := .spectral.yaml
+VACUUM_LINT_ARGS := lint -b -d --no-clip -n warn --remote=false --min-score 100 -r $(VACUUM_RULESET)
 
 OPENAPI_SPEC_FILES := api/**/*openapi.yaml
 
@@ -29,4 +30,8 @@ install: install-bins
 .PHONY: lint
 lint:
 	@$(YAMLLINT) $(OPENAPI_SPEC_FILES)
-	@$(VACUUM) lint -b -d --no-clip -n warn --remote=false --min-score 100 -r ./.spectral.yaml $(OPENAPI_SPEC_FILES)
+	@$(VACUUM) $(VACUUM_LINT_ARGS) $(OPENAPI_SPEC_FILES)
+
+.PHONY: lint-vacuum
+lint-vacuum:
+	@$(VACUUM) $(VACUUM_LINT_ARGS) $(OPENAPI_SPEC_FILES)
