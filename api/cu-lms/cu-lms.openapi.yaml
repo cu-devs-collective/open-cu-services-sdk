@@ -23,11 +23,26 @@ security:
   - BffCookie: [ ]
 tags:
   - name: student
-    description: Endpoints for accessing authenticated student data.
+    description: Endpoints for accessing data for authenticated student.
   - name: courses
     description: Endpoints for accessing courses data.
 paths:
-  /micro-lms/students/me: {}  # TODO: get
+  /micro-lms/students/me:
+    get:
+      operationId: currentStudent
+      summary: Get current student.
+      description: Returns authenticated student data.
+      x-re-notes: This endpoint appears not to be used by non-students.
+      security:
+        - BffCookie: [ ]
+      tags: [ student ]
+      responses:
+        "200":
+          description: Successful response with the authenticated student data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentStudentResponse"
   /micro-lms/courses/student:
     get:
       operationId: listStudentCourses
@@ -178,11 +193,12 @@ components:
           example: false
         category:
           type: string
-          description: Course category.
-          x-re-notes: >
+          description: Category to which the course belongs to.
+          x-re-needs-analysis: true
+          x-re-needs-analysis-notes: >
             Those are clearly not all of the values that exist, so other values
             should be added as they are found.
-
+          x-re-notes: >
             Known values are the following:
             - withoutCategory - not categorized stuff
             - general - general courses, f.e. English
@@ -207,9 +223,10 @@ components:
           type: string
           description: Course card icon style identifier.
           x-re-notes: >
-            It seems those are not all of the values that exist, also it seems
-            there is some algorithm on frontend which decides which color to
-            use for the course card.
+            Those may be not all of the values that exist, so any string
+            is accepted.
+            It seems there is some algorithm on frontend which decides
+            which color to use for the course card.
           anyOf:
             - type: string
               enum:
@@ -253,3 +270,87 @@ components:
             $ref: "#/components/schemas/CourseListItem"
         paging:
           $ref: "#/components/schemas/Paging"
+    UserID:
+      type: string
+      format: uuid
+      description: Unique identifier of the user.
+      x-re-notes: >
+        This UUID is the primary identifier used to reference the user
+        on backend DB.
+      example: "00000000-0000-0000-0000-000000000000"
+    UniversityEmail:
+      type: string
+      format: email
+      x-re-notes: >
+        Most emails use the edu.centraluniversity.ru domain, but other
+        domains may occur (e.g., gmail.com) in rare cases.
+      example: "i.ivanov@edu.centraluniversity.ru"
+    TimeAccount:
+      type: string
+      minLength: 3
+      maxLength: 22
+      pattern: "^[a-z][a-z0-9._-]{2,21}$"
+      description: Username in TiMe messenger (T-Bank's fork of Mattermost).
+      externalDocs:
+        # yamllint disable-line rule:line-length
+        url: https://docs.mattermost.com/end-user-guide/preferences/manage-your-profile.html#:~:text=message%2E-,Username
+        description: Username constraints from Official Mattermost docs.
+      example: "i.ivanov"
+    StudyLevel:
+      type: string
+      description: Student’s current education level.
+      x-re-notes: >
+        "none" level is given to non-enrolled users.
+        Other values may appear in the future.
+      enum:
+        - none
+        - bachelor
+        - master
+        - dpo
+        - dpoMaster
+    CurrentStudentResponse:
+      type: object
+      additionalProperties: false
+      required: [ id, lastName, firstName, middleName, universityEmail,
+                  timeAccount, studyStartYear, studyLevel, lateDaysBalance ]
+      properties:
+        id:
+          $ref: "#/components/schemas/UserID"
+        lastName:
+          type: string
+          example: "Иванов"
+        firstName:
+          type: string
+          example: "Иван"
+        middleName:
+          type: string
+          nullable: true
+          x-re-notes: This value is nullable.
+          example: "Иванович"
+        universityEmail:
+          allOf:
+            - $ref: "#/components/schemas/UniversityEmail"
+            - type: string
+              nullable: false
+              x-re-notes: This field appears to be required (non-nullable).
+        timeAccount:
+          allOf:
+            - $ref: "#/components/schemas/TimeAccount"
+            - type: string
+              nullable: false
+              x-re-notes: This field appears to be required (non-nullable).
+        studyStartYear:
+          type: integer
+          minimum: 1970
+          nullable: true
+          description: Year the student enrolled at the university.
+          x-re-notes: >
+            It seems that null indicates the student was not enrolled.
+          example: 2024
+        studyLevel:
+          $ref: "#/components/schemas/StudyLevel"
+        lateDaysBalance:
+          type: integer
+          minimum: 0
+          description: Number of late days remaining for the student.
+          example: 50
