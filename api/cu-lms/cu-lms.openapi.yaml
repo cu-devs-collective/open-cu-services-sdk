@@ -79,7 +79,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: "#/components/schemas/CourseState"
+              $ref: "#/components/schemas/PublicationState"
       responses:
         "200":
           description: >
@@ -106,7 +106,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CourseSummaryResponse"
-  /micro-lms/courses/{courseId}/overview: {}  # TODO: get
+  /micro-lms/courses/{courseId}/overview:
+    get:
+      operationId: courseOverview
+      summary: Get course overview by its ID.
+      description: >
+        Returns course overview by courseId. Overview consists of unit items
+        called as themes, which are typically weekly modules of longreads and
+        exercises.
+      security:
+        - BffCookie: [ ]
+      tags: [ courses ]
+      parameters:
+        - $ref: "#/components/parameters/CourseIdPath"
+      responses:
+        "200":
+          description: Successful response with course overview by its ID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseOverviewResponse"
 components:
   securitySchemes:
     BffCookie:
@@ -125,16 +144,15 @@ components:
         $ref: "#/components/schemas/CourseId"
       example: 897
   schemas:
-    CourseState:
+    PublicationState:
       type: string
-      description: >
-        Course state is used to filter courses based on their status.
+      description: Publication state of an item.
       x-re-notes: >
         Known values are the following:
-        - publushed - filters non-archived non-draft courses
-        - archived - filsters archived courses
-        - draft - filters draft courses (those are courses which were
-        not published yet, this option is almost useless as such courses are
+        - publushed - filters non-archived non-draft items
+        - archived - filters archived items
+        - draft - filters draft items (those are items which were
+        not published yet, this option is almost useless as such items are
         hidden for regular students)
       enum:
         - published
@@ -146,60 +164,128 @@ components:
       minimum: 0
       description: Numeric identifier of the course.
       example: 897
+    SkillLevel:
+      type: string
+      description: Skill level label configured for the course.
+      x-re-notes: >
+        Unknown usage, as the only seen value is "none".
+        This field appears to be inactive/unused for now.
+      enum:
+        - none
+      example: "none"
+    CourseSettings:
+      type: object
+      description: Prerequisites for enrolling in the course.
+      x-re-notes: >
+        Seems to be incorrect right now, in the future this can change.
+      additionalProperties: false
+      required: [ skillLevel, isSkillLevelEnabled ]
+      properties:
+        skillLevel:
+          $ref: "#/components/schemas/SkillLevel"
+        isSkillLevelEnabled:
+          type: boolean
+          description: Indicates if skill level is enabled for the course.
+          x-re-notes: >
+            Observed skillLevel field only with value "none", so this
+            flag currently appears to have no effect.
+            This field is sometimes set to true, sometimes to false across
+            courses without any relation.
+          example: false
+    CourseName:
+      type: string
+      description: Course name.
+      example: "Английский язык 204S4"
+    CourseIsArchived:
+      type: boolean
+      description: Indicates if the course is archived.
+      x-re-notes:
+        Typically set at the end of a semester to mark the course as finished.
+      example: false
+    PublishDate:
+      type: string
+      format: date-time
+      nullable: true
+      description: Scheduled item publication timestamp, if set.
+      x-re-notes:
+        Can be unset, also can be earlier or later than publishedAt
+        field value.
+      example: "2026-01-26T07:00:00+00:00"
+    PublishedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Actual item publication timestamp.
+      x-re-notes: >
+        It looks like this field is null for items with state "draft".
+      example: "2026-01-26T07:00:44.919045+00:00"
+    CourseCategory:
+      type: string
+      description: Category to which the course belongs to.
+      x-re-needs-analysis: true
+      x-re-needs-analysis-notes: >
+        Those are clearly not all of the values that exist, so other values
+        should be added as they are found.
+      x-re-notes: >
+        Known values are the following:
+        - withoutCategory - not categorized stuff
+        - general - general courses, f.e. English
+        - career - career stuff, f.e. Mock Interview intensive
+        - stem - STEM courses
+        - softSkills - soft skills category courses
+        - mathematics - math courses
+        - development - courses for devs
+      anyOf:
+        - type: string
+          enum:
+            - withoutCategory
+            - general
+            - career
+            - stem
+            - softSkills
+            - mathematics
+            - development
+        - type: string
+      example: "general"
+    CourseCategoryCover:
+      type: string
+      description: Course card icon style identifier.
+      x-re-notes: >
+        Those may be not all of the values that exist, so any string
+        is accepted.
+        It seems there is some algorithm on frontend which decides
+        which color to use for the course card.
+      anyOf:
+        - type: string
+          enum:
+            - spiralLoops
+            - sineWave
+            - curvesGrid
+            - geometricTriangle
+            - verticalLines
+            - symmetricCircles
+            - ellipsesOverlap
+        - type: string
+      example: "symmetricCircles"
     CourseSummaryItem:
       type: object
-      additionalProperties: false
       description: Summary information about a course, used for course listing.
+      additionalProperties: false
       required: [ id, name, state, publishDate, publishedAt, settings,
                   subjectId, isArchived, category, categoryCover ]
       properties:
         id:
           $ref: "#/components/schemas/CourseId"
         name:
-          type: string
-          example: "Английский язык 204S4"
+          $ref: "#/components/schemas/CourseName"
         state:
-          $ref: "#/components/schemas/CourseState"
+          $ref: "#/components/schemas/PublicationState"
         publishDate:
-          type: string
-          format: date-time
-          nullable: true
-          description: Scheduled course publication timestamp, if set.
-          x-re-notes:
-            Can be unset, also can be earlier or later than publishedAt
-            field value.
-          example: "2026-01-26T07:00:00+00:00"
+          $ref: "#/components/schemas/PublishDate"
         publishedAt:
-          type: string
-          format: date-time
-          nullable: true
-          description: Actual course publication timestamp.
-          x-re-notes: >
-            It looks like this field is null for courses with state "draft".
-          example: "2026-01-26T07:00:44.919045+00:00"
+          $ref: "#/components/schemas/PublishedAt"
         settings:
-          type: object
-          additionalProperties: false
-          required: [ skillLevel, isSkillLevelEnabled ]
-          properties:
-            skillLevel:
-              type: string
-              description: Skill level label configured for the course.
-              x-re-notes: >
-                Unknown usage, as the only seen value is "none".
-                This field appears inactive/unused for now.
-              enum:
-                - none
-              example: "none"
-            isSkillLevelEnabled:
-              type: boolean
-              description: Indicates if skill level is enabled for the course.
-              x-re-notes: >
-                Observed settings.skillLevel only with value "none", so this
-                flag currently appears to have no effect.
-                This field is sometimes set to true, sometimes to false across
-                courses.
-              example: false
+          $ref: "#/components/schemas/CourseSettings"
         subjectId:
           type: integer
           nullable: true
@@ -214,60 +300,11 @@ components:
             "English 104" and "English 104. Semester 2" have subjectId unset.
           example: 32
         isArchived:
-          type: boolean
-          description: Indicates if the course is archived.
-          x-re-notes:
-            Typically set at the end of a semester to mark the course as
-            finished.
-          example: false
+          $ref: "#/components/schemas/CourseIsArchived"
         category:
-          type: string
-          description: Category to which the course belongs to.
-          x-re-needs-analysis: true
-          x-re-needs-analysis-notes: >
-            Those are clearly not all of the values that exist, so other values
-            should be added as they are found.
-          x-re-notes: >
-            Known values are the following:
-            - withoutCategory - not categorized stuff
-            - general - general courses, f.e. English
-            - career - career stuff, f.e. Mock Interview intensive
-            - stem - STEM courses
-            - softSkills - soft skills category courses
-            - mathematics - math courses
-            - development - courses for devs
-          anyOf:
-            - type: string
-              enum:
-                - withoutCategory
-                - general
-                - career
-                - stem
-                - softSkills
-                - mathematics
-                - development
-            - type: string
-          example: "general"
+          $ref: "#/components/schemas/CourseCategory"
         categoryCover:
-          type: string
-          description: Course card icon style identifier.
-          x-re-notes: >
-            Those may be not all of the values that exist, so any string
-            is accepted.
-            It seems there is some algorithm on frontend which decides
-            which color to use for the course card.
-          anyOf:
-            - type: string
-              enum:
-                - spiralLoops
-                - sineWave
-                - curvesGrid
-                - geometricTriangle
-                - verticalLines
-                - symmetricCircles
-                - ellipsesOverlap
-            - type: string
-          example: "symmetricCircles"
+          $ref: "#/components/schemas/CourseCategoryCover"
     Paging:
       type: object
       additionalProperties: false
@@ -385,3 +422,62 @@ components:
           example: 50
     CourseSummaryResponse:
       $ref: "#/components/schemas/CourseSummaryItem"
+    CourseThemeId:
+      type: integer
+      minimum: 0
+      description: Numeric identifier of the course theme.
+      example: 6663
+    CourseThemeName:
+      type: string
+      description: "#TODO: CourseThemeName description."
+      example: "Силлабус"
+    LongreadItem:  # TODO: LongreadItem
+      type: object
+      additionalProperties: false
+    CourseThemeItem:
+      type: object
+      additionalProperties: false
+      description: "#TODO: CourseThemeItem description."
+      required: [ id, name, order, state, publishDate, publishedAt, longreads ]
+      properties:
+        id:
+          $ref: "#/components/schemas/CourseThemeId"
+        name:
+          $ref: "#/components/schemas/CourseThemeName"
+        order:
+          type: integer
+          minimum: 1
+          description: "#TODO: order description."
+          example: 1
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        publishDate:
+          $ref: "#/components/schemas/PublishDate"
+        publishedAt:
+          $ref: "#/components/schemas/PublishedAt"
+        longreads:
+          $ref: "#/components/schemas/LongreadItem"
+    CourseOverviewResponse:
+      type: object
+      additionalProperties: false
+      required: [ id, name, isArchived, state, publishDate, publishedAt,
+                  settings, themes ]
+      properties:
+        id:
+          $ref: "#/components/schemas/CourseId"
+        name:
+          $ref: "#/components/schemas/CourseName"
+        isArchived:
+          $ref: "#/components/schemas/CourseIsArchived"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        publishDate:
+          $ref: "#/components/schemas/PublishDate"
+        publishedAt:
+          $ref: "#/components/schemas/PublishedAt"
+        settings:
+          $ref: "#/components/schemas/CourseSettings"
+        themes:
+          type: array
+          items:
+            $ref: "#/components/schemas/CourseThemeItem"
