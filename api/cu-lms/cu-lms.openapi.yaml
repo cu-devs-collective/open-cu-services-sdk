@@ -4,6 +4,9 @@ info:
   description: >
     Reverse engineered OpenAPI specification for the CU LMS API.
   version: 0.1.0
+  license:
+    name: MIT
+    url: https://github.com/CU-Club/cu-open-lms-openapi/blob/master/LICENSE
 servers:
   - url: https://my.centraluniversity.ru/api
     description: Production CU LMS API server.
@@ -434,6 +437,7 @@ components:
     LongreadItem:  # TODO: LongreadItem
       type: object
       additionalProperties: false
+      description: "#TODO: LongreadItem description."
     CourseThemeItem:
       type: object
       additionalProperties: false
