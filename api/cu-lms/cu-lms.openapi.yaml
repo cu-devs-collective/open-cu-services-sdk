@@ -115,8 +115,8 @@ paths:
       summary: Get course overview by its ID.
       description: >
         Returns course overview by courseId. Overview consists of unit items
-        called as themes, which are typically weekly modules of longreads and
-        exercises.
+        called as themes, which are typically weekly modules of longread IDs
+        and exercise items.
       security:
         - BffCookie: [ ]
       tags: [ courses ]
@@ -399,15 +399,13 @@ components:
         universityEmail:
           allOf:
             - $ref: "#/components/schemas/UniversityEmail"
-            - type: string
-              nullable: false
-              x-re-notes: This field appears to be required (non-nullable).
+          nullable: false
+          x-re-notes: This field appears to be non-nullable.
         timeAccount:
           allOf:
             - $ref: "#/components/schemas/TimeAccount"
-            - type: string
-              nullable: false
-              x-re-notes: This field appears to be required (non-nullable).
+          nullable: false
+          x-re-notes: This field appears to be non-nullable.
         studyStartYear:
           type: integer
           minimum: 1970
@@ -430,28 +428,132 @@ components:
       minimum: 0
       description: Numeric identifier of the course theme.
       example: 6663
-    CourseThemeName:
+    LongreadId:
+      type: integer
+      minimum: 0
+      description: Numeric identifier of the longread item.
+      example: 12707
+    LongreadType:
       type: string
-      description: "#TODO: CourseThemeName description."
-      example: "Силлабус"
-    LongreadItem:  # TODO: LongreadItem
+      description: Longread item type.
+      x-re-notes: >
+        Needs further analysis, as the only seen value is "common".
+        This field appears to be inactive/unused for now.
+      enum:
+        - common
+      example: "common"
+    ExerciseId:
+      type: integer
+      minimum: 0
+      description: Numeric identifier of the exercise item.
+      example: 48139
+    ActivityId:
+      type: integer
+      minimum: 0
+      description: Numeric identifier of the activity item.
+      example: 2161
+    ActivityDefinition:
       type: object
       additionalProperties: false
-      description: "#TODO: LongreadItem description."
+      description: >
+        Activity definition shared across exercises. Multiple exercises
+        reference the same activity definition.
+      required: [ id, name, weight ]
+      properties:
+        id:
+          $ref: "#/components/schemas/ActivityId"
+        name:
+          type: string
+          description: Activity name.
+          example: "Аудиторная работа на семинарах"
+        weight:
+          type: number
+          format: float
+          description: >
+            Weight coefficient for every single activity by activity name,
+            used in the course grade formula to calculate the overall semester
+            score.
+          minimum: 0
+          maximum: 1
+          example: 0.25
+    Deadline:
+      type: string
+      format: date-time
+      nullable: false
+      description: Deadline by which the item must be completed.
+      x-re-notes: This field appears to be non-nullable.
+      example: "2026-02-15T19:00:00+00:00"
+    ExerciseItem:
+      type: object
+      additionalProperties: false
+      description: An exercise item within a longread item.
+      required: [ id, name, maxScore, activity, deadline ]
+      properties:
+        id:
+          $ref: "#/components/schemas/ExerciseId"
+        name:
+          type: string
+          description: Exercise name shown as the header is LMS.
+          example: "Seminar 1. Week 2"
+        maxScore:
+          type: integer
+          minimum: 0
+          description: Maximum possible score for completing exercise.
+          example: 10
+        activity:
+          $ref: "#/components/schemas/ActivityDefinition"
+        deadline:
+          $ref: "#/components/schemas/Deadline"
+    LongreadItem:
+      type: object
+      additionalProperties: false
+      description: >
+        A longread list item within a course theme. It may be self-contained
+        content or include one or more associated exercises.
+      required: [ id, type, name, state, publishDate, publishedAt, exercises ]
+      properties:
+        id:
+          $ref: "#/components/schemas/LongreadId"
+        type:
+          $ref: "#/components/schemas/LongreadType"
+        name:
+          type: string
+          description: Longread name shown as the header in LMS.
+          example: "Ссылка на силлабус"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        publishDate:
+          $ref: "#/components/schemas/PublishDate"
+        publishedAt:
+          $ref: "#/components/schemas/PublishedAt"
+        exercises:
+          type: array
+          minItems: 0
+          description: Exercises associated with this longread.
+          items:
+            $ref: "#/components/schemas/ExerciseItem"
     CourseThemeItem:
       type: object
       additionalProperties: false
-      description: "#TODO: CourseThemeItem description."
+      description: >
+        Course theme is a unit, which is typically a weekly module of
+        longread IDs and exercise items.
       required: [ id, name, order, state, publishDate, publishedAt, longreads ]
       properties:
         id:
           $ref: "#/components/schemas/CourseThemeId"
         name:
-          $ref: "#/components/schemas/CourseThemeName"
+          type: string
+          description: >
+            Course unit name shown on the main course view in LMS
+            as the header on line.
+          example: "Силлабус"
         order:
           type: integer
           minimum: 1
-          description: "#TODO: order description."
+          description: >
+            Sort order determining the item's position in the LMS, lower values
+            come first.
           example: 1
         state:
           $ref: "#/components/schemas/PublicationState"
@@ -460,7 +562,9 @@ components:
         publishedAt:
           $ref: "#/components/schemas/PublishedAt"
         longreads:
-          $ref: "#/components/schemas/LongreadItem"
+          type: array
+          items:
+            $ref: "#/components/schemas/LongreadItem"
     CourseOverviewResponse:
       type: object
       additionalProperties: false
