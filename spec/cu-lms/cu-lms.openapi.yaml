@@ -238,37 +238,31 @@ components:
         - softSkills - soft skills category courses
         - mathematics - math courses
         - development - courses for devs
-      anyOf:
-        - type: string
-          enum:
-            - withoutCategory
-            - general
-            - career
-            - stem
-            - softSkills
-            - mathematics
-            - development
-        - type: string
+      enum:
+        - withoutCategory
+        - general
+        - career
+        - stem
+        - softSkills
+        - mathematics
+        - development
       example: "general"
     CourseCategoryCover:
       type: string
       description: Course card icon style identifier.
       x-re-notes: >
-        Those may be not all of the values that exist, so any string
-        is accepted.
+        Those may be not all of the values that exist, so it is good to add
+        new values here if this is being used for some reason by someone.
         It seems there is some algorithm on frontend which decides
         which color to use for the course card.
-      anyOf:
-        - type: string
-          enum:
-            - spiralLoops
-            - sineWave
-            - curvesGrid
-            - geometricTriangle
-            - verticalLines
-            - symmetricCircles
-            - ellipsesOverlap
-        - type: string
+      enum:
+        - spiralLoops
+        - sineWave
+        - curvesGrid
+        - geometricTriangle
+        - verticalLines
+        - symmetricCircles
+        - ellipsesOverlap
       example: "symmetricCircles"
     CourseSummaryItem:
       type: object
