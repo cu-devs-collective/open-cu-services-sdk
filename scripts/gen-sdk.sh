@@ -29,7 +29,7 @@ list_langs() {
     done
     shopt -u nullglob
 
-    (( $found )) || echo "  (none found)"
+    (( found )) || echo "  (none found)"
 }
 
 usage() {
