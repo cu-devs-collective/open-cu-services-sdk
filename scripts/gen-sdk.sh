@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 #------------------------------------------------------------------------------
 # Orchestrator for SDK generation scripts for languages.
 # It contains NO language-specific logic.
@@ -9,8 +10,6 @@
 #   gen-sdk.sh --help
 #   gen-sdk.sh <lang> [-- <args...>]
 #------------------------------------------------------------------------------
-
-set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -38,7 +37,8 @@ Usage:
   $(basename "$0") --help
   $(basename "$0") <lang> [-- <args...>]
 
-Orchestrator for SDK generation scripts for languages
+Orchestrator for SDK generation scripts for languages.
+Args are being forwarded to selected script.
 
 Available languages:
 $(list_langs)
