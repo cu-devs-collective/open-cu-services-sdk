@@ -11,7 +11,7 @@ SPEC_KEYS_TO_GENERATE=(
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SPEC_BASE="${ROOT_DIR}/spec"
-MODULE_BASE="github.com/cu-club/cu-open-lms-openapi/golang"
+MODULE_BASE="github.com/cu-devs-collective/cu-open-lms-openapi/golang"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
