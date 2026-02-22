@@ -8,6 +8,7 @@ OGEN_VERSION="v1.19.0"
 SPEC_KEYS_TO_GENERATE=(
     cu-lms
 )
+OGEN_CONFIG_PATH="../.ogen.yaml"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SPEC_BASE="${ROOT_DIR}/spec"
@@ -51,7 +52,7 @@ package ${pkg}
 
 import _ "github.com/ogen-go/ogen"
 
-//go:generate go run github.com/ogen-go/ogen/cmd/ogen@${OGEN_VERSION} --target . --package ${pkg} --clean ${spec_rel}
+//go:generate go run github.com/ogen-go/ogen/cmd/ogen@${OGEN_VERSION} --config=${OGEN_CONFIG_PATH} --target . --package ${pkg} --clean ${spec_rel}
 EOF
 }
 
