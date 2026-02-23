@@ -3,7 +3,7 @@ set -euo pipefail
 #------------------------------------------------------------------------------
 # Orchestrator for SDK generation scripts for languages.
 # It contains NO language-specific logic.
-# Each language owns its generation logic in scripts/gen-sdk-{lang}.sh.
+# Each language owns its generation logic in gen/<lang>/gen-sdk-<lang>.sh.
 # This script only selects which generator to run and forwards args.
 #
 # Usage:
@@ -17,13 +17,14 @@ die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
 
 list_langs() {
-    local f base lang found=0
+    local d found=0
     shopt -s nullglob
-    for f in "${SCRIPT_DIR}"/gen-sdk-*.sh; do
+    for d in "${SCRIPT_DIR}"/*; do
+        [[ -d "$d" ]] || continue
+        local lang
+        lang="$(basename "$d")"
+        [[ -f "${d}/gen-sdk-${lang}.sh" ]] || continue
         found=1
-        base="$(basename "$f")"
-        lang="${base#gen-sdk-}"
-        lang="${lang%.sh}"
         echo "  - ${lang}"
     done
     shopt -u nullglob
@@ -64,7 +65,7 @@ main() {
     fi
     passthru=("$@")
 
-    local script="${SCRIPT_DIR}/gen-sdk-${lang}.sh"
+    local script="${SCRIPT_DIR}/${lang}/gen-sdk-${lang}.sh"
     [[ -f "$script" ]] || die "Unknown language '${lang}'"
     [[ -x "$script" ]] || die "Generator script is not executable: $script (try: chmod +x \"$script\")"
 

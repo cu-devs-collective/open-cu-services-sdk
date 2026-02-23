@@ -1,7 +1,7 @@
 LOCAL_BIN ?= $(CURDIR)/bin
 PATH      := $(PATH):$(LOCAL_BIN)
 GO        ?= go
-GEN_SDK   := $(CURDIR)/scripts/gen-sdk.sh
+GEN_SDK   := $(CURDIR)/gen/gen-sdk.sh
 
 YAMLLINT_VERSION := v1.38.0
 VACUUM_VERSION   := v0.23.8

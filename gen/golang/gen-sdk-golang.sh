@@ -12,7 +12,7 @@ SPEC_KEYS_TO_GENERATE=(
 )
 OGEN_CONFIG_PATH="../.ogen.yaml"
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SPEC_BASE="${ROOT_DIR}/spec"
 MODULE_BASE="github.com/cu-devs-collective/cu-open-lms-openapi/golang"
 CU_LMS_API_BASE_URL="https://my.centraluniversity.ru/api"
