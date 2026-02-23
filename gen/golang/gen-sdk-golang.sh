@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 #------------------------------------------------------------------------------
-# Generate Go SDK using ogen + go generate.
+# Generate Go SDK from OpenAPI specs using ogen, go generate and templates.
+# SDKs are generated as separate Go modules.
 #
-# cu-lms spec is generated to lmsapi package.
+# Current spec to module mapping:
+# - cu-lms -> github.com/cu-devs-collective/cu-open-lms-openapi/golang/lmsapi
 #------------------------------------------------------------------------------
 
 OGEN_VERSION="v1.19.0"
