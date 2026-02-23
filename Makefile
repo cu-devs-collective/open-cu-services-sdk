@@ -3,8 +3,9 @@ PATH      := $(PATH):$(LOCAL_BIN)
 GO        ?= go
 GEN_SDK   := $(CURDIR)/gen/gen-sdk.sh
 
-YAMLLINT_VERSION := v1.38.0
-VACUUM_VERSION   := v0.23.8
+GOYAMLLINT_VERSION := v1.38.0
+VACUUM_VERSION     := v0.23.8
+GOMPLATE_VERSION   := v5.0.0
 
 YAMLLINT := $(LOCAL_BIN)/yamllint
 
@@ -19,12 +20,24 @@ ifneq (,$(wildcard .env))
 	export
 endif
 
-.PHONY: install-tools
-install-tools:
+.PHONY: check-go
+check-go:
 	@command -v $(GO) >/dev/null 2>&1 || { echo "Go is required: https://go.dev/doc/install"; exit 1; }
-	@mkdir -p $(LOCAL_BIN)
-	GOBIN=$(LOCAL_BIN) $(GO) install github.com/daveshanley/vacuum@$(VACUUM_VERSION) \
-		&& GOBIN=$(LOCAL_BIN) $(GO) install github.com/wasilibs/go-yamllint/cmd/yamllint@$(YAMLLINT_VERSION)
+
+$(LOCAL_BIN):
+	@mkdir -p $@
+
+.PHONY: install-tools-lint
+install-tools-lint: check-go $(LOCAL_BIN)
+	GOBIN=$(LOCAL_BIN) $(GO) install github.com/daveshanley/vacuum@$(VACUUM_VERSION)
+	GOBIN=$(LOCAL_BIN) $(GO) install github.com/wasilibs/go-yamllint/cmd/yamllint@$(GOYAMLLINT_VERSION)
+
+.PHONY: install-tools-generate
+install-tools-generate: check-go $(LOCAL_BIN)
+	GOBIN=$(LOCAL_BIN) $(GO) install github.com/hairyhenderson/gomplate/v5/cmd/gomplate@$(GOMPLATE_VERSION)
+
+.PHONY: install-tools
+install-tools: install-tools-lint install-tools-generate
 
 .PHONY: install
 install: install-tools
