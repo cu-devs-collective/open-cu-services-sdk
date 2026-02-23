@@ -2,6 +2,8 @@
 set -euo pipefail
 #------------------------------------------------------------------------------
 # Generate Go SDK using ogen + go generate.
+#
+# cu-lms spec is generated to lmsapi package.
 #------------------------------------------------------------------------------
 
 OGEN_VERSION="v1.19.0"
@@ -13,6 +15,7 @@ OGEN_CONFIG_PATH="../.ogen.yaml"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SPEC_BASE="${ROOT_DIR}/spec"
 MODULE_BASE="github.com/cu-devs-collective/cu-open-lms-openapi/golang"
+CU_LMS_API_BASE_URL="https://my.centraluniversity.ru/api"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
@@ -27,6 +30,7 @@ resolve_spec() {
             PKG_NAME="lmsapi"
             OUT_DIR="${ROOT_DIR}/golang/${PKG_NAME}"
             MODULE_PATH="${MODULE_BASE}/${PKG_NAME}"
+            EXTRA_FILES_WRITER="write_lmsapi_files"
             ;;
         *) die "Unknown spec key: '$key'";;
     esac
@@ -45,7 +49,7 @@ write_gen_file() {
     local out_dir="$1"
     local pkg="$2"
     local spec_rel="$3"
-    local file="${out_dir}/gen_sdk.go"
+    local file="${out_dir}/generate_sdk.go"
 
     cat > "$file" <<EOF
 package ${pkg}
@@ -53,6 +57,17 @@ package ${pkg}
 import _ "github.com/ogen-go/ogen"
 
 //go:generate go run github.com/ogen-go/ogen/cmd/ogen@${OGEN_VERSION} --config=${OGEN_CONFIG_PATH} --target . --package ${pkg} --clean ${spec_rel}
+EOF
+}
+
+write_lmsapi_files() {
+    local out_dir="$1"
+    local pkg="$2"
+
+    cat > "${out_dir}/lmsapi.go" <<EOF
+package ${pkg}
+
+const DefaultBaseURL = "${CU_LMS_API_BASE_URL}"
 EOF
 }
 
@@ -110,7 +125,13 @@ sdk_generate() {
     info "Running go generate"
     (cd "$OUT_DIR" && go generate -v ./...)
 
-    # 5) go mod tidy
+    # 5) write extra package-specific files
+    if [[ -n "${EXTRA_FILES_WRITER:-}" ]]; then
+        info "Writing extra files via ${EXTRA_FILES_WRITER}"
+        "${EXTRA_FILES_WRITER}" "$OUT_DIR" "$PKG_NAME"
+    fi
+
+    # 6) go mod tidy
     (cd "$OUT_DIR" && go mod tidy)
 }
 
