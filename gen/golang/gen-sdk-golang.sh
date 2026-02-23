@@ -18,6 +18,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SPEC_BASE="${ROOT_DIR}/spec"
 MODULE_BASE="github.com/cu-devs-collective/cu-open-lms-openapi/golang"
 CU_LMS_API_BASE_URL="https://my.centraluniversity.ru/api"
+TEMPLATE_DIR="${ROOT_DIR}/gen/golang/templates/common"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
@@ -32,6 +33,7 @@ resolve_spec() {
             PKG_NAME="lmsapi"
             OUT_DIR="${ROOT_DIR}/golang/${PKG_NAME}"
             MODULE_PATH="${MODULE_BASE}/${PKG_NAME}"
+            USER_AGENT="CU-Open-LMS/Go"
             EXTRA_FILES_WRITER="write_lmsapi_files"
             ;;
         *) die "Unknown spec key: '$key'";;
@@ -47,18 +49,38 @@ sed_inplace() {
     fi
 }
 
+yaml_escape() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    printf "\"%s\"" "$s"
+}
+
+render_template() {
+    local tmpl_path="$1"
+    local out_path="$2"
+
+    [[ -f "$tmpl_path" ]] || die "Template not found: $tmpl_path"
+    "gomplate" -f "$tmpl_path" -o "$out_path" -c ".=stdin:///data.yaml"
+}
+
 write_gen_file() {
     local out_dir="$1"
     local pkg="$2"
     local spec_rel="$3"
+
     local file="${out_dir}/generate_sdk.go"
+    local tmpl="${TEMPLATE_DIR}/generate_sdk.go.tmpl"
 
-    cat > "$file" <<EOF
-package ${pkg}
-
-import _ "github.com/ogen-go/ogen"
-
-//go:generate go run github.com/ogen-go/ogen/cmd/ogen@${OGEN_VERSION} --config=${OGEN_CONFIG_PATH} --target . --package ${pkg} --clean ${spec_rel}
+    render_template "$tmpl" "$file" <<EOF
+Package: $(yaml_escape "$pkg")
+OgenVersion: $(yaml_escape "$OGEN_VERSION")
+Config: true
+ConfigPath: $(yaml_escape "$OGEN_CONFIG_PATH")
+TargetDir: "."
+OgenPackageName: $(yaml_escape "$pkg")
+Clean: true
+SpecPath: $(yaml_escape "$spec_rel")
 EOF
 }
 
@@ -66,10 +88,12 @@ write_lmsapi_files() {
     local out_dir="$1"
     local pkg="$2"
 
-    cat > "${out_dir}/lmsapi.go" <<EOF
-package ${pkg}
-
-const DefaultBaseURL = "${CU_LMS_API_BASE_URL}"
+    local package_file="${out_dir}/lmsapi.go"
+    local package_file_tmpl="${TEMPLATE_DIR}/package.go.tmpl"
+    render_template "$package_file_tmpl" "$package_file" <<EOF
+Package: $(yaml_escape "$pkg")
+BaseURL: $(yaml_escape "$CU_LMS_API_BASE_URL")
+UserAgent: $(yaml_escape "$USER_AGENT")
 EOF
 }
 
