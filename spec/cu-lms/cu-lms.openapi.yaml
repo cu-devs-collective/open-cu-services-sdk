@@ -47,6 +47,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CurrentStudentResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
   /micro-lms/courses/student:
     get:
       operationId: listStudentCourses
@@ -93,6 +95,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ListStudentCoursesResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
   /micro-lms/courses/{courseId}:
     get:
       operationId: courseSummary
@@ -110,6 +114,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CourseSummaryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
   /micro-lms/courses/{courseId}/overview:
     get:
       operationId: courseOverview
@@ -130,6 +140,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CourseOverviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
 components:
   securitySchemes:
     BffCookie:
@@ -148,6 +164,99 @@ components:
         $ref: "#/components/schemas/CourseId"
       example: 897
   schemas:
+    BaseErrorTitle:
+      type: string
+      description: Summary of the problem.
+      example: "Unauthorized"
+    BaseErrorStatus:
+      type: integer
+      minimum: 0
+      format: int32
+      description: HTTP status code.
+      example: 401
+    BaseErrorTraceId:
+      type: string
+      pattern: "^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$"
+      description: >
+        W3C Trace Context traceparent value for backend to correlate requests
+        across services.
+      example: "00-00000000000000000000000000000000-0000000000000000-01"
+    BaseBadRequestError:
+      type: object
+      description: Base error for Bad Request status.
+      additionalProperties: false
+      required: [ title, status, errors ]
+      properties:
+        title:
+          allOf:
+            - $ref: "#/components/schemas/BaseErrorTitle"
+          example: "One or more validation errors occurred."
+        status:
+          allOf:
+            - $ref: "#/components/schemas/BaseErrorStatus"
+          example: 400
+        errors:
+          type: object
+          description: Field-level validation errors keyed by property name.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            courseId:
+              - The value 'invalid-value-example' is not valid.
+    BaseUnauthorizedError:
+      type: object
+      description: Base error for Unauthorized status.
+      x-re-notes: >
+        Interesting thing is that type property is sometimes specified,
+        f.e. for notification-hub, while for micro-lms it is not.
+      additionalProperties: false
+      required: [ title, status, traceId ]
+      properties:
+        type:  # non-required
+          type: string
+          x-re-notes: Website in the URL seems to be abandoned.
+          example: "https://httpstatuscodes.io/401"
+        title:
+          allOf:
+            - $ref: "#/components/schemas/BaseErrorTitle"
+          example: "Unauthorized"
+        status:
+          allOf:
+            - $ref: "#/components/schemas/BaseErrorStatus"
+          example: 401
+        traceId:
+          $ref: "#/components/schemas/BaseErrorTraceId"
+    BaseNotFoundError:
+      type: object
+      description: Base error for Not Found status.
+      additionalProperties: false
+      required: [ title, status, detail, instance, entityId, traceId ]
+      properties:
+        title:
+          allOf:
+            - $ref: "#/components/schemas/BaseErrorTitle"
+          example: "NotFound"
+        status:
+          allOf:
+            - $ref: "#/components/schemas/BaseErrorStatus"
+          example: 404
+        detail:
+          type: string
+          description: Details of the error.
+          example: "Ресурс с идентификатором 1 не найден"
+        instance:
+          type: string
+          description: >
+            Relative request path without service prefix where error occurred.
+          example: "/courses/1"
+        entityId:
+          type: integer
+          description: ID of the entity that was not found.
+          example: 1
+        traceId:
+          $ref: "#/components/schemas/BaseErrorTraceId"
     PublicationState:
       type: string
       description: Publication state of an item.
@@ -584,3 +693,28 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CourseThemeItem"
+  responses:
+    BadRequestError:
+      description: >
+        HTTP 400 - Bad Request error.
+        Returned when request validation was failed because it is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BaseBadRequestError"
+    UnauthorizedError:
+      description: >
+        HTTP 401 - Unauthorized error.
+        Returned when the required BffCookie is missing, invalid, or expired.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BaseUnauthorizedError"
+    NotFoundError:
+      description: >
+        HTTP 404 - Not Found error.
+        Returned when entity was not found by its ID.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BaseNotFoundError"
