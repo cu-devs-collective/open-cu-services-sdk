@@ -33,7 +33,7 @@ list_langs() {
 }
 
 usage() {
-  cat >&2 <<EOF
+    cat >&2 <<EOF
 Usage:
   $(basename "$0") --help
   $(basename "$0") <lang> [-- <args...>]

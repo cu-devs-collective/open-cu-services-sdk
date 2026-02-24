@@ -1,2 +1,2 @@
-# CU Open LMS OpenAPI
-> OpenAPI specification for the CU LMS API, reverse engineered for CU Open LMS project
+# Open CU Services OpenAPI
+> OpenAPI specifications for the CU Service APIs, reverse engineered for Open CU Services Project

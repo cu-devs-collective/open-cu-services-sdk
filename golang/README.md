@@ -1,1 +1,1 @@
-# CU Open LMS API SDK for Go
+# Open CU Services SDK for Go

@@ -7,7 +7,7 @@ info:
   license:
     name: MIT
     # yamllint disable-line rule:line-length
-    url: https://github.com/cu-devs-collective/cu-open-lms-openapi/blob/master/LICENSE
+    url: https://github.com/cu-devs-collective/open-cu-services-openapi/blob/master/LICENSE
 servers:
   - url: https://my.centraluniversity.ru/api
     description: Production CU LMS API server.

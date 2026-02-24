@@ -1,1 +1,1 @@
-# CU Open LMS API SDK for Dart
+# Open CU Services SDK for Dart

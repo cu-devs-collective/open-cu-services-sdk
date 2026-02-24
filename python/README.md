@@ -1,1 +1,1 @@
-# CU Open LMS API SDK for Python
+# Open CU Services SDK for Python

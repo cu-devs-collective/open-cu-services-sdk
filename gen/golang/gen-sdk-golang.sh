@@ -5,7 +5,7 @@ set -euo pipefail
 # SDKs are generated as separate Go modules.
 #
 # Current spec to module mapping:
-# - cu-lms -> github.com/cu-devs-collective/cu-open-lms-openapi/golang/lmsapi
+# - cu-lms -> github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi
 #------------------------------------------------------------------------------
 
 OGEN_VERSION="v1.19.0"
@@ -16,7 +16,7 @@ OGEN_CONFIG_PATH="../.ogen.yaml"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SPEC_BASE="${ROOT_DIR}/spec"
-MODULE_BASE="github.com/cu-devs-collective/cu-open-lms-openapi/golang"
+MODULE_BASE="github.com/cu-devs-collective/open-cu-services-openapi/golang"
 CU_LMS_API_BASE_URL="https://my.centraluniversity.ru/api"
 TEMPLATE_DIR="${ROOT_DIR}/gen/golang/templates/common"
 
@@ -33,7 +33,7 @@ resolve_spec() {
             PKG_NAME="lmsapi"
             OUT_DIR="${ROOT_DIR}/golang/${PKG_NAME}"
             MODULE_PATH="${MODULE_BASE}/${PKG_NAME}"
-            USER_AGENT="CU-Open-LMS/Go"
+            USER_AGENT="Open-CU-Services/Go"
             EXTRA_FILES_WRITER="write_lmsapi_files"
             ;;
         *) die "Unknown spec key: '$key'";;

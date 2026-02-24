@@ -1,1 +1,1 @@
-# CU Open LMS API SDK for TypeScript
+# Open CU Services SDK for TypeScript
