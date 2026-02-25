@@ -12,6 +12,13 @@ import (
 
 type EnvSource struct{ bffCookie string }
 
+var _ lmsapi.SecuritySource = (*EnvSource)(nil)
+
+func (e *EnvSource) BffCookie(_ context.Context, _ lmsapi.OperationName,
+) (lmsapi.BffCookie, error) {
+	return lmsapi.BffCookie{APIKey: e.bffCookie}, nil
+}
+
 func NewEnvSource() (*EnvSource, error) {
 	const envKey = "CU_LMS_BFF_COOKIE"
 	bffCookie := os.Getenv(envKey)
@@ -19,11 +26,6 @@ func NewEnvSource() (*EnvSource, error) {
 		return nil, fmt.Errorf("%s is not set in env", envKey)
 	}
 	return &EnvSource{bffCookie: bffCookie}, nil
-}
-
-func (e *EnvSource) BffCookie(_ context.Context, _ lmsapi.OperationName,
-) (lmsapi.BffCookie, error) {
-	return lmsapi.BffCookie{APIKey: e.bffCookie}, nil
 }
 
 func main() {
