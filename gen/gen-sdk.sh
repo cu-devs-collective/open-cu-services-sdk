@@ -66,7 +66,7 @@ main() {
     passthru=("$@")
 
     local script="${SCRIPT_DIR}/${lang}/gen-sdk-${lang}.sh"
-    [[ -f "$script" ]] || die "Unknown language '${lang}'"
+    [[ -f "$script" ]] || die "Language '${lang}' is not supported for generation"
     [[ -x "$script" ]] || die "Generator script is not executable: $script (try: chmod +x \"$script\")"
 
     if (( ${#passthru[@]} > 0 )); then

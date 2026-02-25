@@ -16,9 +16,10 @@ OGEN_CONFIG_PATH="../.ogen.yaml"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SPEC_BASE="${ROOT_DIR}/spec"
-MODULE_BASE="github.com/cu-devs-collective/open-cu-services-openapi/golang"
-CU_LMS_API_BASE_URL="https://my.centraluniversity.ru/api"
+OUT_BASE="${ROOT_DIR}/golang"
 TEMPLATE_DIR="${ROOT_DIR}/gen/golang/templates/common"
+
+MODULE_BASE="github.com/cu-devs-collective/open-cu-services-openapi/golang"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
@@ -31,10 +32,12 @@ resolve_spec() {
         cu-lms)
             SPEC_PATH="${SPEC_BASE}/cu-lms/cu-lms.openapi.yaml"
             PKG_NAME="lmsapi"
-            OUT_DIR="${ROOT_DIR}/golang/${PKG_NAME}"
+            PKG_DESC="Package lmsapi provides a client for the CU LMS API."
+            OUT_DIR="${OUT_BASE}/${PKG_NAME}"
             MODULE_PATH="${MODULE_BASE}/${PKG_NAME}"
-            USER_AGENT="Open-CU-Services/Go"
             EXTRA_FILES_WRITER="write_lmsapi_files"
+            BASE_URL="https://my.centraluniversity.ru/api"
+            USER_AGENT="Open-CU-Services/Go"
             ;;
         *) die "Unknown spec key: '$key'";;
     esac
@@ -87,12 +90,14 @@ EOF
 write_lmsapi_files() {
     local out_dir="$1"
     local pkg="$2"
+    local pkg_desc="$3"
 
-    local package_file="${out_dir}/lmsapi.go"
+    local package_file="${out_dir}/${pkg}.go"
     local package_file_tmpl="${TEMPLATE_DIR}/package.go.tmpl"
     render_template "$package_file_tmpl" "$package_file" <<EOF
 Package: $(yaml_escape "$pkg")
-BaseURL: $(yaml_escape "$CU_LMS_API_BASE_URL")
+PackageDescription: $(yaml_escape "$pkg_desc")
+BaseURL: $(yaml_escape "$BASE_URL")
 UserAgent: $(yaml_escape "$USER_AGENT")
 EOF
 }
@@ -127,8 +132,8 @@ sdk_generate() {
     # 2) go get ogen@version
     (cd "$OUT_DIR" && go get "github.com/ogen-go/ogen@${OGEN_VERSION}")
 
-    # 3) write/update gen_sdk.go
-    local gen_file="${OUT_DIR}/gen_sdk.go"
+    # 3) write/update generate_sdk.go
+    local gen_file="${OUT_DIR}/generate_sdk.go"
     if [[ ! -f "$gen_file" ]]; then
         info "Writing ${gen_file}"
         write_gen_file "$OUT_DIR" "$PKG_NAME" "$spec_rel"
@@ -137,11 +142,11 @@ sdk_generate() {
         current_ver="$(extract_ogen_version_from_file "$gen_file")"
 
         if [[ -z "$current_ver" ]]; then
-            info "gen_sdk.go has no recognizable ogen version, rewriting file"
+            info "generate_sdk.go has no recognizable ogen version, rewriting file"
             write_gen_file "$OUT_DIR" "$PKG_NAME" "$spec_rel"
         elif [[ "$current_ver" != "$OGEN_VERSION" ]]; then
-            info "Updating ogen version in gen_sdk.go: ${current_ver} -> ${OGEN_VERSION}"
-            sed_inplace "s#\(github\\.com/ogen-go/ogen/cmd/ogen@\)[^[:space:]]\\+#\\1${OGEN_VERSION}#g" "$gen_file"
+            info "generate_sdk.go ogen version changed (${current_ver} -> ${OGEN_VERSION}), rewriting file"
+            write_gen_file "$OUT_DIR" "$PKG_NAME" "$spec_rel"
         else
             info "No ogen version change (${OGEN_VERSION})"
         fi
@@ -154,7 +159,7 @@ sdk_generate() {
     # 5) write extra package-specific files
     if [[ -n "${EXTRA_FILES_WRITER:-}" ]]; then
         info "Writing extra files via ${EXTRA_FILES_WRITER}"
-        "${EXTRA_FILES_WRITER}" "$OUT_DIR" "$PKG_NAME"
+        "${EXTRA_FILES_WRITER}" "$OUT_DIR" "$PKG_NAME" "$PKG_DESC"
     fi
 
     # 6) go mod tidy
