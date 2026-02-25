@@ -134,27 +134,32 @@ sdk_generate() {
 
     # 3) write/update generate_sdk.go
     local gen_file="${OUT_DIR}/generate_sdk.go"
+    local needs_rewrite=0
     if [[ ! -f "$gen_file" ]]; then
         info "Writing ${gen_file}"
-        write_gen_file "$OUT_DIR" "$PKG_NAME" "$spec_rel"
+        needs_rewrite=1
     else
         local current_ver
         current_ver="$(extract_ogen_version_from_file "$gen_file")"
 
         if [[ -z "$current_ver" ]]; then
             info "generate_sdk.go has no recognizable ogen version, rewriting file"
-            write_gen_file "$OUT_DIR" "$PKG_NAME" "$spec_rel"
+            needs_rewrite=1
         elif [[ "$current_ver" != "$OGEN_VERSION" ]]; then
             info "generate_sdk.go ogen version changed (${current_ver} -> ${OGEN_VERSION}), rewriting file"
-            write_gen_file "$OUT_DIR" "$PKG_NAME" "$spec_rel"
+            needs_rewrite=1
         else
             info "No ogen version change (${OGEN_VERSION})"
         fi
     fi
 
+    if (( needs_rewrite )); then
+        write_gen_file "$OUT_DIR" "$PKG_NAME" "$spec_rel"
+    fi
+
     # 4) go generate
     info "Running go generate"
-    (cd "$OUT_DIR" && go generate -v ./...)
+    (cd "$OUT_DIR" && go generate -v -tags tools ./...)
 
     # 5) write extra package-specific files
     if [[ -n "${EXTRA_FILES_WRITER:-}" ]]; then
