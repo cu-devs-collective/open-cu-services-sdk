@@ -31,23 +31,23 @@ func NewEnvSource() (*EnvSource, error) {
 func main() {
 	sec, err := NewEnvSource()
 	if err != nil {
-		log.Fatalf("NewEnvSource: %v", err)
+		log.Fatalf("NewEnvSource error: %v", err)
 	}
 
 	client, err := lmsapi.NewClient(lmsapi.DefaultBaseURL, sec)
 	if err != nil {
-		log.Fatalf("lmsapi.NewClient: %v", err)
+		log.Fatalf("lmsapi.NewClient error: %v", err)
 	}
 
 	res, err := client.CurrentStudent(context.Background())
 	if err != nil {
-		log.Fatalf("client.CurrentStudent: %v", err)
+		log.Fatalf("client.CurrentStudent error: %v", err)
 	}
 
 	out, err := json.MarshalIndent(res, " ", " ")
 	if err != nil {
-		log.Fatalf("json.MarshalIndent: %v", err)
+		log.Fatalf("json.MarshalIndent error: %v", err)
 	}
 
-	log.Printf("client.CurrentStudent response: \n%s", string(out))
+	log.Printf("client.CurrentStudent response of type %T:\n%s", res, string(out))
 }

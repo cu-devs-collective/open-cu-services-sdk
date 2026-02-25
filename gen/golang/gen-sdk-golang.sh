@@ -8,7 +8,7 @@ set -euo pipefail
 # - cu-lms -> github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi
 #------------------------------------------------------------------------------
 
-OGEN_VERSION="v1.19.0"
+OGEN_VERSION="v1.20.0"
 SPEC_KEYS_TO_GENERATE=(
     cu-lms
 )
