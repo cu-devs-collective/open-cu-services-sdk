@@ -49,6 +49,8 @@ paths:
                 $ref: "#/components/schemas/CurrentStudentResponse"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
+        default:
+          $ref: "#/components/responses/DefaultError"
   /micro-lms/courses/student:
     get:
       operationId: listStudentCourses
@@ -97,6 +99,8 @@ paths:
                 $ref: "#/components/schemas/ListStudentCoursesResponse"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
+        default:
+          $ref: "#/components/responses/DefaultError"
   /micro-lms/courses/{courseId}:
     get:
       operationId: courseSummary
@@ -120,6 +124,8 @@ paths:
           $ref: "#/components/responses/UnauthorizedError"
         "404":
           $ref: "#/components/responses/NotFoundError"
+        default:
+          $ref: "#/components/responses/DefaultError"
   /micro-lms/courses/{courseId}/overview:
     get:
       operationId: courseOverview
@@ -146,6 +152,8 @@ paths:
           $ref: "#/components/responses/UnauthorizedError"
         "404":
           $ref: "#/components/responses/NotFoundError"
+        default:
+          $ref: "#/components/responses/DefaultError"
 components:
   securitySchemes:
     BffCookie:
@@ -166,14 +174,29 @@ components:
   schemas:
     BaseErrorTitle:
       type: string
-      description: Summary of the problem.
+      description: Short, human-readable summary of the problem type.
       example: "Unauthorized"
     BaseErrorStatus:
       type: integer
-      minimum: 0
       format: int32
+      minimum: 100
+      maximum: 599
       description: HTTP status code.
       example: 401
+    BaseProblemError:
+      type: object
+      description: Base problem JSON error originating from RFC 9457.
+      additionalProperties: true
+      required: [ title, status ]
+      properties:
+        type:  # non-required
+          type: string
+          x-re-notes: Website in the URL seems to be abandoned.
+          example: "https://httpstatuscodes.io/401"
+        title:
+          $ref: "#/components/schemas/BaseErrorTitle"
+        status:
+          $ref: "#/components/schemas/BaseErrorStatus"
     BaseErrorTraceId:
       type: string
       pattern: "^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$"
@@ -694,12 +717,22 @@ components:
           items:
             $ref: "#/components/schemas/CourseThemeItem"
   responses:
+    # This response not used as default because of a bug in ogen generator.
+    DefaultError:
+      description: Default catch-all error object, untyped.
+      x-re-notes: >
+        It seems that all service errors have the same content type,
+        which is application/problem+json.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/BaseProblemError"
     BadRequestError:
       description: >
         HTTP 400 - Bad Request error.
         Returned when request validation was failed because it is invalid.
       content:
-        application/json:
+        application/problem+json:
           schema:
             $ref: "#/components/schemas/BaseBadRequestError"
     UnauthorizedError:
@@ -707,7 +740,7 @@ components:
         HTTP 401 - Unauthorized error.
         Returned when the required BffCookie is missing, invalid, or expired.
       content:
-        application/json:
+        application/problem+json:
           schema:
             $ref: "#/components/schemas/BaseUnauthorizedError"
     NotFoundError:
@@ -715,6 +748,6 @@ components:
         HTTP 404 - Not Found error.
         Returned when entity was not found by its ID.
       content:
-        application/json:
+        application/problem+json:
           schema:
             $ref: "#/components/schemas/BaseNotFoundError"
