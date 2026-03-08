@@ -119,7 +119,6 @@ sdk_generate() {
     mkdir -p "$OUT_DIR"
 
     # 1) go mod init if missing
-    local spec_rel="../../spec/${SPEC_PATH#${SPEC_BASE}/}"
     if [[ ! -f "${OUT_DIR}/go.mod" ]]; then
         info "Initializing go.mod"
         (cd "$OUT_DIR" && go mod init "$MODULE_PATH")
@@ -130,8 +129,8 @@ sdk_generate() {
     # 2) go get ogen@version
     (cd "$OUT_DIR" && go get "github.com/ogen-go/ogen@${OGEN_VERSION}")
 
-    # 3) write/update generate_sdk.go
-    local gen_file="${OUT_DIR}/generate_sdk.go"
+    # 3) write/update gen.go
+    local gen_file="${OUT_DIR}/gen.go"
     local needs_rewrite=0
     if [[ ! -f "$gen_file" ]]; then
         info "Writing ${gen_file}"
@@ -141,16 +140,17 @@ sdk_generate() {
         current_ver="$(extract_ogen_version_from_file "$gen_file")"
 
         if [[ -z "$current_ver" ]]; then
-            info "generate_sdk.go has no recognizable ogen version, rewriting file"
+            info "gen.go has no recognizable ogen version, rewriting file"
             needs_rewrite=1
         elif [[ "$current_ver" != "$OGEN_VERSION" ]]; then
-            info "generate_sdk.go ogen version changed (${current_ver} -> ${OGEN_VERSION}), rewriting file"
+            info "gen.go ogen version changed (${current_ver} -> ${OGEN_VERSION}), rewriting file"
             needs_rewrite=1
         else
             info "No ogen version change (${OGEN_VERSION})"
         fi
     fi
 
+    local spec_rel="../../spec/${SPEC_PATH#${SPEC_BASE}/}"
     if (( needs_rewrite )); then
         write_gen_file "$OUT_DIR" "$PKG_NAME" "$spec_rel"
     fi
