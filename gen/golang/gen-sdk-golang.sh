@@ -18,7 +18,7 @@ OGEN_CONFIG_PATH="../.ogen.yaml"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SPEC_BASE="${ROOT_DIR}/spec"
 OUT_BASE="${ROOT_DIR}/golang"
-TEMPLATE_DIR="${ROOT_DIR}/gen/golang/templates/common"
+TEMPLATE_DIR="${ROOT_DIR}/gen/golang/templates"
 
 MODULE_BASE="github.com/cu-devs-collective/open-cu-services-openapi/golang"
 
@@ -64,8 +64,8 @@ write_gen_file() {
     local pkg="$2"
     local spec_rel="$3"
 
-    local file="${out_dir}/generate_sdk.go"
-    local tmpl="${TEMPLATE_DIR}/generate_sdk.go.tmpl"
+    local file="${out_dir}/gen.go"
+    local tmpl="${TEMPLATE_DIR}/common/gen.go.tmpl"
 
     render_template "$tmpl" "$file" <<EOF
 Package: $(yaml_escape "$pkg")
@@ -85,10 +85,16 @@ write_lmsapi_files() {
     local pkg_desc="$3"
 
     local package_file="${out_dir}/${pkg}.go"
-    local package_file_tmpl="${TEMPLATE_DIR}/package.go.tmpl"
+    local package_file_tmpl="${TEMPLATE_DIR}/common/_package.go.tmpl"
     render_template "$package_file_tmpl" "$package_file" <<EOF
 Package: $(yaml_escape "$pkg")
 PackageDescription: $(yaml_escape "$pkg_desc")
+EOF
+
+    local default_gen_file="${out_dir}/default_gen.go"
+    local default_gen_file_tmpl="${TEMPLATE_DIR}/default/default_gen.go.tmpl"
+    render_template "$default_gen_file_tmpl" "$default_gen_file" <<EOF
+Package: $(yaml_escape "$pkg")
 BaseURL: $(yaml_escape "$BASE_URL")
 UserAgent: $(yaml_escape "$USER_AGENT")
 EOF
