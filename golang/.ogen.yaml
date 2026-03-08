@@ -1,2 +1,11 @@
 generator:
+  features:
+    enable:
+      - paths/client
+      - webhooks/client
+      - client/request/options
+      - client/editors
+      - ogen/otel
+      - ogen/unimplemented
+    disable_all: true
   convenient_errors: on
