@@ -33,7 +33,7 @@ resolve_spec() {
         cu-lms)
             SPEC_PATH="${SPEC_BASE}/cu-lms/cu-lms.openapi.yaml"
             PKG_NAME="lmsapi"
-            PKG_DESC="Package lmsapi provides a client for the CU LMS API."
+            PKG_DESC="Package lmsapi provides SDK for the CU LMS API."
             OUT_DIR="${OUT_BASE}/${PKG_NAME}"
             MODULE_PATH="${MODULE_BASE}/${PKG_NAME}"
             EXTRA_FILES_WRITER="write_lmsapi_files"
@@ -89,14 +89,14 @@ write_lmsapi_files() {
     render_template "$package_file_tmpl" "$package_file" <<EOF
 Package: $(yaml_escape "$pkg")
 PackageDescription: $(yaml_escape "$pkg_desc")
+BaseURL: $(yaml_escape "$BASE_URL")
+UserAgent: $(yaml_escape "$USER_AGENT")
 EOF
 
     local default_gen_file="${out_dir}/default_gen.go"
-    local default_gen_file_tmpl="${TEMPLATE_DIR}/default/default_gen.go.tmpl"
+    local default_gen_file_tmpl="${TEMPLATE_DIR}/cu-lms/default_gen.go.tmpl"
     render_template "$default_gen_file_tmpl" "$default_gen_file" <<EOF
 Package: $(yaml_escape "$pkg")
-BaseURL: $(yaml_escape "$BASE_URL")
-UserAgent: $(yaml_escape "$USER_AGENT")
 EOF
 }
 
