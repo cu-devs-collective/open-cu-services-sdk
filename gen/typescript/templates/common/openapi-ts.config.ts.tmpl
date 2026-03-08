@@ -1,0 +1,23 @@
+{{- /* Template openapi-ts config for generated SDKs. */ -}}
+import { defineConfig } from "@hey-api/openapi-ts";
+
+export default defineConfig({
+  input: {{ printf "%q" .SpecPath }},
+  output: {
+    path: "src",
+    clean: true,
+    indexFile: true
+  },
+  plugins: [
+    "@hey-api/client-fetch",
+    "@hey-api/typescript",
+    "zod",
+    {
+      name: "@hey-api/sdk",
+      validator: {
+        request: false,
+        response: true
+      }
+    }
+  ]
+});

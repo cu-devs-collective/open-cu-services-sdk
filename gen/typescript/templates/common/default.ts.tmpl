@@ -1,0 +1,13 @@
+{{- /* Template default runtime setup for generated SDKs. */ -}}
+import { client } from "./client.gen";
+
+export const DEFAULT_BASE_URL = {{ printf "%q" .BaseURL }};
+
+export const {{ .ClientFactoryName }} = (config?: Parameters<typeof client.setConfig>[0]) => {
+  client.setConfig({
+    baseUrl: DEFAULT_BASE_URL,
+    ...(config ?? {})
+  });
+
+  return client;
+};

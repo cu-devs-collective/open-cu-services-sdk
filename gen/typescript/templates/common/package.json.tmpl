@@ -1,12 +1,33 @@
 {{- /* Template package.json for generated SDKs. */ -}}
 {
   "name": {{ printf "%q" .PackageName }},
-  "version": "0.0.0", {{- /* The real version is set on release. */ }}
+  "version": "0.0.0", {{- /* The real version is set on release. */}}
   "private": true,
   "description": {{ printf "%q" .PackageDescription }},
   "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "generate": "openapi-ts -f openapi-ts.config.ts",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": {{ printf "%q" .ZodVersion }}
+  },
   "devDependencies": {
     "@hey-api/openapi-ts": {{ printf "%q" .OpenapiTsVersion }},
     "typescript": {{ printf "%q" .TypescriptVersion }}
-  }
+  },
+  "packageManager": "pnpm@{{ .PnpmVersion }}"
 }
