@@ -6,6 +6,7 @@ GEN_SDK   := $(CURDIR)/gen/gen-sdk.sh
 GOYAMLLINT_VERSION := v1.38.0
 VACUUM_VERSION     := v0.24.0
 GOMPLATE_VERSION   := v5.0.0
+YQ_VERSION         := v4.52.4
 
 YAMLLINT := $(LOCAL_BIN)/yamllint
 
@@ -35,6 +36,7 @@ install-tools-lint: check-go $(LOCAL_BIN)
 .PHONY: install-tools-generate
 install-tools-generate: check-go $(LOCAL_BIN)
 	GOBIN=$(LOCAL_BIN) $(GO) install github.com/hairyhenderson/gomplate/v5/cmd/gomplate@$(GOMPLATE_VERSION)
+	GOBIN=$(LOCAL_BIN) $(GO) install github.com/mikefarah/yq/v4@$(YQ_VERSION)
 
 .PHONY: install-tools
 install-tools: install-tools-lint install-tools-generate
