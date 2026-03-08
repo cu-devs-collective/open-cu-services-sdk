@@ -9,6 +9,7 @@ set -euo pipefail
 #------------------------------------------------------------------------------
 
 OGEN_VERSION="v1.20.1"
+
 SPEC_KEYS_TO_GENERATE=(
     cu-lms
 )
@@ -41,15 +42,6 @@ resolve_spec() {
             ;;
         *) die "Unknown spec key: '$key'";;
     esac
-}
-
-sed_inplace() {
-    local expr="$1" file="$2"
-    if [[ "${OSTYPE:-}" == darwin* ]]; then
-        sed -i '' -e "$expr" "$file"
-    else
-        sed -i -e "$expr" "$file"
-    fi
 }
 
 yaml_escape() {
