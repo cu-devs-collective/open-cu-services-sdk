@@ -1,0 +1,12 @@
+{{- /* Template package.json for generated SDKs. */ -}}
+{
+  "name": {{ printf "%q" .PackageName }},
+  "version": "0.0.0", {{- /* The real version is set on release. */ }}
+  "private": true,
+  "description": {{ printf "%q" .PackageDescription }},
+  "type": "module",
+  "devDependencies": {
+    "@hey-api/openapi-ts": {{ printf "%q" .OpenapiTsVersion }},
+    "typescript": {{ printf "%q" .TypescriptVersion }}
+  }
+}

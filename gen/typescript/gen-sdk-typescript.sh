@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 #------------------------------------------------------------------------------
-# Generate TypeScript SDK from OpenAPI specs using openapi-typescript,
-# openapi-fetch, ts-to-zod and templates.
+# Generate TypeScript SDK from OpenAPI specs using @hey-api/openapi-ts
+# and templates.
 #
 # Current spec to module mapping:
 # - cu-lms -> open-cu-services-lmsapi
 #------------------------------------------------------------------------------
 
-OPENAPI_TYPESCRIPT_VERSION="7.13.0"
-OPENAPI_FETCH_VERSION="0.17.0"
-TS_TO_ZOD_VERSION="5.1.0"
-ZOD_VERSION="4.3.6"
+OPENAPI_TS_VERSION="0.94.0"
 TYPESCRIPT_VERSION="5.9.3"
 
 SPEC_KEYS_TO_GENERATE=(
@@ -38,7 +35,7 @@ resolve_spec() {
             PACKAGE_DESC="Open CU Services LMS API TypeScript SDK"
             OUT_DIR="${OUT_BASE}/${SDK_ID}"
             BASE_URL="https://my.centraluniversity.ru/api"
-            CLIENT_FACTORY_NAME="createLmsClient"
+            CLIENT_FACTORY_NAME="createLmsApiClient"
             ;;
         *) die "Unknown spec key: '$key'";;
     esac
@@ -56,7 +53,32 @@ render_template() {
     local out_path="$2"
 
     [[ -f "$tmpl_path" ]] || die "Template not found: $tmpl_path"
-    "gomplate" -f "$tmpl_path" -o "$out_path" -c ".=stdin:///data.yaml"
+    gomplate -f "$tmpl_path" -o "$out_path" -c ".=stdin:///data.yaml"
+}
+
+write_package_json_file() {
+    local out_dir="$1"
+
+    local file="${out_dir}/package.json"
+    local tmpl="${TEMPLATE_DIR}/package.json.tmpl"
+
+    render_template "$tmpl" "$file" <<EOF
+PackageName: $(yaml_escape "$PACKAGE_NAME")
+PackageDescription: $(yaml_escape "$PACKAGE_DESC")
+OpenapiTsVersion: $(yaml_escape "$OPENAPI_TS_VERSION")
+TypescriptVersion: $(yaml_escape "$TYPESCRIPT_VERSION")
+EOF
+}
+
+write_tsconfig_file() {
+    local out_dir="$1"
+
+    local file="${out_dir}/tsconfig.json"
+    local tmpl="${TEMPLATE_DIR}/tsconfig.json.tmpl"
+
+    render_template "$tmpl" "$file" <<'EOF'
+{}
+EOF
 }
 
 sdk_generate() {
@@ -70,12 +92,19 @@ sdk_generate() {
 
     mkdir -p "$OUT_DIR/src"
 
-    # TODO: generation logic
+    write_package_json_file "$OUT_DIR"
+    write_tsconfig_file "$OUT_DIR"
+
+    local src_dir="${OUT_DIR}/src"
+
+    # TODO: generation
 }
 
 main() {
     command -v node >/dev/null 2>&1 || die "Node.js is required"
     command -v npx >/dev/null 2>&1 || die "npx is required"
+    command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
+    command -v yq >/dev/null 2>&1 || die "yq is required, run make install-tools-generate"
 
     local key
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do
