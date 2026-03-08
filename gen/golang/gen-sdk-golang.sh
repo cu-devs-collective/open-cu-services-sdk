@@ -56,7 +56,7 @@ render_template() {
     local out_path="$2"
 
     [[ -f "$tmpl_path" ]] || die "Template not found: $tmpl_path"
-    "gomplate" -f "$tmpl_path" -o "$out_path" -c ".=stdin:///data.yaml"
+    gomplate -f "$tmpl_path" -o "$out_path" -c ".=stdin:///data.yaml"
 }
 
 write_gen_file() {
@@ -171,6 +171,7 @@ sdk_generate() {
 
 main() {
     command -v go >/dev/null 2>&1 || die "Go is required: https://go.dev/doc/install"
+    command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
 
     local key
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do
