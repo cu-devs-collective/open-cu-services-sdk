@@ -66,7 +66,8 @@ generate-golang:
 .PHONY: generate-python
 generate-python:
 	$(info Running Python SDK generation...)
-	@$(GEN_SDK) python
+	$(info Skipped - not supported yet)
+# 	@$(GEN_SDK) python
 
 .PHONY: generate-typescript
 generate-typescript:
@@ -76,4 +77,5 @@ generate-typescript:
 .PHONY: generate-dart
 generate-dart:
 	$(info Running Dart SDK generation...)
-	@$(GEN_SDK) dart
+	$(info Skipped - not supported yet)
+# 	@$(GEN_SDK) dart
