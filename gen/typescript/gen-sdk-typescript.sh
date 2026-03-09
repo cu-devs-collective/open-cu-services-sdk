@@ -5,7 +5,7 @@ set -euo pipefail
 # and templates.
 #
 # Current spec to module mapping:
-# - cu-lms -> open-cu-services-lmsapi
+# - cu-lms -> @cu-devs-collective/open-cu-services-lmsapi
 #------------------------------------------------------------------------------
 
 OPENAPI_TS_VERSION="0.94.0"
@@ -33,11 +33,12 @@ resolve_spec() {
         cu-lms)
             SPEC_PATH="${SPEC_BASE}/cu-lms/cu-lms.openapi.yaml"
             SDK_ID="lmsapi"
-            PACKAGE_NAME="open-cu-services-${SDK_ID}"
+            PACKAGE_NAME="@cu-devs-collective/open-cu-services-${SDK_ID}"
             PACKAGE_DESC="Open CU Services LMS API TypeScript SDK"
             OUT_DIR="${OUT_BASE}/${SDK_ID}"
             EXTRA_FILES_WRITER="write_lmsapi_files"
             BASE_URL="https://my.centraluniversity.ru/api"
+            USER_AGENT="Open-CU-Services/TypeScript"
             CLIENT_FACTORY_NAME="createLmsApiClient"
             ;;
         *) die "Unknown spec key: '$key'";;
@@ -105,6 +106,7 @@ write_lmsapi_files() {
     local default_file_tmpl="${TEMPLATE_DIR}/default.ts.tmpl"
     render_template "$default_file_tmpl" "$default_file" <<EOF
 BaseURL: $(yaml_escape "$BASE_URL")
+UserAgent: $(yaml_escape "$USER_AGENT")
 ClientFactoryName: $(yaml_escape "$CLIENT_FACTORY_NAME")
 EOF
 }
