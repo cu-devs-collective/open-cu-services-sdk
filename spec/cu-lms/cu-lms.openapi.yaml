@@ -154,6 +154,31 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         default:
           $ref: "#/components/responses/DefaultError"
+  /micro-lms/themes/{themeId}:
+    get:
+      operationId: courseThemeSummaryById
+      summary: Get course theme summary by its ID.
+      description: Returns summary information about a course theme by themeId.
+      security:
+        - BffCookie: [ ]
+      tags: [ courses ]
+      parameters:
+        - $ref: "#/components/parameters/ThemeIdPath"
+      responses:
+        "200":
+          description: Successful response with course theme summary by its ID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseThemeSummaryByIdResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        default:
+          $ref: "#/components/responses/DefaultError"
 components:
   securitySchemes:
     BffCookie:
@@ -171,6 +196,14 @@ components:
       schema:
         $ref: "#/components/schemas/CourseId"
       example: 897
+    ThemeIdPath:
+      name: themeId
+      in: path
+      required: true
+      description: Numeric identifier of the course theme specified in URL path.
+      schema:
+        $ref: "#/components/schemas/CourseThemeId"
+      example: 8653
   schemas:
     BaseErrorTitle:
       type: string
@@ -659,6 +692,18 @@ components:
           description: Exercises associated with this longread.
           items:
             $ref: "#/components/schemas/ExerciseItem"
+    CourseThemeName:
+      type: string
+      description: >
+        Course theme name shown on the course view in LMS.
+      example: "Силлабус"
+    ListingOrder:
+      type: integer
+      minimum: 1
+      description: >
+        Listing order determining the item's line position in the LMS,
+        lower values come first.
+      example: 1
     CourseThemeItem:
       type: object
       additionalProperties: false
@@ -670,18 +715,9 @@ components:
         id:
           $ref: "#/components/schemas/CourseThemeId"
         name:
-          type: string
-          description: >
-            Course unit name shown on the main course view in LMS
-            as the header on line.
-          example: "Силлабус"
+          $ref: "#/components/schemas/CourseThemeName"
         order:
-          type: integer
-          minimum: 1
-          description: >
-            Sort order determining the item's position in the LMS, lower values
-            come first.
-          example: 1
+          $ref: "#/components/schemas/ListingOrder"
         state:
           $ref: "#/components/schemas/PublicationState"
         publishDate:
@@ -716,6 +752,35 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CourseThemeItem"
+    CourseThemeSummaryByIdResponse:
+      type: object
+      additionalProperties: false
+      description: Summary information about a course theme by its ID.
+      required: [ id, name, state, publishDate, publishedAt, order, category,
+                  categoryCover ]
+      properties:
+        id:
+          $ref: "#/components/schemas/CourseThemeId"
+        name:
+          $ref: "#/components/schemas/CourseThemeName"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        publishDate:
+          $ref: "#/components/schemas/PublishDate"
+        publishedAt:
+          $ref: "#/components/schemas/PublishedAt"
+        order:
+          $ref: "#/components/schemas/ListingOrder"
+        category:
+          $ref: "#/components/schemas/CourseCategory"
+        categoryCover:
+          type: integer
+          minimum: 0
+          description: Numeric identifier of the category cover.
+          x-re-notes: >
+            It is guessed that the category cover means icon shown in LMS
+            when the theme summary item is opened.
+          example: 0
   responses:
     DefaultError:
       description: Default catch-all error object, untyped.
