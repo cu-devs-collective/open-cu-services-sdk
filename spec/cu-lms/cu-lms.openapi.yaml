@@ -103,7 +103,7 @@ paths:
           $ref: "#/components/responses/DefaultError"
   /micro-lms/courses/{courseId}:
     get:
-      operationId: courseSummary
+      operationId: courseSummaryById
       summary: Get course summary by its ID.
       description: Returns summary information about a course by courseId.
       security:
@@ -117,7 +117,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CourseSummaryResponse"
+                $ref: "#/components/schemas/CourseSummaryByIdResponse"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -128,7 +128,7 @@ paths:
           $ref: "#/components/responses/DefaultError"
   /micro-lms/courses/{courseId}/overview:
     get:
-      operationId: courseOverview
+      operationId: courseOverviewById
       summary: Get course overview by its ID.
       description: >
         Returns course overview by courseId. Overview consists of unit items
@@ -145,7 +145,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CourseOverviewResponse"
+                $ref: "#/components/schemas/CourseOverviewByIdResponse"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -548,7 +548,7 @@ components:
           minimum: 0
           description: Number of late days remaining for the student.
           example: 50
-    CourseSummaryResponse:
+    CourseSummaryByIdResponse:
       $ref: "#/components/schemas/CourseSummaryItem"
     CourseThemeId:
       type: integer
@@ -692,7 +692,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/LongreadItem"
-    CourseOverviewResponse:
+    CourseOverviewByIdResponse:
       type: object
       additionalProperties: false
       required: [ id, name, isArchived, state, publishDate, publishedAt,
