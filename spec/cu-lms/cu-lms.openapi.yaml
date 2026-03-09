@@ -179,6 +179,33 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         default:
           $ref: "#/components/responses/DefaultError"
+  /micro-lms/longreads/{longreadId}:
+    get:
+      operationId: longreadSummaryById
+      summary: Get longread summary by its ID.
+      description: >
+        Returns summary information about a longread item by longreadId.
+      security:
+        - BffCookie: [ ]
+      tags: [ courses ]
+      parameters:
+        - $ref: "#/components/parameters/LongreadIdPath"
+      responses:
+        "200":
+          description: >
+            Successful response with longread item summary by its ID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LongreadByIdResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        default:
+          $ref: "#/components/responses/DefaultError"
 components:
   securitySchemes:
     BffCookie:
@@ -204,6 +231,15 @@ components:
       schema:
         $ref: "#/components/schemas/CourseThemeId"
       example: 8653
+    LongreadIdPath:
+      name: longreadId
+      in: path
+      required: true
+      description: >
+        Numeric identifier of the longread item specified in URL path.
+      schema:
+        $ref: "#/components/schemas/LongreadId"
+      example: 12707
   schemas:
     BaseErrorTitle:
       type: string
@@ -664,6 +700,12 @@ components:
           $ref: "#/components/schemas/ActivityDefinition"
         deadline:
           $ref: "#/components/schemas/Deadline"
+    LongreadName:
+      type: string
+      description: Longread name shown as the header in LMS.
+      x-re-notes: >
+        Better example values are e.g. "Lesson 1A: Duolingo" or "Homework".
+      example: "Ссылка на силлабус"
     LongreadItem:
       type: object
       additionalProperties: false
@@ -677,9 +719,7 @@ components:
         type:
           $ref: "#/components/schemas/LongreadType"
         name:
-          type: string
-          description: Longread name shown as the header in LMS.
-          example: "Ссылка на силлабус"
+          $ref: "#/components/schemas/LongreadName"
         state:
           $ref: "#/components/schemas/PublicationState"
         publishDate:
@@ -781,6 +821,25 @@ components:
             It is guessed that the category cover means icon shown in LMS
             when the theme summary item is opened.
           example: 0
+    LongreadByIdResponse:
+      type: object
+      additionalProperties: false
+      required: [ id, type, name, order, state, publishDate, publishedAt ]
+      properties:
+        id:
+          $ref: "#/components/schemas/LongreadId"
+        type:
+          $ref: "#/components/schemas/LongreadType"
+        name:
+          $ref: "#/components/schemas/LongreadName"
+        order:
+          $ref: "#/components/schemas/ListingOrder"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        publishDate:
+          $ref: "#/components/schemas/PublishDate"
+        publishedAt:
+          $ref: "#/components/schemas/PublishedAt"
   responses:
     DefaultError:
       description: Default catch-all error object, untyped.
