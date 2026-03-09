@@ -25,5 +25,6 @@ func main() {
 		log.Fatalf("json.MarshalIndent error: %v", err)
 	}
 
-	log.Printf("client.CurrentStudent response of type %T:\n%s", res, string(out))
+	log.Printf("client.CurrentStudent response of type %T:\n", res)
+	log.Println(string(out))
 }

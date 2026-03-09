@@ -34,4 +34,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-// replace github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi => ../../golang/lmsapi
+replace github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi => ../../golang/lmsapi
