@@ -226,14 +226,15 @@ components:
             items:
               type: string
           example:
-            courseId:
-              - The value 'invalid-value-example' is not valid.
+            {
+              "courseId": [ "The value 'invalid-value-example' is not valid." ]
+            }
     BaseUnauthorizedError:
       type: object
       description: Base error for Unauthorized status.
       x-re-notes: >
-        Interesting thing is that type property is sometimes specified,
-        f.e. for notification-hub, while for micro-lms it is not.
+        Interesting thing is that `type` is sometimes specified,
+        e.g. for notification-hub service, while for micro-lms it is not.
       additionalProperties: false
       required: [ title, status, traceId ]
       properties:
@@ -285,9 +286,9 @@ components:
       description: Publication state of an item.
       x-re-notes: >
         Known values are the following:
-        - publushed - filters non-archived non-draft items
-        - archived - filters archived items
-        - draft - filters draft items (those are items which were
+        - "published" - filters non-archived non-draft items
+        - "archived" - filters archived items
+        - "draft" - filters draft items (those are items which were
         not published yet, this option is almost useless as such items are
         hidden for regular students)
       enum:
@@ -323,7 +324,7 @@ components:
           type: boolean
           description: Indicates if skill level is enabled for the course.
           x-re-notes: >
-            Observed skillLevel field only with value "none", so this
+            Observed `skillLevel` only with value "none", so this
             flag currently appears to have no effect.
             This field is sometimes set to true, sometimes to false across
             courses without any relation.
@@ -344,8 +345,7 @@ components:
       nullable: true
       description: Scheduled item publication timestamp, if set.
       x-re-notes:
-        Can be unset, also can be earlier or later than publishedAt
-        field value.
+        Can be unset, also can be earlier or later than `publishedAt` value.
       example: "2026-01-26T07:00:00+00:00"
     PublishedAt:
       type: string
@@ -353,7 +353,7 @@ components:
       nullable: true
       description: Actual item publication timestamp.
       x-re-notes: >
-        It looks like this field is null for items with state "draft".
+        It looks like this field is null for items with `state` "draft".
       example: "2026-01-26T07:00:44.919045+00:00"
     CourseCategory:
       type: string
@@ -364,13 +364,13 @@ components:
         should be added as they are found.
       x-re-notes: >
         Known values are the following:
-        - withoutCategory - not categorized stuff
-        - general - general courses, f.e. English
-        - career - career stuff, f.e. Mock Interview intensive
-        - stem - STEM courses
-        - softSkills - soft skills category courses
-        - mathematics - math courses
-        - development - courses for devs
+        - "withoutCategory" - not categorized stuff
+        - "general" - general courses, e.g. English
+        - "career" - career stuff, e.g. Mock Interview intensive
+        - "stem" - STEM courses
+        - "softSkills" - soft skills category courses
+        - "mathematics" - math courses
+        - "development" - courses for devs
       enum:
         - withoutCategory
         - general
@@ -422,12 +422,12 @@ components:
           description: Identifier of the subject this course belongs to.
           x-re-notes: >
             Courses covering the same subject typically share the same
-            subjectId, f.e. courses with names
+            `subjectId`, e.g. courses with names
             "Архитектура компьютера и операционные системы I"
             and "Архитектура компьютера и операционные системы 2"
             have the same value.
-            This field is not guaranteed to be set: f.e. courses with names
-            "English 104" and "English 104. Semester 2" have subjectId unset.
+            This field is not guaranteed to be set: e.g. courses with names
+            "English 104" and "English 104. Semester 2" have `subjectId` unset.
           example: 32
         isArchived:
           $ref: "#/components/schemas/CourseIsArchived"
@@ -717,12 +717,11 @@ components:
           items:
             $ref: "#/components/schemas/CourseThemeItem"
   responses:
-    # This response not used as default because of a bug in ogen generator.
     DefaultError:
       description: Default catch-all error object, untyped.
       x-re-notes: >
         It seems that all service errors have the same content type,
-        which is application/problem+json.
+        which is "application/problem+json".
       content:
         application/problem+json:
           schema:
