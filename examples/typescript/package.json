@@ -1,0 +1,21 @@
+{
+  "name": "open-cu-services-examples-typescript",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "current-student": "pnpm run build && tsx current_student/main.ts"
+  },
+  "dependencies": {
+    "@cu-devs-collective/open-cu-services-lmsapi": "file:../../typescript/lmsapi"
+  },
+  "//(comment) dependencies": {
+    "@cu-devs-collective/open-cu-services-lmsapi": "git+https://github.com/cu-devs-collective/open-cu-services-openapi#@cu-devs-collective/open-cu-services-lmsapi@0.0.0&path:/typescript/lmsapi"
+  },
+  "devDependencies": {
+    "@types/node": "24.5.2",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  },
+  "packageManager": "pnpm@10.31.0"
+}
