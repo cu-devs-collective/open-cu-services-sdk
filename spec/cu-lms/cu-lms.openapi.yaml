@@ -195,6 +195,8 @@ paths:
       tags: [ courses ]
       parameters:
         - $ref: "#/components/parameters/LongreadIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/OffsetQuery"
       responses:
         "200":
           description: Successful response with longread materials by its ID.
@@ -575,6 +577,7 @@ components:
       x-re-notes: >
         This UUID is the primary identifier used to reference the user
         on backend DB.
+        "00000000-0000-0000-0000-000000000000" is reserved for the System user.
       example: "00000000-0000-0000-0000-000000000000"
     UniversityEmail:
       type: string
@@ -681,6 +684,10 @@ components:
       minimum: 0
       description: Numeric identifier of the activity item.
       example: 2161
+    ActivityName:
+      type: string
+      description: Activity name.
+      example: "Аудиторная работа на семинарах"
     ActivityDefinition:
       type: object
       additionalProperties: false
@@ -692,9 +699,7 @@ components:
         id:
           $ref: "#/components/schemas/ActivityId"
         name:
-          type: string
-          description: Activity name.
-          example: "Аудиторная работа на семинарах"
+          $ref: "#/components/schemas/ActivityName"
         weight:
           type: number
           format: float
@@ -712,6 +717,15 @@ components:
       description: Deadline by which the item must be completed.
       x-re-notes: This field appears to be non-nullable.
       example: "2026-02-15T19:00:00+00:00"
+    MaxScore:
+      type: integer
+      minimum: 0
+      description: Maximum possible score for completing exercise.
+      example: 10
+    ExerciseName:
+      type: string
+      description: Exercise name shown as the header is LMS.
+      example: "Seminar 1. Week 2"
     ExerciseItem:
       type: object
       additionalProperties: false
@@ -721,14 +735,9 @@ components:
         id:
           $ref: "#/components/schemas/ExerciseId"
         name:
-          type: string
-          description: Exercise name shown as the header is LMS.
-          example: "Seminar 1. Week 2"
+          $ref: "#/components/schemas/ExerciseName"
         maxScore:
-          type: integer
-          minimum: 0
-          description: Maximum possible score for completing exercise.
-          example: 10
+          $ref: "#/components/schemas/MaxScore"
         activity:
           $ref: "#/components/schemas/ActivityDefinition"
         deadline:
@@ -1039,35 +1048,67 @@ components:
       properties:
         exerciseUrl:
           $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
-    LongreadMaterialEstimation:  # TODO
+    LongreadMaterialActivity:
+      x-re-properties-order:
+        ignored: false
+      allOf:
+        - $ref: "#/components/schemas/ActivityDefinition"
+        - type: object
+          additionalProperties: false
+          properties:
+            averageScoreThreshold:  # TODO: averageScoreThreshold analysis
+              type: object
+              additionalProperties: true
+              nullable: true
+              x-re-needs-analysis: true
+              x-re-needs-analysis-notes: This needs analysis for non-null value.
+              x-re-notes: Value is temporary set to any object.
+            isLateDaysEnabled:
+              type: boolean
+              description: Indicates if late days can be used for this activity.
+              example: true
+    LongreadMaterialEstimation:
       type: object
-      additionalProperties: true
-    LongreadMaterialReviewerItem:  # TODO
-      type: object
-      additionalProperties: true  # TODO: change
-    LongreadMaterialAssigneeItem:  # TODO
-      type: object
-      additionalProperties: true  # TODO: change
-    BackloggedAt:   # TODO: add more accurate description
+      additionalProperties: false
+      description: "#TODO: LongreadMaterialEstimation description."
+      required: [ startDate, timer, maxScore, deadline, activity ]
+      properties:
+        startDate:
+          allOf:
+            - $ref: "#/components/schemas/PublishDate"
+          x-re-notes: It seems that this is the same as PublishDate.
+        timer:  # TODO: timer analysis
+          type: object
+          additionalProperties: true
+          nullable: true
+          x-re-needs-analysis: true
+          x-re-needs-analysis-notes: This needs analysis for non-null value.
+          x-re-notes: Value is temporary set to any object.
+        maxScore:
+          $ref: "#/components/schemas/MaxScore"
+        deadline:
+          $ref: "#/components/schemas/Deadline"
+        activity:
+          $ref: "#/components/schemas/LongreadMaterialActivity"
+    BackloggedAt:
       type: string
       format: date-time
       nullable: true
       description: Timestamp when task was moved to backlog.
+      x-re-notes: >
+        The exact meaning of this property is unclear.
+        It does not affect the frontend, but it appears to represent the date
+        when the authors consider the exercise creation to be complete?
       example: "2026-03-07T07:00:05.991326+00:00"
     longreadMaterialBase:
       type: object
       additionalProperties: false
-      required: [ discriminator, state, publishDate, publishedAt, viewType,
-                  type, id, order ]
+      required: [ discriminator, state, viewType, type, id, order ]
       properties:
         discriminator:
           $ref: "#/components/schemas/LongreadMaterialDiscriminator"
         state:
           $ref: "#/components/schemas/PublicationState"
-        publishDate:
-          $ref: "#/components/schemas/PublishDate"
-        publishedAt:
-          $ref: "#/components/schemas/PublishedAt"
         viewType:
           $ref: "#/components/schemas/LongreadMaterialViewType"
         type:
@@ -1085,7 +1126,7 @@ components:
         - $ref: "#/components/schemas/longreadMaterialBase"
         - type: object
           additionalProperties: false
-          required: [ viewContent ]
+          required: [ viewContent, publishDate, publishedAt ]
           properties:
             discriminator:  # example value
               type: string
@@ -1104,6 +1145,10 @@ components:
               x-re-notes: Logically this is never null for `type` "markdown".
               allOf:
                 - $ref: "#/components/schemas/LongreadMaterialViewContent"
+            publishDate:
+              $ref: "#/components/schemas/PublishDate"
+            publishedAt:
+              $ref: "#/components/schemas/PublishedAt"
     LongreadFileMaterialItem:
       x-re-properties-order:
         ignored: true
@@ -1111,7 +1156,8 @@ components:
         - $ref: "#/components/schemas/longreadMaterialBase"
         - type: object
           additionalProperties: false
-          required: [ mediaType, filename, version, length, content ]
+          required: [ mediaType, filename, version, length, publishDate,
+                      publishedAt, content ]
           properties:
             discriminator:  # example value
               type: string
@@ -1133,6 +1179,10 @@ components:
               $ref: "#/components/schemas/LongreadMaterialVersion"
             length:
               $ref: "#/components/schemas/LongreadMaterialLength"
+            publishDate:
+              $ref: "#/components/schemas/PublishDate"
+            publishedAt:
+              $ref: "#/components/schemas/PublishedAt"
             content:
               $ref: "#/components/schemas/LongreadMaterialContent"
     LongreadCodingMaterialItem:
@@ -1162,8 +1212,8 @@ components:
             coding:
               $ref: "#/components/schemas/LongreadMaterialCoding"
             name:
-              type: string
-              description: Coding task name shown in LMS.
+              allOf:
+                - $ref: "#/components/schemas/ExerciseName"
               example: "HW. Week 6"
             viewContent:
               $ref: "#/components/schemas/LongreadMaterialViewContent"
@@ -1171,14 +1221,21 @@ components:
               $ref: "#/components/schemas/LongreadMaterialEstimation"
             reviewers:
               type: array
+              minItems: 0
               description: Reviewers assigned to this coding task.
+              x-re-notes: >
+                Reviewer is added to the list after is is being selected by the
+                System.
               items:
-                $ref: "#/components/schemas/LongreadMaterialReviewerItem"
+                $ref: "#/components/schemas/UserId"
             assignees:
               type: array
+              minItems: 0
               description: Assignees linked to this coding task.
+              x-re-notes: >
+                Never seen this array having items, so item type is a guess.
               items:
-                $ref: "#/components/schemas/LongreadMaterialAssigneeItem"
+                $ref: "#/components/schemas/UserId"
             attachments:
               type: array
               items:
