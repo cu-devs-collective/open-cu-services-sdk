@@ -61,33 +61,9 @@ paths:
         - BffCookie: [ ]
       tags: [ courses ]
       parameters:
-        - in: query
-          name: limit
-          description: Maximum number of items to return.
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            default: 25
-        - in: query
-          name: offset
-          description: Number of items to skip before collecting result items.
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            default: 0
-        - in: query
-          name: state
-          style: form
-          explode: true
-          description: >
-            Include only courses whose state matches any of the specified
-            values.
-          schema:
-            type: array
-            items:
-              $ref: "#/components/schemas/PublicationState"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/OffsetQuery"
+        - $ref: "#/components/parameters/PublicationStateFilterQuery"
       responses:
         "200":
           description: >
@@ -197,7 +173,35 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LongreadByIdResponse"
+                $ref: "#/components/schemas/LongreadSummaryByIdResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /micro-lms/longreads/{longreadId}/materials:
+    get:
+      operationId: longreadMaterialsById
+      summary: Get longread materials by its ID.
+      description: >
+        Returns longread materials by longreadId.
+        Materials are blocks like markdown, files and exercises.
+        Blocks are declared for each longread.
+      security:
+        - BffCookie: [ ]
+      tags: [ courses ]
+      parameters:
+        - $ref: "#/components/parameters/LongreadIdPath"
+      responses:
+        "200":
+          description: Successful response with longread materials by its ID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LongreadMaterialsByIdResponse"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -215,6 +219,35 @@ components:
       description: >
         Session cookie used to authenticate the user when calling the LMS API.
   parameters:
+    LimitQuery:
+      name: limit
+      in: query
+      description: Maximum number of items to return.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 25
+    OffsetQuery:
+      name: offset
+      in: query
+      description: Number of items to skip before collecting result items.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+    PublicationStateFilterQuery:
+      name: state
+      in: query
+      style: form
+      explode: true
+      description: >
+        Include only courses whose state matches any of the specified values.
+      schema:
+        type: array
+        items:
+          $ref: "#/components/schemas/PublicationState"
     CourseIdPath:
       name: courseId
       in: path
@@ -354,7 +387,7 @@ components:
       type: string
       description: Publication state of an item.
       x-re-notes: >
-        Known values are the following:
+        Known values:
         - "published" - filters non-archived non-draft items
         - "archived" - filters archived items
         - "draft" - filters draft items (those are items which were
@@ -432,7 +465,7 @@ components:
         Those are clearly not all of the values that exist, so other values
         should be added as they are found.
       x-re-notes: >
-        Known values are the following:
+        Known values:
         - "withoutCategory" - not categorized stuff
         - "general" - general courses, e.g. English
         - "career" - career stuff, e.g. Mock Interview intensive
@@ -593,15 +626,15 @@ components:
           x-re-notes: This value is nullable.
           example: "Иванович"
         universityEmail:
+          nullable: false
+          x-re-notes: This field appears to be non-nullable.
           allOf:
             - $ref: "#/components/schemas/UniversityEmail"
+        timeAccount:
           nullable: false
           x-re-notes: This field appears to be non-nullable.
-        timeAccount:
           allOf:
             - $ref: "#/components/schemas/TimeAccount"
-          nullable: false
-          x-re-notes: This field appears to be non-nullable.
         studyStartYear:
           type: integer
           minimum: 1970
@@ -739,10 +772,13 @@ components:
       example: "Силлабус"
     ListingOrder:
       type: integer
-      minimum: 1
+      minimum: 0
       description: >
         Listing order determining the item's line position in the LMS,
         lower values come first.
+      x-re-notes: >
+        Seen minimum value as 1 e.g. for course theme and longread item,
+        but 0 for longread material.
       example: 1
     CourseThemeItem:
       type: object
@@ -821,7 +857,7 @@ components:
             It is guessed that the category cover means icon shown in LMS
             when the theme summary item is opened.
           example: 0
-    LongreadByIdResponse:
+    LongreadSummaryByIdResponse:
       type: object
       additionalProperties: false
       required: [ id, type, name, order, state, publishDate, publishedAt ]
@@ -840,6 +876,339 @@ components:
           $ref: "#/components/schemas/PublishDate"
         publishedAt:
           $ref: "#/components/schemas/PublishedAt"
+    LongreadMaterialId:
+      type: integer
+      minimum: 0
+      description: Numeric identifier of a longread material block.
+      example: 54041
+    LongreadMaterialType:
+      type: string
+      description: Material block type identifier.
+      x-re-needs-analysis: true
+      x-re-needs-analysis-notes: >
+        This enum needs further analysis to document all of the
+        possible values.
+      x-re-notes: >
+        Known values:
+        - "markdown" - Markdown block
+        - "content" - some attachment
+        - "coding" - basically exercise where something should be attached
+      enum:
+        - markdown
+        - content
+        - coding
+      example: "markdown"
+    LongreadMaterialDiscriminator:
+      type: string
+      description: Material block discriminator used by LMS frontend.
+      x-re-needs-analysis: true
+      x-re-needs-analysis-notes: >
+        This enum needs further analysis to document all of the
+        possible values.
+      x-re-notes: >
+        Known values:
+        - "markdown" - => LongreadMaterialType "markdown"
+        - "file" - => LongreadMaterialType "content"
+        - "coding" - => LongreadMaterialType "coding"
+      enum:
+        - markdown
+        - file
+        - coding
+      example: "markdown"
+    LongreadMaterialViewType:
+      type: string
+      description: View renderer type used by LMS frontend.
+      x-re-needs-analysis: true
+      x-re-needs-analysis-notes: >
+        This enum needs further analysis to document all of the
+        possible values.
+      x-re-notes: >
+        Known values:
+        - "ngxMarkdown" - Markdown rendered with ngx-markdown
+        - "file" - file attachment
+        - "exerciseCoding" - exercise that needs attachment for completion
+      enum:
+        - ngxMarkdown
+        - file
+        - exerciseCoding
+      example: "ngxMarkdown"
+    LongreadMaterialMediaType:
+      type: string
+      description: Media type identifier.
+      x-re-needs-analysis: true
+      x-re-needs-analysis-notes: >
+        This enum needs further analysis to document all of the
+        possible values.
+      x-re-notes: >
+        Known values:
+        - "file" - file attachment
+      enum:
+        - file
+      example: "file"
+    LongreadMaterialMediaTypeUpper:
+      type: string
+      description: Media type identifier in upper.
+      x-re-needs-analysis: true
+      x-re-needs-analysis-notes: >
+        This value correlation with the real media type of
+        LongreadMaterialMediaType should be investigated.
+        The guess is that this value is just the upper version of it,
+        cuz else it makes no actual sense.
+        This enum needs further analysis to document all of the
+        possible values.
+      x-re-notes: >
+        Known values:
+        - "File" - => LongreadMaterialMediaType "file"
+      enum:
+        - File
+      example: "File"
+    LongreadMaterialVersion:
+      type: string
+      description: Material content revision identifier.
+      example: "0104f8da"
+    LongreadMaterialLength:
+      type: integer
+      minimum: 0
+      description: Material payload size in bytes.
+      example: 1701642
+    FileAttachmentName:
+      type: string
+      description: File attachment display name shown in LMS.
+      example: "English_204S4-C_SW_Week 6.pdf"
+    FileNameObjectPath:
+      type: string
+      description: File object path in storage.
+      example: "longreads/16770/English_204S4-C_SW_Week 6.pdf"
+    LongreadMaterialContent:
+      type: object
+      additionalProperties: false
+      required: [ name, filename, mediaType, version, length ]
+      properties:
+        name:
+          $ref: "#/components/schemas/FileAttachmentName"
+        filename:
+          $ref: "#/components/schemas/FileNameObjectPath"
+        mediaType:
+          $ref: "#/components/schemas/LongreadMaterialMediaTypeUpper"
+        version:
+          $ref: "#/components/schemas/LongreadMaterialVersion"
+        length:
+          $ref: "#/components/schemas/LongreadMaterialLength"
+    LongreadMaterialViewContent:
+      type: string
+      nullable: true
+      description: JSON-serialized markdown content rendered in LMS.
+      x-re-notes: >
+        Markdown blocks contain JSON with `value` and `isTuiEditor`.
+        Seems to be nullable in places where can be omitted, e.g. in coding
+        exercises there can be no description.
+      example: "{\"value\":\"<p>...</p>\",\"isTuiEditor\":true}"
+    LongreadMaterialAttachmentItem:
+      type: object
+      additionalProperties: false
+      required: [ name, filename, mediaType, length, version ]
+      properties:
+        name:
+          allOf:
+            - $ref: "#/components/schemas/FileAttachmentName"
+          example: "English_204S4_C_HW_2e_Week _6.pdf"
+        filename:
+          allOf:
+            - $ref: "#/components/schemas/FileNameObjectPath"
+          example: "exercises/54045/English_204S4_C_HW_2e_Week _6.pdf"
+        mediaType:
+          $ref: "#/components/schemas/LongreadMaterialMediaType"
+        length:
+          $ref: "#/components/schemas/LongreadMaterialLength"
+        version:
+          $ref: "#/components/schemas/LongreadMaterialVersion"
+    TaskId:
+      type: integer
+      minimum: 0
+      description: Numeric identifier of the task.
+      example: 1468065
+    LongreadMaterialExerciseUrl:
+      type: string
+      nullable: true
+      description: URL of coding exercise if configured.
+      example: null
+    LongreadMaterialCoding:
+      type: object
+      additionalProperties: false
+      required: [ exerciseUrl ]
+      properties:
+        exerciseUrl:
+          $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
+    LongreadMaterialEstimation:  # TODO
+      type: object
+      additionalProperties: true
+    LongreadMaterialReviewerItem:  # TODO
+      type: object
+      additionalProperties: true  # TODO: change
+    LongreadMaterialAssigneeItem:  # TODO
+      type: object
+      additionalProperties: true  # TODO: change
+    BackloggedAt:   # TODO: add more accurate description
+      type: string
+      format: date-time
+      nullable: true
+      description: Timestamp when task was moved to backlog.
+      example: "2026-03-07T07:00:05.991326+00:00"
+    longreadMaterialBase:
+      type: object
+      additionalProperties: false
+      required: [ discriminator, state, publishDate, publishedAt, viewType,
+                  type, id, order ]
+      properties:
+        discriminator:
+          $ref: "#/components/schemas/LongreadMaterialDiscriminator"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        publishDate:
+          $ref: "#/components/schemas/PublishDate"
+        publishedAt:
+          $ref: "#/components/schemas/PublishedAt"
+        viewType:
+          $ref: "#/components/schemas/LongreadMaterialViewType"
+        type:
+          $ref: "#/components/schemas/LongreadMaterialType"
+        id:
+          $ref: "#/components/schemas/LongreadMaterialId"
+        order:
+          allOf:
+            - $ref: "#/components/schemas/ListingOrder"
+          example: 0
+    LongreadMarkdownMaterialItem:
+      x-re-properties-order:
+        ignored: true
+      allOf:
+        - $ref: "#/components/schemas/longreadMaterialBase"
+        - type: object
+          additionalProperties: false
+          required: [ viewContent ]
+          properties:
+            discriminator:  # example value
+              type: string
+              enum: [ markdown ]
+              example: "markdown"
+            type:  # example value
+              type: string
+              enum: [ markdown ]
+              example: "markdown"
+            viewType:  # example value
+              type: string
+              enum: [ ngxMarkdown ]
+              example: "ngxMarkdown"
+            viewContent:
+              nullable: false
+              x-re-notes: Logically this is never null for `type` "markdown".
+              allOf:
+                - $ref: "#/components/schemas/LongreadMaterialViewContent"
+    LongreadFileMaterialItem:
+      x-re-properties-order:
+        ignored: true
+      allOf:
+        - $ref: "#/components/schemas/longreadMaterialBase"
+        - type: object
+          additionalProperties: false
+          required: [ mediaType, filename, version, length, content ]
+          properties:
+            discriminator:  # example value
+              type: string
+              enum: [ file ]
+              example: "file"
+            type:  # example value
+              type: string
+              enum: [ content ]
+              example: "content"
+            viewType:  # example value
+              type: string
+              enum: [ file ]
+              example: "file"
+            mediaType:
+              $ref: "#/components/schemas/LongreadMaterialMediaType"
+            filename:
+              $ref: "#/components/schemas/FileNameObjectPath"
+            version:
+              $ref: "#/components/schemas/LongreadMaterialVersion"
+            length:
+              $ref: "#/components/schemas/LongreadMaterialLength"
+            content:
+              $ref: "#/components/schemas/LongreadMaterialContent"
+    LongreadCodingMaterialItem:
+      x-re-properties-order:
+        ignored: true
+      allOf:
+        - $ref: "#/components/schemas/longreadMaterialBase"
+        - type: object
+          additionalProperties: false
+          required: [ exerciseUrl, coding, name, viewContent, estimation,
+                      reviewers, assignees, attachments, backloggedAt, taskId ]
+          properties:
+            discriminator:  # example value
+              type: string
+              enum: [ coding ]
+              example: "coding"
+            type:  # example value
+              type: string
+              enum: [ coding ]
+              example: "coding"
+            viewType:  # example value
+              type: string
+              enum: [ exerciseCoding ]
+              example: "exerciseCoding"
+            exerciseUrl:
+              $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
+            coding:
+              $ref: "#/components/schemas/LongreadMaterialCoding"
+            name:
+              type: string
+              description: Coding task name shown in LMS.
+              example: "HW. Week 6"
+            viewContent:
+              $ref: "#/components/schemas/LongreadMaterialViewContent"
+            estimation:
+              $ref: "#/components/schemas/LongreadMaterialEstimation"
+            reviewers:
+              type: array
+              description: Reviewers assigned to this coding task.
+              items:
+                $ref: "#/components/schemas/LongreadMaterialReviewerItem"
+            assignees:
+              type: array
+              description: Assignees linked to this coding task.
+              items:
+                $ref: "#/components/schemas/LongreadMaterialAssigneeItem"
+            attachments:
+              type: array
+              items:
+                $ref: "#/components/schemas/LongreadMaterialAttachmentItem"
+            backloggedAt:
+              $ref: "#/components/schemas/BackloggedAt"
+            taskId:
+              $ref: "#/components/schemas/TaskId"
+    LongreadMaterialItem:
+      oneOf:
+        - $ref: "#/components/schemas/LongreadMarkdownMaterialItem"
+        - $ref: "#/components/schemas/LongreadFileMaterialItem"
+        - $ref: "#/components/schemas/LongreadCodingMaterialItem"
+      discriminator:
+        propertyName: discriminator
+        mapping:
+          markdown: "#/components/schemas/LongreadMarkdownMaterialItem"
+          file: "#/components/schemas/LongreadFileMaterialItem"
+          coding: "#/components/schemas/LongreadCodingMaterialItem"
+    LongreadMaterialsByIdResponse:
+      type: object
+      additionalProperties: false
+      required: [ items, paging ]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/LongreadMaterialItem"
+        paging:
+          $ref: "#/components/schemas/Paging"
   responses:
     DefaultError:
       description: Default catch-all error object, untyped.
