@@ -440,7 +440,7 @@ components:
     CourseIsArchived:
       type: boolean
       description: Indicates if the course is archived.
-      x-re-notes:
+      x-re-notes: >
         Typically set at the end of a semester to mark the course as finished.
       example: false
     PublishDate:
@@ -448,7 +448,7 @@ components:
       format: date-time
       nullable: true
       description: Scheduled item publication timestamp, if set.
-      x-re-notes:
+      x-re-notes: >
         Can be unset, also can be earlier or later than `publishedAt` value.
       example: "2026-01-26T07:00:00+00:00"
     PublishedAt:
@@ -902,10 +902,12 @@ components:
         - "markdown" - Markdown block
         - "content" - some attachment
         - "coding" - basically exercise where something should be attached
+        - "image" - image block
       enum:
         - markdown
         - content
         - coding
+        - image
       example: "markdown"
     LongreadMaterialDiscriminator:
       type: string
@@ -919,10 +921,14 @@ components:
         - "markdown" - => LongreadMaterialType "markdown"
         - "file" - => LongreadMaterialType "content"
         - "coding" - => LongreadMaterialType "coding"
+        - "image" - => LongreadMaterialType "image"
+        - "questions" - => LongreadMaterialType "questions"
       enum:
         - markdown
         - file
         - coding
+        - image
+        - questions
       example: "markdown"
     LongreadMaterialViewType:
       type: string
@@ -934,25 +940,35 @@ components:
       x-re-notes: >
         Known values:
         - "ngxMarkdown" - Markdown rendered with ngx-markdown
-        - "file" - file attachment
+        - "file" - file attachment that is downloadable
         - "exerciseCoding" - exercise that needs attachment for completion
+        - "image" - rendered image
+        - "exerciseQuestions" - exercise that has questions to complete
       enum:
         - ngxMarkdown
         - file
         - exerciseCoding
+        - image
+        - exerciseQuestions
       example: "ngxMarkdown"
     LongreadMaterialMediaType:
       type: string
-      description: Media type identifier.
+      description: Media type attachment identifier.
       x-re-needs-analysis: true
       x-re-needs-analysis-notes: >
         This enum needs further analysis to document all of the
         possible values.
       x-re-notes: >
+        This value seems to only show attachment type for downloadable file,
+        it doesn't affect frontend.
         Known values:
         - "file" - file attachment
+        - "image" - image attachment
+        - "video" - video attachment
       enum:
         - file
+        - image
+        - video
       example: "file"
     LongreadMaterialMediaTypeUpper:
       type: string
@@ -968,12 +984,19 @@ components:
       x-re-notes: >
         Known values:
         - "File" - => LongreadMaterialMediaType "file"
+        - "Image" - => LongreadMaterialMediaType "image"
       enum:
         - File
+        - Image
       example: "File"
     LongreadMaterialVersion:
       type: string
+      pattern: "^[0-9a-f]{8}$"
+      nullable: true
       description: Material content revision identifier.
+      x-re-notes: >
+        At first longread materials didn't have a version, so for backwards
+        compatibility value can be null.
       example: "0104f8da"
     LongreadMaterialLength:
       type: integer
@@ -1040,6 +1063,7 @@ components:
       type: string
       nullable: true
       description: URL of coding exercise if configured.
+      x-re-notes: This URL is shown on frontend labeled as "Подробное условие".
       example: null
     LongreadMaterialCoding:
       type: object
@@ -1055,11 +1079,13 @@ components:
         - $ref: "#/components/schemas/ActivityDefinition"
         - type: object
           additionalProperties: false
+          required: [ averageScoreThreshold, isLateDaysEnabled ]
           properties:
             averageScoreThreshold:  # TODO: averageScoreThreshold analysis
-              type: object
-              additionalProperties: true
+              type: string
               nullable: true
+              enum:
+                - null
               x-re-needs-analysis: true
               x-re-needs-analysis-notes: This needs analysis for non-null value.
               x-re-notes: Value is temporary set to any object.
@@ -1078,9 +1104,10 @@ components:
             - $ref: "#/components/schemas/PublishDate"
           x-re-notes: It seems that this is the same as PublishDate.
         timer:  # TODO: timer analysis
-          type: object
-          additionalProperties: true
+          type: string
           nullable: true
+          enum:
+            - null
           x-re-needs-analysis: true
           x-re-needs-analysis-notes: This needs analysis for non-null value.
           x-re-notes: Value is temporary set to any object.
@@ -1100,9 +1127,32 @@ components:
         It does not affect the frontend, but it appears to represent the date
         when the authors consider the exercise creation to be complete?
       example: "2026-03-07T07:00:05.991326+00:00"
+    LongreadExerciseQuestionsMode:
+      type: string
+      description: Questions mode.
+      x-re-notes: >
+        Unknown usage, as the only seen value is "atMoment".
+        It seems there is only one questions mode for now.
+      enum:
+        - atMoment
+      example: "atMoment"
+    LongreadExerciseQuestionsSettings:  # TODO: LongreadExerciseQuestionsSet
+      type: object
+      additionalProperties: false
+      description: "#TODO: LongreadExerciseQuestionsSettings description."
+    QuizId:
+      x-re-notes: It seems that this is the same as TaskId.
+      allOf:
+        - $ref: "#/components/schemas/TaskId"
+    LongreadExerciseQuestionItem:  # TODO: LongreadExerciseQuestionItem
+      type: object
+      additionalProperties: false
+      description: "#TODO: LongreadExerciseQuestionItem description."
     longreadMaterialBase:
       type: object
       additionalProperties: false
+      x-re-properties-order:
+        ignored: true
       required: [ discriminator, state, viewType, type, id, order ]
       properties:
         discriminator:
@@ -1119,6 +1169,52 @@ components:
           allOf:
             - $ref: "#/components/schemas/ListingOrder"
           example: 0
+    longreadExerciseMaterialBase:
+      x-re-properties-order:
+        ignored: true
+      allOf:
+        - $ref: "#/components/schemas/longreadMaterialBase"
+        - type: object
+          additionalProperties: false
+          required: [ name, viewContent, estimation, reviewers, assignees,
+                      attachments, backloggedAt, taskId ]
+          properties:
+            name:
+              allOf:
+                - $ref: "#/components/schemas/ExerciseName"
+              example: "HW. Week 6"
+            viewContent:
+              $ref: "#/components/schemas/LongreadMaterialViewContent"
+            estimation:
+              $ref: "#/components/schemas/LongreadMaterialEstimation"
+            reviewers:
+              type: array
+              minItems: 0
+              description: Reviewers assigned to this exercise task.
+              x-re-notes: >
+                Reviewer is added to the list after being selected by
+                the System.
+              items:
+                $ref: "#/components/schemas/UserId"
+            assignees:
+              type: array
+              minItems: 0
+              description: Assignees linked to this exercise task.
+              x-re-notes: >
+                Never seen this array having items, so item type is a guess.
+                Purpose is unknown, but a guess is that this property is unused
+                for now and in the future there would be a feature of assigning
+                multiple students to the same task?
+              items:
+                $ref: "#/components/schemas/UserId"
+            attachments:
+              type: array
+              items:
+                $ref: "#/components/schemas/LongreadMaterialAttachmentItem"
+            backloggedAt:
+              $ref: "#/components/schemas/BackloggedAt"
+            taskId:
+              $ref: "#/components/schemas/TaskId"
     LongreadMarkdownMaterialItem:
       x-re-properties-order:
         ignored: true
@@ -1185,15 +1281,14 @@ components:
               $ref: "#/components/schemas/PublishedAt"
             content:
               $ref: "#/components/schemas/LongreadMaterialContent"
-    LongreadCodingMaterialItem:
+    LongreadExerciseCodingMaterialItem:
       x-re-properties-order:
         ignored: true
       allOf:
-        - $ref: "#/components/schemas/longreadMaterialBase"
+        - $ref: "#/components/schemas/longreadExerciseMaterialBase"
         - type: object
           additionalProperties: false
-          required: [ exerciseUrl, coding, name, viewContent, estimation,
-                      reviewers, assignees, attachments, backloggedAt, taskId ]
+          required: [ exerciseUrl, coding ]
           properties:
             discriminator:  # example value
               type: string
@@ -1211,50 +1306,106 @@ components:
               $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
             coding:
               $ref: "#/components/schemas/LongreadMaterialCoding"
-            name:
+    LongreadImageMaterialItem:
+      x-re-properties-order:
+        ignored: true
+      allOf:
+        - $ref: "#/components/schemas/longreadMaterialBase"
+        - type: object
+          additionalProperties: false
+          required: [ imageScale, mediaType, filename, version, length,
+                      publishDate, publishedAt, content ]
+          properties:
+            discriminator:  # example value
+              type: string
+              enum: [ image ]
+              example: "image"
+            type:  # example value
+              type: string
+              enum: [ content ]
+              example: "content"
+            viewType:  # example value
+              type: string
+              enum: [ image ]
+              example: "image"
+            imageScale:  # TODO: imageScale analysis
+              type: string
+              nullable: true
+              enum:
+                - null
+              x-re-needs-analysis: true
+              x-re-needs-analysis-notes: Needs analysis for non-null value.
+              x-re-notes: Value is temporary set to any object.
+            mediaType:
               allOf:
-                - $ref: "#/components/schemas/ExerciseName"
-              example: "HW. Week 6"
-            viewContent:
-              $ref: "#/components/schemas/LongreadMaterialViewContent"
-            estimation:
-              $ref: "#/components/schemas/LongreadMaterialEstimation"
-            reviewers:
+                - $ref: "#/components/schemas/LongreadMaterialMediaType"
+              example: "image"
+            filename:
+              allOf:
+                - $ref: "#/components/schemas/FileNameObjectPath"
+              example: "longreads/301/Снимок экрана 2024-08-12 в 11.10.59.png"
+            version:
+              $ref: "#/components/schemas/LongreadMaterialVersion"
+            length:
+              $ref: "#/components/schemas/LongreadMaterialLength"
+            publishDate:
+              $ref: "#/components/schemas/PublishDate"
+            publishedAt:
+              $ref: "#/components/schemas/PublishedAt"
+            content:
+              $ref: "#/components/schemas/LongreadMaterialContent"
+    LongreadExerciseQuestionsMaterialItem:
+      x-re-properties-order:
+        ignored: true
+      allOf:
+        - $ref: "#/components/schemas/longreadExerciseMaterialBase"
+        - type: object
+          additionalProperties: false
+          required: [ mode, areQuestionsShuffled, settings, quizId, questions ]
+          properties:
+            discriminator:  # example value
+              type: string
+              enum: [ questions ]
+              example: "questions"
+            type:  # example value
+              type: string
+              enum: [ questions ]
+              example: "questions"
+            viewType:  # example value
+              type: string
+              enum: [ exerciseQuestions ]
+              example: "exerciseQuestions"
+            mode:
+              $ref: "#/components/schemas/LongreadExerciseQuestionsMode"
+            areQuestionsShuffled:
+              type: boolean
+              description: >
+                Indicates if questions need to be shuffled on frontend.
+              example: false
+            settings:
+              $ref: "#/components/schemas/LongreadExerciseQuestionsSettings"
+            quizId:
+              $ref: "#/components/schemas/QuizId"
+            questions:
               type: array
-              minItems: 0
-              description: Reviewers assigned to this coding task.
-              x-re-notes: >
-                Reviewer is added to the list after is is being selected by the
-                System.
               items:
-                $ref: "#/components/schemas/UserId"
-            assignees:
-              type: array
-              minItems: 0
-              description: Assignees linked to this coding task.
-              x-re-notes: >
-                Never seen this array having items, so item type is a guess.
-              items:
-                $ref: "#/components/schemas/UserId"
-            attachments:
-              type: array
-              items:
-                $ref: "#/components/schemas/LongreadMaterialAttachmentItem"
-            backloggedAt:
-              $ref: "#/components/schemas/BackloggedAt"
-            taskId:
-              $ref: "#/components/schemas/TaskId"
+                $ref: "#/components/schemas/LongreadExerciseQuestionItem"
     LongreadMaterialItem:
       oneOf:
         - $ref: "#/components/schemas/LongreadMarkdownMaterialItem"
         - $ref: "#/components/schemas/LongreadFileMaterialItem"
-        - $ref: "#/components/schemas/LongreadCodingMaterialItem"
+        - $ref: "#/components/schemas/LongreadExerciseCodingMaterialItem"
+        - $ref: "#/components/schemas/LongreadImageMaterialItem"
+        - $ref: "#/components/schemas/LongreadExerciseQuestionsMaterialItem"
       discriminator:
         propertyName: discriminator
         mapping:
           markdown: "#/components/schemas/LongreadMarkdownMaterialItem"
           file: "#/components/schemas/LongreadFileMaterialItem"
           coding: "#/components/schemas/LongreadCodingMaterialItem"
+          image: "#/components/schemas/LongreadImageMaterialItem"
+          # yamllint disable-line rule:line-length
+          questions: "#/components/schemas/LongreadExerciseQuestionsMaterialItem"
     LongreadMaterialsByIdResponse:
       type: object
       additionalProperties: false
