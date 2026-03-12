@@ -1224,18 +1224,6 @@ components:
           additionalProperties: false
           required: [ viewContent, publishDate, publishedAt ]
           properties:
-            discriminator:  # example value
-              type: string
-              enum: [ markdown ]
-              example: "markdown"
-            type:  # example value
-              type: string
-              enum: [ markdown ]
-              example: "markdown"
-            viewType:  # example value
-              type: string
-              enum: [ ngxMarkdown ]
-              example: "ngxMarkdown"
             viewContent:
               nullable: false
               x-re-notes: Logically this is never null for `type` "markdown".
@@ -1255,18 +1243,6 @@ components:
           required: [ mediaType, filename, version, length, publishDate,
                       publishedAt, content ]
           properties:
-            discriminator:  # example value
-              type: string
-              enum: [ file ]
-              example: "file"
-            type:  # example value
-              type: string
-              enum: [ content ]
-              example: "content"
-            viewType:  # example value
-              type: string
-              enum: [ file ]
-              example: "file"
             mediaType:
               $ref: "#/components/schemas/LongreadMaterialMediaType"
             filename:
@@ -1290,18 +1266,6 @@ components:
           additionalProperties: false
           required: [ exerciseUrl, coding ]
           properties:
-            discriminator:  # example value
-              type: string
-              enum: [ coding ]
-              example: "coding"
-            type:  # example value
-              type: string
-              enum: [ coding ]
-              example: "coding"
-            viewType:  # example value
-              type: string
-              enum: [ exerciseCoding ]
-              example: "exerciseCoding"
             exerciseUrl:
               $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
             coding:
@@ -1316,18 +1280,6 @@ components:
           required: [ imageScale, mediaType, filename, version, length,
                       publishDate, publishedAt, content ]
           properties:
-            discriminator:  # example value
-              type: string
-              enum: [ image ]
-              example: "image"
-            type:  # example value
-              type: string
-              enum: [ content ]
-              example: "content"
-            viewType:  # example value
-              type: string
-              enum: [ image ]
-              example: "image"
             imageScale:  # TODO: imageScale analysis
               type: string
               nullable: true
@@ -1363,18 +1315,6 @@ components:
           additionalProperties: false
           required: [ mode, areQuestionsShuffled, settings, quizId, questions ]
           properties:
-            discriminator:  # example value
-              type: string
-              enum: [ questions ]
-              example: "questions"
-            type:  # example value
-              type: string
-              enum: [ questions ]
-              example: "questions"
-            viewType:  # example value
-              type: string
-              enum: [ exerciseQuestions ]
-              example: "exerciseQuestions"
             mode:
               $ref: "#/components/schemas/LongreadExerciseQuestionsMode"
             areQuestionsShuffled:
@@ -1402,7 +1342,7 @@ components:
         mapping:
           markdown: "#/components/schemas/LongreadMarkdownMaterialItem"
           file: "#/components/schemas/LongreadFileMaterialItem"
-          coding: "#/components/schemas/LongreadCodingMaterialItem"
+          coding: "#/components/schemas/LongreadExerciseCodingMaterialItem"
           image: "#/components/schemas/LongreadImageMaterialItem"
           # yamllint disable-line rule:line-length
           questions: "#/components/schemas/LongreadExerciseQuestionsMaterialItem"
