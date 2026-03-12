@@ -1092,7 +1092,7 @@ components:
         exerciseUrl:
           $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
     LongreadMaterialActivity:
-      description: "#TODO: LongreadMaterialActivity description."
+      description: Activity configuration for a longread exercise.
       x-re-properties-order:
         ignored: false
       allOf:
@@ -1110,7 +1110,7 @@ components:
     LongreadMaterialEstimation:
       type: object
       additionalProperties: false
-      description: "#TODO: LongreadMaterialEstimation description."
+      description: Estimation and grading constraints for exercise material.
       required: [ startDate, timer, maxScore, deadline, activity ]
       properties:
         startDate:
@@ -1156,7 +1156,7 @@ components:
     LongreadExerciseQuestionsSettings:
       type: object
       additionalProperties: false
-      description: "#TODO: LongreadExerciseQuestionsSettings description."
+      description: Settings for questions exercise behavior.
       required: [ questionsPerAttempt, attemptsLimit, evaluationStrategy ]
       properties:
         questionsPerAttempt:
@@ -1211,7 +1211,7 @@ components:
       description: Score (max possible) for answering the question correctly.
       example: 5
     LongreadExerciseQuestionItem:
-      description: "#TODO: LongreadExerciseQuestionItem description."
+      description: Question item within a questions exercise.
       x-re-properties-order:
         ignored: true
       allOf:
