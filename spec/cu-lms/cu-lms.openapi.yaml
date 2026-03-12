@@ -385,7 +385,7 @@ components:
           example: 1
         traceId:
           $ref: "#/components/schemas/BaseErrorTraceId"
-    _propertyNeedsAnalysisSeenAsNull:
+    _propertyNeedsAnalysis_SeenAsNull:
       type: string
       nullable: true
       description: Special object for values only seen as null.
@@ -394,6 +394,16 @@ components:
       x-re-needs-analysis: true
       x-re-needs-analysis-notes:
         This field needs analysis, value seen only as null.
+    _propertyNeedsAnalysis_SeenAsEmptyArray:
+      type: array
+      minItems: 0
+      maxItems: 0
+      items:
+        type: object
+        additionalProperties: true
+      x-re-needs-analysis: true
+      x-re-needs-analysis-notes:
+        This field needs analysis, value seen only as empty array.
     PublicationState:
       type: string
       description: Publication state of an item.
@@ -1043,7 +1053,7 @@ components:
         Markdown blocks contain JSON with `value` and `isTuiEditor`.
         Seems to be nullable in places where can be omitted, e.g. in coding
         exercises there can be no description.
-      example: "{\"value\":\"<p>...</p>\",\"isTuiEditor\":true}"
+      example: '{"value":"<p>...</p>","isTuiEditor":true}'
     LongreadMaterialAttachmentItem:
       type: object
       additionalProperties: false
@@ -1082,6 +1092,7 @@ components:
         exerciseUrl:
           $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
     LongreadMaterialActivity:
+      description: "#TODO: LongreadMaterialActivity description."
       x-re-properties-order:
         ignored: false
       allOf:
@@ -1090,8 +1101,8 @@ components:
           additionalProperties: false
           required: [ averageScoreThreshold, isLateDaysEnabled ]
           properties:
-            averageScoreThreshold:  # TODO: averageScoreThreshold analysis
-              $ref: "#/components/schemas/_propertyNeedsAnalysisSeenAsNull"
+            averageScoreThreshold:
+              $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
             isLateDaysEnabled:
               type: boolean
               description: Indicates if late days can be used for this activity.
@@ -1106,14 +1117,8 @@ components:
           allOf:
             - $ref: "#/components/schemas/PublishDate"
           x-re-notes: It seems that this is the same as PublishDate.
-        timer:  # TODO: timer analysis
-          type: string
-          nullable: true
-          enum:
-            - null
-          x-re-needs-analysis: true
-          x-re-needs-analysis-notes: This needs analysis for non-null value.
-          x-re-notes: Value is temporary set to any object.
+        timer:
+          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
         maxScore:
           $ref: "#/components/schemas/MaxScore"
         deadline:
@@ -1155,7 +1160,7 @@ components:
       required: [ questionsPerAttempt, attemptsLimit, evaluationStrategy ]
       properties:
         questionsPerAttempt:
-          $ref: "#/components/schemas/_propertyNeedsAnalysisSeenAsNull"
+          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
         attemptsLimit:
           type: integer
           minimum: 0
@@ -1166,10 +1171,70 @@ components:
       x-re-notes: It seems that this is the same as TaskId.
       allOf:
         - $ref: "#/components/schemas/TaskId"
-    LongreadExerciseQuestionItem:  # TODO: LongreadExerciseQuestionItem
+    QuestionId:
+      type: integer
+      minimum: 0
+      description: Numeric identifier of the question.
+      example: 766
+    QuestionItemType:
+      type: string
+      description: Question type.
+      x-re-notes: >
+        Known values:
+        - "input" - question that needs input as an answer
+      enum:
+        - input
+      example: "input"
+    QuestionItemEvaluationBlock:
       type: object
       additionalProperties: false
+      required: [ correctAnswer, autoEvaluation, recommendation ]
+      properties:
+        correctAnswer:
+          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
+        autoEvaluation:
+          type: boolean
+          description: Indicates if the question is auto evaluated.
+          example: false
+        recommendation:
+          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
+    QuestionItemContent:
+      type: string
+      description: JSON-serialized markdown question content rendered in LMS.
+      x-re-notes: >
+        Markdown blocks contain JSON with `description`.
+        Format is not the same as for LongreadMaterialViewContent.
+      example: '{"description": "..."}'
+    QuestionItemScore:
+      type: integer
+      minimum: 0
+      description: Score (max possible) for answering the question correctly.
+      example: 5
+    LongreadExerciseQuestionItem:
       description: "#TODO: LongreadExerciseQuestionItem description."
+      x-re-properties-order:
+        ignored: true
+      allOf:
+        - $ref: "#/components/schemas/QuestionItemEvaluationBlock"
+        - type: object
+          additionalProperties: false
+          required: [ type, input, id, order, content, score, attachments ]
+          properties:
+            type:
+              $ref: "#/components/schemas/QuestionItemType"
+            input:
+              $ref: "#/components/schemas/QuestionItemEvaluationBlock"
+            id:
+              $ref: "#/components/schemas/QuestionId"
+            order:
+              $ref: "#/components/schemas/ListingOrder"
+            content:
+              $ref: "#/components/schemas/QuestionItemContent"
+            score:
+              $ref: "#/components/schemas/QuestionItemScore"
+            attachments:
+              # yamllint disable-line rule:line-length
+              $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsEmptyArray"
     longreadMaterialBase:
       type: object
       additionalProperties: false
@@ -1302,8 +1367,8 @@ components:
           required: [ imageScale, mediaType, filename, version, length,
                       publishDate, publishedAt, content ]
           properties:
-            imageScale:  # TODO: imageScale analysis
-              $ref: "#/components/schemas/_propertyNeedsAnalysisSeenAsNull"
+            imageScale:
+              $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
             mediaType:
               allOf:
                 - $ref: "#/components/schemas/LongreadMaterialMediaType"
