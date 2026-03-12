@@ -969,6 +969,7 @@ components:
           - "image" - rendered image
           - "exerciseQuestions" - exercise that has questions to complete
           - "videoPlatform" - embedded video by link
+          - "video" - embedded video by file
       enum:
         - ngxMarkdown
         - file
@@ -976,6 +977,7 @@ components:
         - image
         - exerciseQuestions
         - videoPlatform
+        - video
       example: "ngxMarkdown"
     LongreadMaterialMediaType:
       type: string
@@ -1113,6 +1115,7 @@ components:
             averageScoreThreshold:
               type: integer
               minimum: 0
+              nullable: true
               description: Average score threshold.
               x-re-notes: Unknown usage.
               example: 0
@@ -1199,6 +1202,12 @@ components:
         - input
         - singleChoice
       example: "input"
+    QuestionOptionRecommendation:
+      type: string
+      nullable: true
+      description: Text rendered under the option on frontend.
+      x-re-notes: Need to investigate more what actual sense this has.
+      example: "-"
     QuestionItemEvaluationBlock:
       type: object
       additionalProperties: false
@@ -1211,7 +1220,9 @@ components:
           description: Indicates if the question is auto evaluated.
           example: false
         recommendation:
-          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
+          x-re-notes: Only seen this exact value as null, so this is a guess.
+          allOf:
+            - $ref: "#/components/schemas/QuestionOptionRecommendation"
     QuestionItemContent:
       type: string
       description: JSON-serialized markdown question content rendered in LMS.
@@ -1252,10 +1263,7 @@ components:
             Seen value to be true when there is only one possible option.
           example: true
         recommendation:
-          type: string
-          description: Text rendered under the option on frontend.
-          x-re-notes: Need to investigate more what actual sense this has.
-          example: "-"
+          $ref: "#/components/schemas/QuestionOptionRecommendation"
     QuestionItemOptions:
       type: array
       items:
@@ -1286,6 +1294,12 @@ components:
       allOf:
         - $ref: "#/components/schemas/longreadExerciseQuestionBase"
         - $ref: "#/components/schemas/QuestionItemEvaluationBlock"
+        - type: object
+          additionalProperties: false
+          required: [ input ]
+          properties:
+            input:
+              $ref: "#/components/schemas/QuestionItemEvaluationBlock"
     LongreadExerciseSingleChoiceQuestionitem:
       description: Question that requires the right choice as answer.
       x-re-properties-order:
@@ -1560,6 +1574,33 @@ components:
               example: "https://vp-embed.example.com/?token=ey..."
             viewType:
               $ref: "#/components/schemas/VideoPlatformViewType"
+    LongreadVideoMaterialItem:
+      x-re-properties-order:
+        ignored: true
+      x-re-notes: >
+        Internally is the same as LongreadFileMaterialItem, but schema
+        is recreated as ogen doesn't support "sum types with same names".
+      allOf:
+        - $ref: "#/components/schemas/longreadMaterialBase"
+        - type: object
+          additionalProperties: false
+          required: [ mediaType, filename, version, length, publishDate,
+                      publishedAt, content ]
+          properties:
+            mediaType:
+              $ref: "#/components/schemas/LongreadMaterialMediaType"
+            filename:
+              $ref: "#/components/schemas/FileNameObjectPath"
+            version:
+              $ref: "#/components/schemas/LongreadMaterialVersion"
+            length:
+              $ref: "#/components/schemas/LongreadMaterialLength"
+            publishDate:
+              $ref: "#/components/schemas/PublishDate"
+            publishedAt:
+              $ref: "#/components/schemas/PublishedAt"
+            content:
+              $ref: "#/components/schemas/LongreadMaterialContent"
     LongreadMaterialItem:
       oneOf:
         - $ref: "#/components/schemas/LongreadMarkdownMaterialItem"
@@ -1568,6 +1609,7 @@ components:
         - $ref: "#/components/schemas/LongreadImageMaterialItem"
         - $ref: "#/components/schemas/LongreadExerciseQuestionsMaterialItem"
         - $ref: "#/components/schemas/LongreadVideoPlatformMaterialItem"
+        - $ref: "#/components/schemas/LongreadVideoMaterialItem"
       discriminator:
         propertyName: discriminator
         mapping:
@@ -1579,6 +1621,7 @@ components:
           questions: "#/components/schemas/LongreadExerciseQuestionsMaterialItem"
           # yamllint disable-line rule:line-length
           videoPlatform: "#/components/schemas/LongreadVideoPlatformMaterialItem"
+          video: "#/components/schemas/LongreadVideoMaterialItem"
     LongreadMaterialsByIdResponse:
       type: object
       additionalProperties: false
