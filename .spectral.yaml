@@ -31,11 +31,17 @@ rules:
     message: "Schema description must end with a '.'"
     severity: warn
     recommended: true
-    given: "$..description"
+    # Check description fields on objects, but avoid false positives for
+    # schema property names like properties.description.
+    given: "$..[?(@ && @.description)].description"
     then:
-      function: pattern
+      function: schema
       functionOptions:
-        match: "^[\\s\\S]*\\.\\s*$"
+        schema:
+          if:
+            type: string
+          then:
+            pattern: "^[\\s\\S]*\\.\\s*$"
   object-additionalProperties-defined:
     description: Object schemas should explicitly declare additionalProperties.
     message: "Schema is an object but does not declare additionalProperties."
