@@ -409,9 +409,9 @@ components:
       description: Publication state of an item.
       x-re-notes: >
         Known values:
-        - "published" - filters non-archived non-draft items
-        - "archived" - filters archived items
-        - "draft" - filters draft items (those are items which were
+          - "published" - filters non-archived non-draft items
+          - "archived" - filters archived items
+          - "draft" - filters draft items (those are items which were
         not published yet, this option is almost useless as such items are
         hidden for regular students)
       enum:
@@ -487,13 +487,13 @@ components:
         should be added as they are found.
       x-re-notes: >
         Known values:
-        - "withoutCategory" - not categorized stuff
-        - "general" - general courses, e.g. English
-        - "career" - career stuff, e.g. Mock Interview intensive
-        - "stem" - STEM courses
-        - "softSkills" - soft skills category courses
-        - "mathematics" - math courses
-        - "development" - courses for devs
+          - "withoutCategory" - not categorized stuff
+          - "general" - general courses, e.g. English
+          - "career" - career stuff, e.g. Mock Interview intensive
+          - "stem" - STEM courses
+          - "softSkills" - soft skills category courses
+          - "mathematics" - math courses
+          - "development" - courses for devs
       enum:
         - withoutCategory
         - general
@@ -918,15 +918,18 @@ components:
         possible values.
       x-re-notes: >
         Known values:
-        - "markdown" - Markdown block
-        - "content" - some attachment
-        - "coding" - basically exercise where something should be attached
-        - "image" - image block
+          - "markdown" - Markdown block
+          - "content" - some attachment
+          - "coding" - basically exercise where something should be attached
+          - "image" - image block
+          - "questions" - exercise with multiple questions
+          - "videoPlatform" - embedded video by link
       enum:
         - markdown
         - content
         - coding
         - image
+        - questions
       example: "markdown"
     LongreadMaterialDiscriminator:
       type: string
@@ -937,17 +940,19 @@ components:
         possible values.
       x-re-notes: >
         Known values:
-        - "markdown" - => LongreadMaterialType "markdown"
-        - "file" - => LongreadMaterialType "content"
-        - "coding" - => LongreadMaterialType "coding"
-        - "image" - => LongreadMaterialType "image"
-        - "questions" - => LongreadMaterialType "questions"
+          - "markdown" - => LongreadMaterialType "markdown"
+          - "file" - => LongreadMaterialType "content"
+          - "coding" - => LongreadMaterialType "coding"
+          - "image" - => LongreadMaterialType "image"
+          - "questions" - => LongreadMaterialType "questions"
+          - "videoPlatform" - => LongreadMaterialType "videoPlatform"
       enum:
         - markdown
         - file
         - coding
         - image
         - questions
+        - videoPlatform
       example: "markdown"
     LongreadMaterialViewType:
       type: string
@@ -958,17 +963,19 @@ components:
         possible values.
       x-re-notes: >
         Known values:
-        - "ngxMarkdown" - Markdown rendered with ngx-markdown
-        - "file" - file attachment that is downloadable
-        - "exerciseCoding" - exercise that needs attachment for completion
-        - "image" - rendered image
-        - "exerciseQuestions" - exercise that has questions to complete
+          - "ngxMarkdown" - Markdown rendered with ngx-markdown
+          - "file" - file attachment that is downloadable
+          - "exerciseCoding" - exercise that needs attachment for completion
+          - "image" - rendered image
+          - "exerciseQuestions" - exercise that has questions to complete
+          - "videoPlatform" - embedded video by link
       enum:
         - ngxMarkdown
         - file
         - exerciseCoding
         - image
         - exerciseQuestions
+        - videoPlatform
       example: "ngxMarkdown"
     LongreadMaterialMediaType:
       type: string
@@ -981,9 +988,9 @@ components:
         This value seems to only show attachment type for downloadable file,
         it doesn't affect frontend.
         Known values:
-        - "file" - file attachment
-        - "image" - image attachment
-        - "video" - video attachment
+          - "file" - file attachment
+          - "image" - image attachment
+          - "video" - video attachment
       enum:
         - file
         - image
@@ -1002,8 +1009,8 @@ components:
         possible values.
       x-re-notes: >
         Known values:
-        - "File" - => LongreadMaterialMediaType "file"
-        - "Image" - => LongreadMaterialMediaType "image"
+          - "File" - => LongreadMaterialMediaType "file"
+          - "Image" - => LongreadMaterialMediaType "image"
       enum:
         - File
         - Image
@@ -1050,7 +1057,9 @@ components:
       nullable: true
       description: JSON-serialized markdown content rendered in LMS.
       x-re-notes: >
-        Markdown blocks contain JSON with `value` and `isTuiEditor`.
+        Seen 2 different versions of JSON content:
+          1. `value`, `isTuiEditor`
+          2. `description`
         Seems to be nullable in places where can be omitted, e.g. in coding
         exercises there can be no description.
       example: '{"value":"<p>...</p>","isTuiEditor":true}'
@@ -1102,7 +1111,11 @@ components:
           required: [ averageScoreThreshold, isLateDaysEnabled ]
           properties:
             averageScoreThreshold:
-              $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
+              type: integer
+              minimum: 0
+              description: Average score threshold.
+              x-re-notes: Unknown usage.
+              example: 0
             isLateDaysEnabled:
               type: boolean
               description: Indicates if late days can be used for this activity.
@@ -1138,11 +1151,10 @@ components:
     LongreadExerciseQuestionsMode:
       type: string
       description: Questions mode.
-      x-re-notes: >
-        Unknown usage, as the only seen value is "atMoment".
-        It seems there is only one questions mode for now.
+      x-re-notes: Unknown usage, as the logic behind this value is unknown.
       enum:
         - atMoment
+        - byDeadline
       example: "atMoment"
     QuestionsSettingsEvalStrategy:
       type: string
@@ -1181,9 +1193,11 @@ components:
       description: Question type.
       x-re-notes: >
         Known values:
-        - "input" - question that needs input as an answer
+          - "input" - question that requires input as answer
+          - "singleChoice" - question that requires the right choice as answer
       enum:
         - input
+        - singleChoice
       example: "input"
     QuestionItemEvaluationBlock:
       type: object
@@ -1210,31 +1224,102 @@ components:
       minimum: 0
       description: Score (max possible) for answering the question correctly.
       example: 5
-    LongreadExerciseQuestionItem:
-      description: Question item within a questions exercise.
+    QuestionOptionId:
+      type: integer
+      minimum: 0
+      description: Numeric identifier of the question option.
+      example: 471
+    QuestionItemOption:
+      type: object
+      additionalProperties: false
+      description: Option is a possible answer that can be chosen.
+      required: [ id, value, order, isCorrect, recommendation ]
+      properties:
+        id:
+          $ref: "#/components/schemas/QuestionOptionId"
+        value:
+          type: string
+          description: The option value rendered on frontend.
+          example: "Ознакомлен"
+        order:
+          allOf:
+            - $ref: "#/components/schemas/ListingOrder"
+          example: 0
+        isCorrect:
+          type: boolean
+          description: Indicates if the option is the correct answer.
+          x-re-notes: >
+            Seen value to be true when there is only one possible option.
+          example: true
+        recommendation:
+          type: string
+          description: Text rendered under the option on frontend.
+          x-re-notes: Need to investigate more what actual sense this has.
+          example: "-"
+    QuestionItemOptions:
+      type: array
+      items:
+        $ref: "#/components/schemas/QuestionItemOption"
+    longreadExerciseQuestionBase:
+      type: object
+      additionalProperties: false
+      x-re-properties-order:
+        ignored: true
+      required: [ type, id, order, content, score, attachments ]
+      properties:
+        type:
+          $ref: "#/components/schemas/QuestionItemType"
+        id:
+          $ref: "#/components/schemas/QuestionId"
+        order:
+          $ref: "#/components/schemas/ListingOrder"
+        content:
+          $ref: "#/components/schemas/QuestionItemContent"
+        score:
+          $ref: "#/components/schemas/QuestionItemScore"
+        attachments:
+          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsEmptyArray"
+    LongreadExerciseInputQuestionItem:
+      description: Question that needs input as answer.
       x-re-properties-order:
         ignored: true
       allOf:
+        - $ref: "#/components/schemas/longreadExerciseQuestionBase"
         - $ref: "#/components/schemas/QuestionItemEvaluationBlock"
+    LongreadExerciseSingleChoiceQuestionitem:
+      description: Question that requires the right choice as answer.
+      x-re-properties-order:
+        ignored: true
+      allOf:
+        - $ref: "#/components/schemas/longreadExerciseQuestionBase"
         - type: object
           additionalProperties: false
-          required: [ type, input, id, order, content, score, attachments ]
+          required: [ options, areOptionsShuffled, singleChoice ]
           properties:
-            type:
-              $ref: "#/components/schemas/QuestionItemType"
-            input:
-              $ref: "#/components/schemas/QuestionItemEvaluationBlock"
-            id:
-              $ref: "#/components/schemas/QuestionId"
-            order:
-              $ref: "#/components/schemas/ListingOrder"
-            content:
-              $ref: "#/components/schemas/QuestionItemContent"
-            score:
-              $ref: "#/components/schemas/QuestionItemScore"
-            attachments:
-              # yamllint disable-line rule:line-length
-              $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsEmptyArray"
+            options:
+              $ref: "#/components/schemas/QuestionItemOptions"
+            areOptionsShuffled:
+              type: boolean
+              description: >
+                Indicates if options need to be shuffled on frontend.
+              example: false
+            singleChoice:
+              type: object
+              additionalProperties: false
+              required: [ options ]
+              properties:
+                options:
+                  $ref: "#/components/schemas/QuestionItemOptions"
+    LongreadExerciseQuestionItem:
+      oneOf:
+        - $ref: "#/components/schemas/LongreadExerciseInputQuestionItem"
+        - $ref: "#/components/schemas/LongreadExerciseSingleChoiceQuestionitem"
+      discriminator:
+        propertyName: type
+        mapping:
+          input: "#/components/schemas/LongreadExerciseInputQuestionItem"
+          # yamllint disable-line rule:line-length
+          singleChoice: "#/components/schemas/LongreadExerciseSingleChoiceQuestionitem"
     longreadMaterialBase:
       type: object
       additionalProperties: false
@@ -1256,6 +1341,30 @@ components:
           allOf:
             - $ref: "#/components/schemas/ListingOrder"
           example: 0
+    VideoId:
+      type: string
+      format: uuid
+      description: Video identifier in UUID format.
+      example: "89b9757f-3f1d-4e9b-8f50-4c7f99617ff4"
+    VideoPlatformState:
+      type: string
+      description: Video state.
+      x-re-notes: >
+        Seems to show the current video state, e.g. it can be in the
+        transcribation process at the moment? But seen only one value,
+        so this is just a guess.
+        Known values:
+          - "ready" - video is ready
+      enum:
+        - ready
+      example: "ready"
+    VideoPlatformViewType:
+      type: string
+      description: View type.
+      x-re-notes: Seems useless and seen only as one value.
+      enum:
+        - videoPlatform
+      example: "videoPlatform"
     longreadExerciseMaterialBase:
       x-re-properties-order:
         ignored: true
@@ -1368,7 +1477,11 @@ components:
                       publishDate, publishedAt, content ]
           properties:
             imageScale:
-              $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
+              type: integer
+              nullable: true
+              description: Image scale.
+              x-re-notes: Not exactly known how this scale works if set.
+              example: 100
             mediaType:
               allOf:
                 - $ref: "#/components/schemas/LongreadMaterialMediaType"
@@ -1411,6 +1524,42 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/LongreadExerciseQuestionItem"
+    LongreadVideoPlatformMaterialItem:
+      x-re-properties-order:
+        ignored: true
+      allOf:
+        - $ref: "#/components/schemas/longreadMaterialBase"
+        - type: object
+          additionalProperties: false
+          required: [ name, description, videoId, timecodes, publishDate,
+                      videoState, url, viewType ]
+          properties:
+            name:
+              type: string
+              description: Embedded video title.
+              x-re-notes: For some reason not shown on frontend.
+              example: "Прожарка резюме и HR-собеседования"
+            description:
+              type: string
+              description: Embedded video description.
+              x-re-notes: >
+                Only seen as empty, so unknown if it is shown on frontend.
+              example: ""
+            videoId:
+              $ref: "#/components/schemas/VideoId"
+            timecodes:
+              # yamllint disable-line rule:line-length
+              $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsEmptyArray"
+            publishDate:
+              $ref: "#/components/schemas/PublishDate"
+            videoState:
+              $ref: "#/components/schemas/VideoPlatformState"
+            url:
+              type: string
+              format: uri
+              example: "https://vp-embed.example.com/?token=ey..."
+            viewType:
+              $ref: "#/components/schemas/VideoPlatformViewType"
     LongreadMaterialItem:
       oneOf:
         - $ref: "#/components/schemas/LongreadMarkdownMaterialItem"
@@ -1418,6 +1567,7 @@ components:
         - $ref: "#/components/schemas/LongreadExerciseCodingMaterialItem"
         - $ref: "#/components/schemas/LongreadImageMaterialItem"
         - $ref: "#/components/schemas/LongreadExerciseQuestionsMaterialItem"
+        - $ref: "#/components/schemas/LongreadVideoPlatformMaterialItem"
       discriminator:
         propertyName: discriminator
         mapping:
@@ -1427,6 +1577,8 @@ components:
           image: "#/components/schemas/LongreadImageMaterialItem"
           # yamllint disable-line rule:line-length
           questions: "#/components/schemas/LongreadExerciseQuestionsMaterialItem"
+          # yamllint disable-line rule:line-length
+          videoPlatform: "#/components/schemas/LongreadVideoPlatformMaterialItem"
     LongreadMaterialsByIdResponse:
       type: object
       additionalProperties: false
