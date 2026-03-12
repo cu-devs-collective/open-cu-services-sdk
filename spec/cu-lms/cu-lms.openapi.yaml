@@ -385,6 +385,15 @@ components:
           example: 1
         traceId:
           $ref: "#/components/schemas/BaseErrorTraceId"
+    _propertyNeedsAnalysisSeenAsNull:
+      type: string
+      nullable: true
+      description: Special object for values only seen as null.
+      enum:
+        - null
+      x-re-needs-analysis: true
+      x-re-needs-analysis-notes:
+        This field needs analysis, value seen only as null.
     PublicationState:
       type: string
       description: Publication state of an item.
@@ -1082,13 +1091,7 @@ components:
           required: [ averageScoreThreshold, isLateDaysEnabled ]
           properties:
             averageScoreThreshold:  # TODO: averageScoreThreshold analysis
-              type: string
-              nullable: true
-              enum:
-                - null
-              x-re-needs-analysis: true
-              x-re-needs-analysis-notes: This needs analysis for non-null value.
-              x-re-notes: Value is temporary set to any object.
+              $ref: "#/components/schemas/_propertyNeedsAnalysisSeenAsNull"
             isLateDaysEnabled:
               type: boolean
               description: Indicates if late days can be used for this activity.
@@ -1136,10 +1139,29 @@ components:
       enum:
         - atMoment
       example: "atMoment"
-    LongreadExerciseQuestionsSettings:  # TODO: LongreadExerciseQuestionsSet
+    QuestionsSettingsEvalStrategy:
+      type: string
+      description: Evaluation strategy.
+      x-re-notes: >
+        Unknown usage, as the only seen value is "last".
+        It seems there is only one eval strategy for now.
+      enum:
+        - last
+      example: "last"
+    LongreadExerciseQuestionsSettings:
       type: object
       additionalProperties: false
       description: "#TODO: LongreadExerciseQuestionsSettings description."
+      required: [ questionsPerAttempt, attemptsLimit, evaluationStrategy ]
+      properties:
+        questionsPerAttempt:
+          $ref: "#/components/schemas/_propertyNeedsAnalysisSeenAsNull"
+        attemptsLimit:
+          type: integer
+          minimum: 0
+          example: 1
+        evaluationStrategy:
+          $ref: "#/components/schemas/QuestionsSettingsEvalStrategy"
     QuizId:
       x-re-notes: It seems that this is the same as TaskId.
       allOf:
@@ -1281,13 +1303,7 @@ components:
                       publishDate, publishedAt, content ]
           properties:
             imageScale:  # TODO: imageScale analysis
-              type: string
-              nullable: true
-              enum:
-                - null
-              x-re-needs-analysis: true
-              x-re-needs-analysis-notes: Needs analysis for non-null value.
-              x-re-notes: Value is temporary set to any object.
+              $ref: "#/components/schemas/_propertyNeedsAnalysisSeenAsNull"
             mediaType:
               allOf:
                 - $ref: "#/components/schemas/LongreadMaterialMediaType"
