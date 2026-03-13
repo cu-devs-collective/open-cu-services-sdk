@@ -1013,9 +1013,11 @@ components:
         Known values:
           - "File" - => LongreadMaterialMediaType "file"
           - "Image" - => LongreadMaterialMediaType "image"
+          - "Video" - => LongreadMaterialMediaType "video"
       enum:
         - File
         - Image
+        - Video
       example: "File"
     LongreadMaterialVersion:
       type: string
@@ -1214,7 +1216,7 @@ components:
       required: [ correctAnswer, autoEvaluation, recommendation ]
       properties:
         correctAnswer:
-          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
+          $ref: "#/components/schemas/QuestionItemCorrectAnswer"
         autoEvaluation:
           type: boolean
           description: Indicates if the question is auto evaluated.
@@ -1268,6 +1270,41 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/QuestionItemOption"
+    QuestionItemCorrectAnswerType:
+      type: string
+      x-re-notes: >
+        Known values:
+          - "inputStringCorrectAnswer" - shows correct input answers
+      enum:
+        - inputStringCorrectAnswer
+      example: "inputStringCorrectAnswer"
+    QuestionItemCorrectAnswerInputStringCorrectAnswer:
+      type: object
+      additionalProperties: false
+      required: [ type, variants ]
+      properties:
+        type:
+          $ref: "#/components/schemas/QuestionItemCorrectAnswerType"
+        variants:
+          type: array
+          items:
+            type: string
+          example: [ "АБББ", "А Б Б Б", "А, Б, Б, Б" ]
+    QuestionItemCorrectAnswer:
+      # yamllint disable rule:line-length
+      nullable: true
+      x-re-notes: >
+        There can be more than one discriminator type, but for now seen
+        only one which is "inputStringCorrectAnswer".
+      allOf:
+        - $ref: "#/components/schemas/QuestionItemCorrectAnswerInputStringCorrectAnswer"
+    #  oneOf:
+    #    - $ref: "#/components/schemas/QuestionItemCorrectAnswerInputStringCorrectAnswer"
+    #  discriminator:
+    #    propertyName: type
+    #    mapping:
+    #      inputStringCorrectAnswer: "#/components/schemas/QuestionItemCorrectAnswerInputStringCorrectAnswer"
+    #  yamllint enable rule:line-length
     longreadExerciseQuestionBase:
       type: object
       additionalProperties: false
