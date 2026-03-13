@@ -946,6 +946,7 @@ components:
           - "image" - => LongreadMaterialType "image"
           - "questions" - => LongreadMaterialType "questions"
           - "videoPlatform" - => LongreadMaterialType "videoPlatform"
+          - "video" - => LongreadMaterialType "content"
       enum:
         - markdown
         - file
@@ -953,6 +954,7 @@ components:
         - image
         - questions
         - videoPlatform
+        - video
       example: "markdown"
     LongreadMaterialViewType:
       type: string
@@ -1200,9 +1202,11 @@ components:
         Known values:
           - "input" - question that requires input as answer
           - "singleChoice" - question that requires the right choice as answer
+          - "multipleChoice" - question that requires chosing multiple options
       enum:
         - input
         - singleChoice
+        - multipleChoice
       example: "input"
     QuestionOptionRecommendation:
       type: string
@@ -1270,13 +1274,15 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/QuestionItemOption"
-    QuestionItemCorrectAnswerType:
+    QuestionCorrectAnswerType:
       type: string
       x-re-notes: >
         Known values:
-          - "inputStringCorrectAnswer" - shows correct input answers
+          - "inputStringCorrectAnswer" - shows correct string input answers
+          - "inputNumberCorrectAnswer" - shows correct number input answers
       enum:
         - inputStringCorrectAnswer
+        - inputNumberCorrectAnswer
       example: "inputStringCorrectAnswer"
     QuestionItemCorrectAnswerInputStringCorrectAnswer:
       type: object
@@ -1284,27 +1290,48 @@ components:
       required: [ type, variants ]
       properties:
         type:
-          $ref: "#/components/schemas/QuestionItemCorrectAnswerType"
+          $ref: "#/components/schemas/QuestionCorrectAnswerType"
         variants:
           type: array
           items:
             type: string
           example: [ "АБББ", "А Б Б Б", "А, Б, Б, Б" ]
+    QuestionItemCorrectAnswerInputNumberCorrectAnswer:
+      type: object
+      additionalProperties: false
+      required: [ type, variants ]
+      properties:
+        type:
+          $ref: "#/components/schemas/QuestionCorrectAnswerType"
+        variants:
+          type: array
+          items:
+            type: number
+          example: [ 2.5 ]
+        showPrecisionHint:
+          type: boolean
+          description: Indicates if precision hint should be shown on frontend.
+          example: true
+        autoEvaluationPrecision:
+          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
+        precision:
+          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
     QuestionItemCorrectAnswer:
       # yamllint disable rule:line-length
       nullable: true
-      x-re-notes: >
-        There can be more than one discriminator type, but for now seen
-        only one which is "inputStringCorrectAnswer".
-      allOf:
+      oneOf:
         - $ref: "#/components/schemas/QuestionItemCorrectAnswerInputStringCorrectAnswer"
-    #  oneOf:
-    #    - $ref: "#/components/schemas/QuestionItemCorrectAnswerInputStringCorrectAnswer"
-    #  discriminator:
-    #    propertyName: type
-    #    mapping:
-    #      inputStringCorrectAnswer: "#/components/schemas/QuestionItemCorrectAnswerInputStringCorrectAnswer"
-    #  yamllint enable rule:line-length
+        - $ref: "#/components/schemas/QuestionItemCorrectAnswerInputNumberCorrectAnswer"
+      discriminator:
+        propertyName: type
+        mapping:
+          inputStringCorrectAnswer: "#/components/schemas/QuestionItemCorrectAnswerInputStringCorrectAnswer"
+          inputNumberCorrectAnswer: "#/components/schemas/QuestionItemCorrectAnswerInputNumberCorrectAnswer"
+    # yamllint enable rule:line-length
+    QuestionitemAreOptionsShuffled:
+      type: boolean
+      description: Indicates if options need to be shuffled on frontend.
+      example: false
     longreadExerciseQuestionBase:
       type: object
       additionalProperties: false
@@ -1350,10 +1377,7 @@ components:
             options:
               $ref: "#/components/schemas/QuestionItemOptions"
             areOptionsShuffled:
-              type: boolean
-              description: >
-                Indicates if options need to be shuffled on frontend.
-              example: false
+              $ref: "#/components/schemas/QuestionitemAreOptionsShuffled"
             singleChoice:
               type: object
               additionalProperties: false
@@ -1361,16 +1385,40 @@ components:
               properties:
                 options:
                   $ref: "#/components/schemas/QuestionItemOptions"
+    LongreadExerciseMultipleChoiceQuestionItem:
+      description: Question that requires chosing multiple options as answer.
+      x-re-properties-order:
+        ignored: true
+      allOf:
+        - $ref: "#/components/schemas/longreadExerciseQuestionBase"
+        - type: object
+          additionalProperties: false
+          required: [ options, areOptionsShuffled, multipleChoice ]
+          properties:
+            options:
+              $ref: "#/components/schemas/QuestionItemOptions"
+            areOptionsShuffled:
+              $ref: "#/components/schemas/QuestionitemAreOptionsShuffled"
+            multipleChoice:
+              type: object
+              additionalProperties: false
+              required: [ options ]
+              properties:
+                options:
+                  $ref: "#/components/schemas/QuestionItemOptions"
     LongreadExerciseQuestionItem:
+      # yamllint disable rule:line-length
       oneOf:
         - $ref: "#/components/schemas/LongreadExerciseInputQuestionItem"
         - $ref: "#/components/schemas/LongreadExerciseSingleChoiceQuestionitem"
+        - $ref: "#/components/schemas/LongreadExerciseMultipleChoiceQuestionItem"
       discriminator:
         propertyName: type
         mapping:
           input: "#/components/schemas/LongreadExerciseInputQuestionItem"
-          # yamllint disable-line rule:line-length
           singleChoice: "#/components/schemas/LongreadExerciseSingleChoiceQuestionitem"
+          multipleChoice: "#/components/schemas/LongreadExerciseMultipleChoiceQuestionItem"
+    # yamllint enable rule:line-length
     longreadMaterialBase:
       type: object
       additionalProperties: false
