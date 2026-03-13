@@ -1126,7 +1126,7 @@ components:
           required: [ averageScoreThreshold, isLateDaysEnabled ]
           properties:
             averageScoreThreshold:
-              type: integer
+              type: number
               minimum: 0
               nullable: true
               description: Average score threshold.
@@ -1140,6 +1140,9 @@ components:
       type: object
       additionalProperties: false
       description: Estimation and grading constraints for exercise material.
+      x-re-notes: >
+        There are rare cases when value of
+        `maxScore`, `deadline` and `activity` is null.
       required: [ startDate, timer, maxScore, deadline, activity ]
       properties:
         startDate:
@@ -1149,11 +1152,17 @@ components:
         timer:
           $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
         maxScore:
-          $ref: "#/components/schemas/MaxScore"
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/MaxScore"
         deadline:
-          $ref: "#/components/schemas/Deadline"
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/Deadline"
         activity:
-          $ref: "#/components/schemas/LongreadMaterialActivity"
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/LongreadMaterialActivity"
     BackloggedAt:
       type: string
       format: date-time
@@ -1366,7 +1375,9 @@ components:
         score:
           $ref: "#/components/schemas/QuestionItemScore"
         attachments:
-          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsEmptyArray"
+          type: array
+          items:
+            $ref: "#/components/schemas/LongreadMaterialAttachmentItem"
     LongreadExerciseInputQuestionItem:
       description: Question that needs input as answer.
       x-re-properties-order:
@@ -1465,13 +1476,14 @@ components:
       type: string
       description: Video state.
       x-re-notes: >
-        Seems to show the current video state, e.g. it can be in the
-        transcribation process at the moment? But seen only one value,
-        so this is just a guess.
+        Seems to somehow show the current video state.
+        But it's hard to get the sense of it.
         Known values:
           - "ready" - video is ready
+          - "empty" - video is empty (unknown what that means)
       enum:
         - ready
+        - empty
       example: "ready"
     VideoPlatformViewType:
       type: string
@@ -1702,7 +1714,35 @@ components:
               $ref: "#/components/schemas/PublishedAt"
             content:
               $ref: "#/components/schemas/LongreadMaterialContent"
+    LongreadAudioMaterialItem:
+      x-re-properties-order:
+        ignored: true
+      x-re-notes: >
+        Internally is the same as LongreadFileMaterialItem, but schema
+        is recreated as ogen doesn't support "sum types with same names".
+      allOf:
+        - $ref: "#/components/schemas/longreadMaterialBase"
+        - type: object
+          additionalProperties: false
+          required: [ mediaType, filename, version, length, publishDate,
+                      publishedAt, content ]
+          properties:
+            mediaType:
+              $ref: "#/components/schemas/LongreadMaterialMediaType"
+            filename:
+              $ref: "#/components/schemas/FileNameObjectPath"
+            version:
+              $ref: "#/components/schemas/LongreadMaterialVersion"
+            length:
+              $ref: "#/components/schemas/LongreadMaterialLength"
+            publishDate:
+              $ref: "#/components/schemas/PublishDate"
+            publishedAt:
+              $ref: "#/components/schemas/PublishedAt"
+            content:
+              $ref: "#/components/schemas/LongreadMaterialContent"
     LongreadMaterialItem:
+      # yamllint disable rule:line-length
       oneOf:
         - $ref: "#/components/schemas/LongreadMarkdownMaterialItem"
         - $ref: "#/components/schemas/LongreadFileMaterialItem"
@@ -1711,6 +1751,7 @@ components:
         - $ref: "#/components/schemas/LongreadExerciseQuestionsMaterialItem"
         - $ref: "#/components/schemas/LongreadVideoPlatformMaterialItem"
         - $ref: "#/components/schemas/LongreadVideoMaterialItem"
+        - $ref: "#/components/schemas/LongreadAudioMaterialItem"
       discriminator:
         propertyName: discriminator
         mapping:
@@ -1718,11 +1759,11 @@ components:
           file: "#/components/schemas/LongreadFileMaterialItem"
           coding: "#/components/schemas/LongreadExerciseCodingMaterialItem"
           image: "#/components/schemas/LongreadImageMaterialItem"
-          # yamllint disable-line rule:line-length
           questions: "#/components/schemas/LongreadExerciseQuestionsMaterialItem"
-          # yamllint disable-line rule:line-length
           videoPlatform: "#/components/schemas/LongreadVideoPlatformMaterialItem"
           video: "#/components/schemas/LongreadVideoMaterialItem"
+          audio: "#/components/schemas/LongreadAudioMaterialItem"
+    # yamllint enable rule:line-length
     LongreadMaterialsByIdResponse:
       type: object
       additionalProperties: false
