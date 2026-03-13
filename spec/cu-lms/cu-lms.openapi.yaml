@@ -930,6 +930,7 @@ components:
         - coding
         - image
         - questions
+        - videoPlatform
       example: "markdown"
     LongreadMaterialDiscriminator:
       type: string
@@ -947,6 +948,7 @@ components:
           - "questions" - => LongreadMaterialType "questions"
           - "videoPlatform" - => LongreadMaterialType "videoPlatform"
           - "video" - => LongreadMaterialType "content"
+          - "audio" - => LongreadMaterialType "content"
       enum:
         - markdown
         - file
@@ -955,6 +957,7 @@ components:
         - questions
         - videoPlatform
         - video
+        - audio
       example: "markdown"
     LongreadMaterialViewType:
       type: string
@@ -972,6 +975,7 @@ components:
           - "exerciseQuestions" - exercise that has questions to complete
           - "videoPlatform" - embedded video by link
           - "video" - embedded video by file
+          - "audio" - embedded audio by file
       enum:
         - ngxMarkdown
         - file
@@ -980,6 +984,7 @@ components:
         - exerciseQuestions
         - videoPlatform
         - video
+        - audio
       example: "ngxMarkdown"
     LongreadMaterialMediaType:
       type: string
@@ -995,10 +1000,12 @@ components:
           - "file" - file attachment
           - "image" - image attachment
           - "video" - video attachment
+          - "audio" - audio attachment
       enum:
         - file
         - image
         - video
+        - audio
       example: "file"
     LongreadMaterialMediaTypeUpper:
       type: string
@@ -1016,10 +1023,12 @@ components:
           - "File" - => LongreadMaterialMediaType "file"
           - "Image" - => LongreadMaterialMediaType "image"
           - "Video" - => LongreadMaterialMediaType "video"
+          - "Audio" - => LongreadMaterialMediaType "audio"
       enum:
         - File
         - Image
         - Video
+        - Audio
       example: "File"
     LongreadMaterialVersion:
       type: string
@@ -1299,7 +1308,8 @@ components:
     QuestionItemCorrectAnswerInputNumberCorrectAnswer:
       type: object
       additionalProperties: false
-      required: [ type, variants ]
+      required: [ type, variants, showPrecisionHint, autoEvaluationPrecision,
+                  precision ]
       properties:
         type:
           $ref: "#/components/schemas/QuestionCorrectAnswerType"
@@ -1313,9 +1323,15 @@ components:
           description: Indicates if precision hint should be shown on frontend.
           example: true
         autoEvaluationPrecision:
-          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
+          type: string
+          pattern: "^0(\\.0+)?"
+          nullable: true
+          example: "0.00"
         precision:
-          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
+          type: integer
+          minimum: 0
+          nullable: true
+          example: 2
     QuestionItemCorrectAnswer:
       # yamllint disable rule:line-length
       nullable: true
