@@ -1,0 +1,32 @@
+{{- /* Template package metadata for generated Python SDKs. */ -}}
+[project]
+name = {{ printf "%q" .ProjectName }}
+version = "0.0.0" {{- /* The real version is set on release. */}}
+description = {{ printf "%q" .PackageDescription }}
+authors = [
+  { name = "CU Devs Collective", email = "contact@centraluniversity.dev" }
+]
+license = { text = "MIT" }
+requires-python = "{{ .PythonVersion }}"
+dependencies = [
+  "httpx{{ .HttpxVersion }}",
+]
+
+[project.urls]
+Homepage = "https://github.com/cu-devs-collective/open-cu-services-openapi"
+Repository = "https://github.com/cu-devs-collective/open-cu-services-openapi"
+Issues = "https://github.com/cu-devs-collective/open-cu-services-openapi/issues"
+
+[tool.uv.build-backend]
+module-name = {{ printf "%q" .PackageImportName }}
+module-root = ""
+
+[build-system]
+requires = ["uv_build{{ .UvVersion }}"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.lint]
+select = ["F", "I", "UP"]
