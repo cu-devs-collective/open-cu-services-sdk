@@ -82,16 +82,16 @@ def create_lms_client(
 
 def create_lms_client_from_env(
     *,
-    env_var: str = "CU_LMS_BFF_COOKIE",
+    bff_cookie_env_var: str = "CU_LMS_BFF_COOKIE",
     base_url: str = DEFAULT_BASE_URL,
     headers: dict[str, str] = {},
     cookies: dict[str, str] = {},
     timeout: Optional[httpx.Timeout] = None,
     **kwargs: Any,
 ) -> BffCookieAuthenticatedClient:
-    bff_cookie = os.getenv(env_var, "")
+    bff_cookie = os.getenv(bff_cookie_env_var, "")
     if not bff_cookie:
-        raise BffCookieIsEmptyError(f"{env_var} is not set in env")
+        raise BffCookieIsEmptyError(f"{bff_cookie_env_var} is not set in env")
 
     return create_lms_client(
         bff_cookie=bff_cookie,
