@@ -8,9 +8,12 @@ set -euo pipefail
 # - cu-lms -> @cu-devs-collective/open-cu-services-lmsapi
 #------------------------------------------------------------------------------
 
+# package.json dev dependencies versions
 OPENAPI_TS_VERSION="0.94.0"
 TYPESCRIPT_VERSION="5.9.3"
+# package.json dependencies versions
 ZOD_VERSION="4.3.6"
+# package.json package manager version
 PNPM_VERSION="10.31.0"
 
 SPEC_KEYS_TO_GENERATE=(

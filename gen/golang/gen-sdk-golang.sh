@@ -8,6 +8,7 @@ set -euo pipefail
 # - cu-lms -> github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi
 #------------------------------------------------------------------------------
 
+# codegen version
 OGEN_VERSION="v1.20.1"
 
 SPEC_KEYS_TO_GENERATE=(
