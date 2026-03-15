@@ -66,8 +66,7 @@ generate-golang:
 .PHONY: generate-python
 generate-python:
 	$(info Running Python SDK generation...)
-	$(info Skipped - not supported yet)
-# 	@$(GEN_SDK) python
+	@$(GEN_SDK) python
 
 .PHONY: generate-typescript
 generate-typescript:
