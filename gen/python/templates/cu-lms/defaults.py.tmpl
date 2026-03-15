@@ -11,10 +11,51 @@ from .client import AuthenticatedClient
 
 DEFAULT_BASE_URL = {{ printf "%q" .BaseURL }}
 DEFAULT_USER_AGENT = {{ printf "%q" .UserAgent }}
+BFF_COOKIE_NAME = "bff.cookie"
 
 
 class BffCookieIsEmptyError(ValueError):
     """Raised when the LMS session cookie is missing."""
+
+
+class BffCookieAuthenticatedClient(AuthenticatedClient):
+    """Authenticated client that sends the LMS session cookie."""
+
+    def _build_headers(self) -> dict[str, str]:
+        headers = dict(self._headers)
+        headers.setdefault("User-Agent", DEFAULT_USER_AGENT)
+        return headers
+
+    def _build_cookies(self) -> dict[str, str]:
+        cookies = dict(self._cookies)
+        cookies[BFF_COOKIE_NAME] = self.token
+        return cookies
+
+    def get_httpx_client(self) -> httpx.Client:
+        if self._client is None:
+            self._client = httpx.Client(
+                base_url=self._base_url,
+                cookies=self._build_cookies(),
+                headers=self._build_headers(),
+                timeout=self._timeout,
+                verify=self._verify_ssl,
+                follow_redirects=self._follow_redirects,
+                **self._httpx_args,
+            )
+        return self._client
+
+    def get_async_httpx_client(self) -> httpx.AsyncClient:
+        if self._async_client is None:
+            self._async_client = httpx.AsyncClient(
+                base_url=self._base_url,
+                cookies=self._build_cookies(),
+                headers=self._build_headers(),
+                timeout=self._timeout,
+                verify=self._verify_ssl,
+                follow_redirects=self._follow_redirects,
+                **self._httpx_args,
+            )
+        return self._async_client
 
 
 def create_lms_client(
@@ -25,11 +66,11 @@ def create_lms_client(
     cookies: dict[str, str] = {},
     timeout: Optional[httpx.Timeout] = None,
     **kwargs: Any,
-) -> AuthenticatedClient:
+) -> BffCookieAuthenticatedClient:
     if not bff_cookie:
         raise BffCookieIsEmptyError("bff_cookie is empty")
 
-    return AuthenticatedClient(
+    return BffCookieAuthenticatedClient(
         base_url=base_url,
         token=bff_cookie,
         headers=headers,
@@ -47,7 +88,7 @@ def create_lms_client_from_env(
     cookies: dict[str, str] = {},
     timeout: Optional[httpx.Timeout] = None,
     **kwargs: Any,
-) -> AuthenticatedClient:
+) -> BffCookieAuthenticatedClient:
     bff_cookie = os.getenv(env_var, "")
     if not bff_cookie:
         raise BffCookieIsEmptyError(f"{env_var} is not set in env")

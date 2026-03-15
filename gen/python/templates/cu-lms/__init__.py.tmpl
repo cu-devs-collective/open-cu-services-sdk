@@ -5,8 +5,10 @@
 
 from .client import AuthenticatedClient, Client
 from .defaults import (
+    BFF_COOKIE_NAME,
     DEFAULT_BASE_URL,
     DEFAULT_USER_AGENT,
+    BffCookieAuthenticatedClient,
     BffCookieIsEmptyError,
     create_lms_client,
     create_lms_client_from_env,
@@ -14,6 +16,8 @@ from .defaults import (
 
 __all__ = (
     "AuthenticatedClient",
+    "BFF_COOKIE_NAME",
+    "BffCookieAuthenticatedClient",
     "BffCookieIsEmptyError",
     "Client",
     "DEFAULT_BASE_URL",
