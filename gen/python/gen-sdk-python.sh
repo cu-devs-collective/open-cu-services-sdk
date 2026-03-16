@@ -74,6 +74,7 @@ write_generator_config_file() {
     local tmpl="${TEMPLATE_DIR}/common/openapi-python-client-config.yml.tmpl"
 
     render_template "$tmpl" "$file" <<EOF
+ProjectName: $(yaml_escape "$PROJECT_NAME")
 PackageImportName: $(yaml_escape "$PACKAGE_IMPORT_NAME")
 EOF
 }
@@ -130,9 +131,8 @@ sdk_generate() {
 
     mkdir -p "$OUT_DIR"
 
-    # 1) write package files
+    # 1) write generator config
     write_generator_config_file "$OUT_DIR" "$CONFIG_PATH"
-    write_pyproject_file "$OUT_DIR"
 
     # 2) run openapi-python-client generation
     info "Running openapi-python-client generation"
@@ -146,7 +146,10 @@ sdk_generate() {
     local package_dir="${OUT_DIR}/${PACKAGE_IMPORT_NAME}"
     [[ -d "$package_dir" ]] || die "Generated package directory not found: $package_dir"
 
-    # 3) write extra package-specific files
+    # 3) rewrite package pyproject.toml file
+    write_pyproject_file "$OUT_DIR"
+
+    # 4) write extra package-specific files
     if [[ -n "${EXTRA_FILES_WRITER:-}" ]]; then
         info "Writing extra files via ${EXTRA_FILES_WRITER}"
         "${EXTRA_FILES_WRITER}" "$OUT_DIR"
