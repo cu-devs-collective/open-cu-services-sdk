@@ -10,7 +10,7 @@
     "@cu-devs-collective/open-cu-services-lmsapi": "file:../../typescript/lmsapi"
   },
   "//(comment) dependencies": {
-    "@cu-devs-collective/open-cu-services-lmsapi": "git+https://github.com/cu-devs-collective/open-cu-services-openapi#@cu-devs-collective/open-cu-services-lmsapi@0.0.0&path:/typescript/lmsapi"
+    "@cu-devs-collective/open-cu-services-lmsapi": "git+https://github.com/cu-devs-collective/open-cu-services-openapi#typescript/lmsapi/0.0.0&path:/typescript/lmsapi"
   },
   "devDependencies": {
     "@types/node": "24.5.2",
