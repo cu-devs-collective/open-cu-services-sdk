@@ -136,7 +136,7 @@ sdk_generate() {
     # 1) write package files
     write_package_json_file "$OUT_DIR"
     write_tsconfig_file "$OUT_DIR"
-    local spec_rel="../../spec/${SPEC_PATH#${SPEC_BASE}/}"
+    local spec_rel="../../spec/${SPEC_PATH#"${SPEC_BASE}"/}"
     write_openapi_ts_config_file "$OUT_DIR" "$spec_rel"
 
     # 2) install pnpm deps
@@ -157,10 +157,14 @@ sdk_generate() {
     ensure_default_export "$OUT_DIR"
 }
 
-main() {
+ensure_tooling() {
     command -v node >/dev/null 2>&1 || die "Node.js is required"
     command -v pnpm >/dev/null 2>&1 || die "pnpm is required"
     command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
+}
+
+main() {
+    ensure_tooling
 
     local key
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do

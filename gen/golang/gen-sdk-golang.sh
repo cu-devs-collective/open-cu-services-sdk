@@ -151,7 +151,7 @@ sdk_generate() {
         fi
     fi
 
-    local spec_rel="../../spec/${SPEC_PATH#${SPEC_BASE}/}"
+    local spec_rel="../../spec/${SPEC_PATH#"${SPEC_BASE}"/}"
     if (( needs_rewrite )); then
         write_gen_file "$OUT_DIR" "$PKG_NAME" "$spec_rel"
     fi
@@ -170,9 +170,13 @@ sdk_generate() {
     (cd "$OUT_DIR" && go mod tidy)
 }
 
-main() {
+ensure_tooling() {
     command -v go >/dev/null 2>&1 || die "Go is required: https://go.dev/doc/install"
     command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
+}
+
+main() {
+    ensure_tooling
 
     local key
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do
