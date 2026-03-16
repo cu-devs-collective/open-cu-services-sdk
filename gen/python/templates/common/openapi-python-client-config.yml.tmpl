@@ -2,5 +2,5 @@
 
 package_name_override: {{ .PackageImportName }}
 post_hooks:
-  - ruff check . --fix-only --extend-select=I
-  - ruff format .
+  - ruff check . --fix-only --no-respect-gitignore
+  - ruff format . --no-respect-gitignore
