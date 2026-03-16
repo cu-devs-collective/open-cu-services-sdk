@@ -1,0 +1,11 @@
+[project]
+name = "open-cu-services-examples-python"
+version = "0.0.0"
+requires-python = ">=3.10"
+dependencies = [
+  "open-cu-services-lmsapi",
+]
+
+[tool.uv.sources]
+open-cu-services-lmsapi = { path = "../../python/lmsapi" }
+# open-cu-services-lmsapi = { git = "https://github.com/cu-devs-collective/open-cu-services-openapi", tag = "python/lmsapi/0.0.0", subdirectory = "python/lmsapi" }
