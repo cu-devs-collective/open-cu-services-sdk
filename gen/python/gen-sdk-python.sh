@@ -45,6 +45,7 @@ resolve_spec() {
             PACKAGE_DESC="Open CU Services LMS API Python SDK"
             OUT_DIR="${OUT_BASE}/${SDK_ID}"
             CONFIG_PATH="${OUT_DIR}/openapi-python-client-config.yml"
+            EXTRA_FILES_WRITER="write_lmsapi_files"
             BASE_URL="https://my.centraluniversity.ru/api"
             USER_AGENT="Open-CU-Services/Python"
             ;;
@@ -104,15 +105,16 @@ run_uvx() {
 
 write_lmsapi_files() {
     local out_dir="$1"
+    local pkg_import_name="$2"
 
-    local defaults_file="${out_dir}/defaults.py"
+    local defaults_file="${out_dir}/$pkg_import_name/defaults.py"
     local defaults_file_tmpl="${TEMPLATE_DIR}/cu-lms/defaults.py.tmpl"
     render_template "$defaults_file_tmpl" "$defaults_file" <<EOF
 BaseURL: $(yaml_escape "$BASE_URL")
 UserAgent: $(yaml_escape "$USER_AGENT")
 EOF
 
-    local init_file="${out_dir}/__init__.py"
+    local init_file="${out_dir}/$pkg_import_name/__init__.py"
     local init_file_tmpl="${TEMPLATE_DIR}/cu-lms/__init__.py.tmpl"
     render_template "$init_file_tmpl" "$init_file" <<EOF
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
@@ -152,7 +154,7 @@ sdk_generate() {
     # 4) write extra package-specific files
     if [[ -n "${EXTRA_FILES_WRITER:-}" ]]; then
         info "Writing extra files via ${EXTRA_FILES_WRITER}"
-        "${EXTRA_FILES_WRITER}" "$OUT_DIR"
+        "${EXTRA_FILES_WRITER}" "$OUT_DIR" "$PACKAGE_IMPORT_NAME"
     fi
 }
 
