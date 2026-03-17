@@ -4,13 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"net/http"
 
 	"github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi"
 )
 
 func main() {
-	// Loads bffCookie from env variable CU_LMS_BFF_COOKIE
-	client, err := lmsapi.NewDefaultClientFromEnv()
+	var statusCode int
+	client, err := lmsapi.NewDefaultClientFromEnv(
+		lmsapi.WithResponseEditor(
+			func(_ context.Context, resp *http.Response) error {
+				statusCode = resp.StatusCode
+				return nil
+			}),
+	)
 	if err != nil {
 		log.Fatalf("lmsapi.NewDefaultClientFromEnv error: %v", err)
 	}
@@ -25,6 +32,7 @@ func main() {
 		log.Fatalf("json.MarshalIndent error: %v", err)
 	}
 
-	log.Printf("client.CurrentStudent response of type %T:\n", res)
+	log.Printf("client.CurrentStudent response with statusCode=%d, type=%T:\n",
+		statusCode, res)
 	log.Println(string(out))
 }
