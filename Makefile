@@ -76,5 +76,4 @@ generate-typescript:
 .PHONY: generate-dart
 generate-dart:
 	$(info Running Dart SDK generation...)
-	$(info Skipped - not supported yet)
-# 	@$(GEN_SDK) dart
+	@$(GEN_SDK) dart
