@@ -5,7 +5,7 @@ set -euo pipefail
 # templates with runtime helpers.
 #
 # Current spec to package mapping:
-# - cu-lms -> open-cu-services-lmsapi
+# - lmsapi -> open-cu-services-lmsapi
 #------------------------------------------------------------------------------
 
 # codegen version
@@ -19,7 +19,7 @@ PYTHON_DATEUTIL_VERSION="==2.9.0.post0"
 UV_VERSION=">=0.10.0,<0.11.0"
 
 SPEC_KEYS_TO_GENERATE=(
-    cu-lms
+    lmsapi
 )
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -37,8 +37,8 @@ resolve_spec() {
     [[ -n "$key" ]] || die "Missing spec key"
 
     case "$key" in
-        cu-lms)
-            SPEC_PATH="${SPEC_BASE}/cu-lms/cu-lms.openapi.yaml"
+        lmsapi)
+            SPEC_PATH="${SPEC_BASE}/lmsapi/lmsapi.openapi.yaml"
             SDK_ID="lmsapi"
             PROJECT_NAME="open-cu-services-${SDK_ID}"
             PACKAGE_IMPORT_NAME="open_cu_services_${SDK_ID}"
@@ -73,7 +73,6 @@ write_generator_config_file() {
 
     local file="$2"
     local tmpl="${TEMPLATE_DIR}/common/openapi-python-client-config.yml.tmpl"
-
     render_template "$tmpl" "$file" <<EOF
 ProjectName: $(yaml_escape "$PROJECT_NAME")
 PackageImportName: $(yaml_escape "$PACKAGE_IMPORT_NAME")
@@ -85,7 +84,6 @@ write_pyproject_file() {
 
     local file="${out_dir}/pyproject.toml"
     local tmpl="${TEMPLATE_DIR}/common/pyproject.toml.tmpl"
-
     render_template "$tmpl" "$file" <<EOF
 ProjectName: $(yaml_escape "$PROJECT_NAME")
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
@@ -108,14 +106,14 @@ write_lmsapi_files() {
     local pkg_import_name="$2"
 
     local defaults_file="${out_dir}/$pkg_import_name/defaults.py"
-    local defaults_file_tmpl="${TEMPLATE_DIR}/cu-lms/defaults.py.tmpl"
+    local defaults_file_tmpl="${TEMPLATE_DIR}/lmsapi/defaults.py.tmpl"
     render_template "$defaults_file_tmpl" "$defaults_file" <<EOF
 BaseURL: $(yaml_escape "$BASE_URL")
 UserAgent: $(yaml_escape "$USER_AGENT")
 EOF
 
     local init_file="${out_dir}/$pkg_import_name/__init__.py"
-    local init_file_tmpl="${TEMPLATE_DIR}/cu-lms/__init__.py.tmpl"
+    local init_file_tmpl="${TEMPLATE_DIR}/lmsapi/__init__.py.tmpl"
     render_template "$init_file_tmpl" "$init_file" <<EOF
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
 EOF

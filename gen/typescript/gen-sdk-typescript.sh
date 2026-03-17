@@ -5,7 +5,7 @@ set -euo pipefail
 # and templates.
 #
 # Current spec to module mapping:
-# - cu-lms -> @cu-devs-collective/open-cu-services-lmsapi
+# - lmsapi -> @cu-devs-collective/open-cu-services-lmsapi
 #------------------------------------------------------------------------------
 
 # package.json dev dependencies versions
@@ -17,7 +17,7 @@ ZOD_VERSION="4.3.6"
 PNPM_VERSION="10.31.0"
 
 SPEC_KEYS_TO_GENERATE=(
-    cu-lms
+    lmsapi
 )
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -33,8 +33,8 @@ resolve_spec() {
     [[ -n "$key" ]] || die "Missing spec key"
 
     case "$key" in
-        cu-lms)
-            SPEC_PATH="${SPEC_BASE}/cu-lms/cu-lms.openapi.yaml"
+        lmsapi)
+            SPEC_PATH="${SPEC_BASE}/lmsapi/lmsapi.openapi.yaml"
             SDK_ID="lmsapi"
             PACKAGE_NAME="@cu-devs-collective/open-cu-services-${SDK_ID}"
             PACKAGE_DESC="Open CU Services LMS API TypeScript SDK"
@@ -68,7 +68,6 @@ write_package_json_file() {
 
     local file="${out_dir}/package.json"
     local tmpl="${TEMPLATE_DIR}/common/package.json.tmpl"
-
     render_template "$tmpl" "$file" <<EOF
 PackageName: $(yaml_escape "$PACKAGE_NAME")
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
@@ -84,7 +83,6 @@ write_gitignore_file() {
 
     local file="${out_dir}/.gitignore"
     local tmpl="${TEMPLATE_DIR}/common/gitignore.tmpl"
-
     render_template "$tmpl" "$file" <<'EOF'
 {}
 EOF
@@ -95,7 +93,6 @@ write_tsconfig_file() {
 
     local file="${out_dir}/tsconfig.json"
     local tmpl="${TEMPLATE_DIR}/common/tsconfig.json.tmpl"
-
     render_template "$tmpl" "$file" <<'EOF'
 {}
 EOF
@@ -107,7 +104,6 @@ write_openapi_ts_config_file() {
 
     local file="${out_dir}/openapi-ts.config.ts"
     local tmpl="${TEMPLATE_DIR}/common/openapi-ts.config.ts.tmpl"
-
     render_template "$tmpl" "$file" <<EOF
 SpecPath: $(yaml_escape "$spec_path")
 EOF

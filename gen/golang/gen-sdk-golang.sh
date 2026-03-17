@@ -5,14 +5,14 @@ set -euo pipefail
 # SDKs are generated as separate Go modules.
 #
 # Current spec to module mapping:
-# - cu-lms -> github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi
+# - lmsapi -> github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi
 #------------------------------------------------------------------------------
 
 # codegen version
 OGEN_VERSION="v1.20.1"
 
 SPEC_KEYS_TO_GENERATE=(
-    cu-lms
+    lmsapi
 )
 OGEN_CONFIG_PATH="../.ogen.yaml"
 
@@ -31,8 +31,8 @@ resolve_spec() {
     [[ -n "$key" ]] || die "Missing spec key"
 
     case "$key" in
-        cu-lms)
-            SPEC_PATH="${SPEC_BASE}/cu-lms/cu-lms.openapi.yaml"
+        lmsapi)
+            SPEC_PATH="${SPEC_BASE}/lmsapi/lmsapi.openapi.yaml"
             PKG_NAME="lmsapi"
             PKG_DESC="Package lmsapi provides SDK for the CU LMS API."
             OUT_DIR="${OUT_BASE}/${PKG_NAME}"
@@ -67,7 +67,6 @@ write_gen_file() {
 
     local file="${out_dir}/gen.go"
     local tmpl="${TEMPLATE_DIR}/common/gen.go.tmpl"
-
     render_template "$tmpl" "$file" <<EOF
 Package: $(yaml_escape "$pkg")
 OgenVersion: $(yaml_escape "$OGEN_VERSION")
@@ -95,7 +94,7 @@ UserAgent: $(yaml_escape "$USER_AGENT")
 EOF
 
     local default_gen_file="${out_dir}/default_gen.go"
-    local default_gen_file_tmpl="${TEMPLATE_DIR}/cu-lms/default_gen.go.tmpl"
+    local default_gen_file_tmpl="${TEMPLATE_DIR}/lmsapi/default_gen.go.tmpl"
     render_template "$default_gen_file_tmpl" "$default_gen_file" <<EOF
 Package: $(yaml_escape "$pkg")
 EOF
