@@ -151,6 +151,7 @@ write_lmsapi_files() {
     render_template "$defaults_tmpl" "$defaults_file" <<EOF
 BaseURL: $(yaml_escape "$BASE_URL")
 UserAgent: $(yaml_escape "$USER_AGENT")
+$(emit_defaults_template_data "$SDK_ID")
 EOF
 }
 
