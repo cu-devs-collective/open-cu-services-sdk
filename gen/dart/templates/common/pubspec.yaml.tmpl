@@ -1,0 +1,23 @@
+{{- /* Template pubspec.yaml for generated Dart SDKs. */ -}}
+name: {{ .PackageName }}
+version: 0.0.0 {{- /* The real version is set on release. */}}
+publish_to: none
+description: {{ .PackageDescription }}
+homepage: https://github.com/cu-devs-collective/open-cu-services-openapi
+repository: https://github.com/cu-devs-collective/open-cu-services-openapi
+issue_tracker: https://github.com/cu-devs-collective/open-cu-services-openapi/issues
+
+environment:
+  sdk: {{ printf "%q" .DartSdkVersion }}
+
+dependencies:
+  chopper: {{ printf "%q" .ChopperVersion }}
+  collection: {{ printf "%q" .CollectionVersion }}
+  http: {{ printf "%q" .HttpVersion }}
+  json_annotation: {{ printf "%q" .JsonAnnotationVersion }}
+
+dev_dependencies:
+  build_runner: {{ printf "%q" .BuildRunnerVersion }}
+  chopper_generator: {{ printf "%q" .ChopperGeneratorVersion }}
+  json_serializable: {{ printf "%q" .JsonSerializableVersion }}
+  swagger_dart_code_generator: {{ printf "%q" .SwaggerDartCodeGeneratorVersion }}
