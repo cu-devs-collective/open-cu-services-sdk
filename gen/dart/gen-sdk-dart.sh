@@ -70,6 +70,7 @@ render_template() {
 
 write_pubspec_file() {
     local out_dir="$1"
+
     local file="${out_dir}/pubspec.yaml"
     local tmpl="${TEMPLATE_DIR}/common/pubspec.yaml.tmpl"
 
@@ -90,6 +91,7 @@ EOF
 
 write_gitignore_file() {
     local out_dir="$1"
+
     local file="${out_dir}/.gitignore"
     local tmpl="${TEMPLATE_DIR}/common/gitignore.tmpl"
 
@@ -100,11 +102,34 @@ EOF
 
 write_analysis_options_file() {
     local out_dir="$1"
+
     local file="${out_dir}/analysis_options.yaml"
     local tmpl="${TEMPLATE_DIR}/common/analysis_options.yaml.tmpl"
 
     render_template "$tmpl" "$file" <<'EOF'
 {}
+EOF
+}
+
+write_build_config_file() {
+    local out_dir="$1"
+
+    local file="${out_dir}/build.yaml"
+    local tmpl="${TEMPLATE_DIR}/common/build.yaml.tmpl"
+
+    render_template "$tmpl" "$file" <<'EOF'
+{}
+EOF
+}
+
+write_library_file() {
+    local out_dir="$1"
+
+    local file="${out_dir}/lib/${LIBRARY_FILE}"
+    local tmpl="${TEMPLATE_DIR}/common/library.dart.tmpl"
+
+    render_template "$tmpl" "$file" <<EOF
+GeneratedLibraryPath: $(yaml_escape "$GENERATED_REL_PATH")
 EOF
 }
 
@@ -129,6 +154,8 @@ sdk_generate() {
     write_pubspec_file "$OUT_DIR"
     write_gitignore_file "$OUT_DIR"
     write_analysis_options_file "$OUT_DIR"
+    write_build_config_file "$OUT_DIR"
+    write_library_file "$OUT_DIR"
 
     # 2) install pub dependencies
     info "Installing Dart dependencies"

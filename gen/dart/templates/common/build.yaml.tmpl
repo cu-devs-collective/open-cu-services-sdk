@@ -1,0 +1,16 @@
+{{- /* Template build.yaml for swagger_dart_code_generator. */ -}}
+targets:
+  $default:
+    sources:
+      - lib/**
+      - ../../spec/**
+    builders:
+      swagger_dart_code_generator:
+        options:
+          input_folder: {{ printf "%q" .SwaggerInputFolder }}
+          output_folder: lib/generated
+          with_base_url: false {{- /* Base URL is set in defaults. */}}
+          separate_models: true
+          override_equals_and_hashcode: true
+          use_path_for_request_names: false
+          override_to_string: true
