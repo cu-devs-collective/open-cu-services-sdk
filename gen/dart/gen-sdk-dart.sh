@@ -14,7 +14,7 @@ BUILD_RUNNER_VERSION="2.13.0"
 CHOPPER_GENERATOR_VERSION="8.6.0"
 JSON_SERIALIZABLE_VERSION="6.13.0"
 # environment version
-DART_SDK_VERSION=">=3.0.0 <4.0.0"
+DART_SDK_VERSION="^3.8.0"
 # dependencies version
 CHOPPER_VERSION="^8.5.0"
 COLLECTION_VERSION="^1.19.1"
@@ -29,6 +29,10 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SPEC_BASE="${ROOT_DIR}/spec"
 OUT_BASE="${ROOT_DIR}/dart"
 TEMPLATE_DIR="${ROOT_DIR}/gen/dart/templates"
+FIXUPS_SCRIPT="${ROOT_DIR}/gen/dart/fixups.sh"
+
+# shellcheck source=gen/dart/fixups.sh
+source "${FIXUPS_SCRIPT}"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
@@ -169,15 +173,21 @@ sdk_generate() {
     write_library_file "$OUT_DIR"
     copy_swagger_input "$OUT_DIR"
 
-    # 2) install pub dependencies
+    # 2) run precodegen fixups
+    run_precodegen_fixups "$SDK_ID" "$SWAGGER_INPUT_PATH"
+
+    # 3) install pub dependencies
     info "Installing Dart dependencies"
     (cd "$OUT_DIR" && dart pub get)
 
-    # 3) run swagger_dart_code_generator generation
+    # 4) run swagger_dart_code_generator generation
     info "Running swagger_dart_code_generator generation"
     (cd "$OUT_DIR" && dart run build_runner build --delete-conflicting-outputs)
 
-    # 4) write extra package-specific files
+    # 5) run postcodegen fixups
+    run_postcodegen_fixups "$SDK_ID" "$OUT_DIR"
+
+    # 6) write extra package-specific files
     if [[ -n "${EXTRA_FILES_WRITER:-}" ]]; then
         info "Writing extra files via ${EXTRA_FILES_WRITER}"
         "${EXTRA_FILES_WRITER}" "$OUT_DIR"
@@ -187,7 +197,7 @@ sdk_generate() {
 ensure_tooling() {
     command -v dart >/dev/null 2>&1 || die "Dart is required: https://dart.dev/get-dart"
     command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
-    command -v yq >/dev/null 2>&1 || die "yq is required, run make install-tools-generate"
+    ensure_fixups_tooling
 }
 
 main() {
