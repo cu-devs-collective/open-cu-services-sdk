@@ -23,7 +23,7 @@ SPEC_KEYS_TO_GENERATE=(
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SPEC_BASE="${ROOT_DIR}/spec"
 OUT_BASE="${ROOT_DIR}/typescript"
-TEMPLATE_DIR="${ROOT_DIR}/gen/typescript/templates/common"
+TEMPLATE_DIR="${ROOT_DIR}/gen/typescript/templates"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
@@ -67,7 +67,7 @@ write_package_json_file() {
     local out_dir="$1"
 
     local file="${out_dir}/package.json"
-    local tmpl="${TEMPLATE_DIR}/package.json.tmpl"
+    local tmpl="${TEMPLATE_DIR}/common/package.json.tmpl"
 
     render_template "$tmpl" "$file" <<EOF
 PackageName: $(yaml_escape "$PACKAGE_NAME")
@@ -79,11 +79,22 @@ PnpmVersion: $(yaml_escape "$PNPM_VERSION")
 EOF
 }
 
+write_gitignore_file() {
+    local out_dir="$1"
+
+    local file="${out_dir}/.gitignore"
+    local tmpl="${TEMPLATE_DIR}/common/gitignore.tmpl"
+
+    render_template "$tmpl" "$file" <<'EOF'
+{}
+EOF
+}
+
 write_tsconfig_file() {
     local out_dir="$1"
 
     local file="${out_dir}/tsconfig.json"
-    local tmpl="${TEMPLATE_DIR}/tsconfig.json.tmpl"
+    local tmpl="${TEMPLATE_DIR}/common/tsconfig.json.tmpl"
 
     render_template "$tmpl" "$file" <<'EOF'
 {}
@@ -95,7 +106,7 @@ write_openapi_ts_config_file() {
     local spec_path="$2"
 
     local file="${out_dir}/openapi-ts.config.ts"
-    local tmpl="${TEMPLATE_DIR}/openapi-ts.config.ts.tmpl"
+    local tmpl="${TEMPLATE_DIR}/common/openapi-ts.config.ts.tmpl"
 
     render_template "$tmpl" "$file" <<EOF
 SpecPath: $(yaml_escape "$spec_path")
@@ -106,7 +117,7 @@ write_lmsapi_files() {
     local out_dir="$1"
 
     local default_file="${out_dir}/src/default.ts"
-    local default_file_tmpl="${TEMPLATE_DIR}/default.ts.tmpl"
+    local default_file_tmpl="${TEMPLATE_DIR}/common/default.ts.tmpl"
     render_template "$default_file_tmpl" "$default_file" <<EOF
 BaseURL: $(yaml_escape "$BASE_URL")
 UserAgent: $(yaml_escape "$USER_AGENT")
@@ -135,6 +146,7 @@ sdk_generate() {
 
     # 1) write package files
     write_package_json_file "$OUT_DIR"
+    write_gitignore_file "$OUT_DIR"
     write_tsconfig_file "$OUT_DIR"
     local spec_rel="../../spec/${SPEC_PATH#"${SPEC_BASE}"/}"
     write_openapi_ts_config_file "$OUT_DIR" "$spec_rel"
