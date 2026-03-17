@@ -10,6 +10,8 @@ set -euo pipefail
 
 # codegen version
 OGEN_VERSION="v1.20.1"
+# go.mod version
+GO_MOD_VERSION="1.25.0"
 
 SPEC_KEYS_TO_GENERATE=(
     lmsapi
@@ -121,7 +123,7 @@ sdk_generate() {
     # 1) go mod init if missing
     if [[ ! -f "${OUT_DIR}/go.mod" ]]; then
         info "Initializing go.mod"
-        (cd "$OUT_DIR" && go mod init "$MODULE_PATH")
+        (cd "$OUT_DIR" && go mod init "$MODULE_PATH" && go get "go@${GO_MOD_VERSION}")
     else
         info "go.mod exists, skipping go mod init"
     fi
