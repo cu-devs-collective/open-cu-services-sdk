@@ -94,7 +94,7 @@ wheels = [
 
 [[package]]
 name = "open-cu-services-examples-python"
-version = "0.0.0"
+version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "open-cu-services-lmsapi" },
