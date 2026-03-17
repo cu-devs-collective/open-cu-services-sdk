@@ -18,12 +18,18 @@ async def main() -> int:
 
         if isinstance(response.parsed, CurrentStudentResponse):
             print("current_student response:")
-            print(json.dumps(response.parsed.to_dict(), indent=2, ensure_ascii=False))
+            print(json.dumps(
+                response.parsed.to_dict(),
+                indent=2, ensure_ascii=False))
             return 0
 
-        print(f"current_student response status_code={response.status_code} response.parsed={type(response.parsed).__name__}:")
+        print("current_student response"
+              + f" response.status_code={response.status_code}"
+              + f" response.parsed={type(response.parsed).__name__}:")
         if response.parsed:
-            print(json.dumps(response.parsed.to_dict(), indent=2, ensure_ascii=False))
+            print(json.dumps(
+                response.parsed.to_dict(),
+                indent=2, ensure_ascii=False))
         else:
             print(f"no content was parsed, got raw content: {response.content}")
 

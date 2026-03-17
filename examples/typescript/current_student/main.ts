@@ -17,7 +17,7 @@ async function main() {
 
   if (result.error) {
     if (result.error instanceof Error) {
-      console.error("currentStudent returned error:");
+      console.error("currentStudent failed:");
       console.error(result.error);
     } else {
       console.error(`currentStudent response with status ${result.response?.status}:`);

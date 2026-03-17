@@ -4,6 +4,8 @@ go 1.25.0
 
 require github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi v0.0.0
 
+replace github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi => ../../golang/lmsapi
+
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
@@ -33,5 +35,3 @@ require (
 	golang.org/x/text v0.34.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
-
-replace github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi => ../../golang/lmsapi
