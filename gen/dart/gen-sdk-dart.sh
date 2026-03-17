@@ -5,7 +5,7 @@ set -euo pipefail
 # build_runner and templates.
 #
 # Current spec to package mapping:
-# - cu-lms -> open_cu_services_lmsapi
+# - lmsapi -> open_cu_services_lmsapi
 #------------------------------------------------------------------------------
 
 # codegen versions
@@ -21,7 +21,7 @@ HTTP_VERSION="1.6.0"
 DART_SDK_VERSION=">=3.0.0 <4.0.0"
 
 SPEC_KEYS_TO_GENERATE=(
-    cu-lms
+    lmsapi
 )
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -37,15 +37,17 @@ resolve_spec() {
     [[ -n "$key" ]] || die "Missing spec key"
 
     case "$key" in
-        cu-lms)
-            SPEC_PATH="${SPEC_BASE}/cu-lms/cu-lms.openapi.yaml"
+        lmsapi)
             SDK_ID="lmsapi"
+            SDK_ID_SNAKE_CASE="lms_api"
+            SPEC_PATH="${SPEC_BASE}/${SDK_ID}/${SDK_ID}.openapi.yaml"
             PACKAGE_NAME="open_cu_services_${SDK_ID}"
             PACKAGE_DESC="Open CU Services LMS API Dart SDK"
             OUT_DIR="${OUT_BASE}/${SDK_ID}"
             LIBRARY_FILE="${PACKAGE_NAME}.dart"
-            GENERATED_REL_PATH="generated/${SDK_ID}.swagger.dart"
-            EXTRA_FILES_WRITER="write_lmsapi_files"
+            SWAGGER_INPUT_PATH="${OUT_DIR}/lib/swaggers/${SDK_ID_SNAKE_CASE}.yaml"
+            GENERATED_REL_PATH="generated/${SDK_ID_SNAKE_CASE}.swagger.dart"
+            EXTRA_FILES_WRITER="write_${SDK_ID}_files"
             BASE_URL="https://my.centraluniversity.ru/api"
             USER_AGENT="Open-CU-Services/Dart"
             ;;
@@ -65,6 +67,7 @@ render_template() {
     local out_path="$2"
 
     [[ -f "$tmpl_path" ]] || die "Template not found: $tmpl_path"
+    mkdir -p "$(dirname "$out_path")"
     gomplate -f "$tmpl_path" -o "$out_path" -c ".=stdin:///data.yaml"
 }
 
@@ -73,7 +76,6 @@ write_pubspec_file() {
 
     local file="${out_dir}/pubspec.yaml"
     local tmpl="${TEMPLATE_DIR}/common/pubspec.yaml.tmpl"
-
     render_template "$tmpl" "$file" <<EOF
 PackageName: $(yaml_escape "$PACKAGE_NAME")
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
@@ -94,7 +96,6 @@ write_gitignore_file() {
 
     local file="${out_dir}/.gitignore"
     local tmpl="${TEMPLATE_DIR}/common/gitignore.tmpl"
-
     render_template "$tmpl" "$file" <<'EOF'
 {}
 EOF
@@ -105,7 +106,6 @@ write_analysis_options_file() {
 
     local file="${out_dir}/analysis_options.yaml"
     local tmpl="${TEMPLATE_DIR}/common/analysis_options.yaml.tmpl"
-
     render_template "$tmpl" "$file" <<'EOF'
 {}
 EOF
@@ -116,7 +116,6 @@ write_build_config_file() {
 
     local file="${out_dir}/build.yaml"
     local tmpl="${TEMPLATE_DIR}/common/build.yaml.tmpl"
-
     render_template "$tmpl" "$file" <<'EOF'
 {}
 EOF
@@ -127,16 +126,27 @@ write_library_file() {
 
     local file="${out_dir}/lib/${LIBRARY_FILE}"
     local tmpl="${TEMPLATE_DIR}/common/library.dart.tmpl"
-
     render_template "$tmpl" "$file" <<EOF
 GeneratedLibraryPath: $(yaml_escape "$GENERATED_REL_PATH")
 EOF
 }
 
+copy_swagger_input() {
+    local out_dir="$1"
+
+    mkdir -p "${out_dir}/lib/swaggers"
+    cp "$SPEC_PATH" "$SWAGGER_INPUT_PATH"
+}
+
 write_lmsapi_files() {
     local out_dir="$1"
 
-    # TODO: write_lmsapi_files
+    local defaults_file="${out_dir}/lib/defaults.dart"
+    local defaults_tmpl="${TEMPLATE_DIR}/lmsapi/defaults.dart.tmpl"
+    render_template "$defaults_tmpl" "$defaults_file" <<EOF
+BaseURL: $(yaml_escape "$BASE_URL")
+UserAgent: $(yaml_escape "$USER_AGENT")
+EOF
 }
 
 sdk_generate() {
@@ -156,6 +166,7 @@ sdk_generate() {
     write_analysis_options_file "$OUT_DIR"
     write_build_config_file "$OUT_DIR"
     write_library_file "$OUT_DIR"
+    copy_swagger_input "$OUT_DIR"
 
     # 2) install pub dependencies
     info "Installing Dart dependencies"
@@ -175,6 +186,7 @@ sdk_generate() {
 ensure_tooling() {
     command -v dart >/dev/null 2>&1 || die "Dart is required: https://dart.dev/get-dart"
     command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
+    command -v yq >/dev/null 2>&1 || die "yq is required, run make install-tools-generate"
 }
 
 main() {
