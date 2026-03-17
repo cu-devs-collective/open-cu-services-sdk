@@ -8,17 +8,18 @@ set -euo pipefail
 # - lmsapi -> open_cu_services_lmsapi
 #------------------------------------------------------------------------------
 
-# codegen versions
+# codegen versions (dev dependencies)
 SWAGGER_DART_CODE_GENERATOR_VERSION="4.1.1"
-BUILD_RUNNER_VERSION="2.12.2"
-# dependencies version
-CHOPPER_VERSION="8.5.0"
+BUILD_RUNNER_VERSION="2.13.0"
 CHOPPER_GENERATOR_VERSION="8.6.0"
-JSON_ANNOTATION_VERSION="4.11.0"
-COLLECTION_VERSION="1.19.1"
 JSON_SERIALIZABLE_VERSION="6.13.0"
-HTTP_VERSION="1.6.0"
+# environment version
 DART_SDK_VERSION=">=3.0.0 <4.0.0"
+# dependencies version
+CHOPPER_VERSION="^8.5.0"
+COLLECTION_VERSION="^1.19.1"
+HTTP_VERSION="^1.6.0"
+JSON_ANNOTATION_VERSION="^4.11.0"
 
 SPEC_KEYS_TO_GENERATE=(
     lmsapi
