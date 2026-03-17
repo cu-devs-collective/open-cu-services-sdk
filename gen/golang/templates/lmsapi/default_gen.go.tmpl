@@ -47,18 +47,20 @@ func NewValueSecSource(bffCookie string) (*ValueSecSource, error) {
 	return &ValueSecSource{bffCookie: bffCookie}, nil
 }
 
-func NewDefaultClientFromEnv() (*Client, error) {
+func NewDefaultClientFromEnv(opts ...ClientOption) (*Client, error) {
 	sec, err := NewEnvSecSource()
 	if err != nil {
 		return nil, fmt.Errorf("NewEnvSecSource: %w", err)
 	}
 
-	client, err := NewClient(DefaultBaseURL, sec,
+	clientOpts := append([]ClientOption{
 		WithRequestEditor(func(ctx context.Context, req *http.Request) error {
 			req.Header.Set("User-Agent", DefaultUserAgent)
 			return nil
 		}),
-	)
+	}, opts...)
+
+	client, err := NewClient(DefaultBaseURL, sec, clientOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("NewClient: %w", err)
 	}
@@ -66,18 +68,20 @@ func NewDefaultClientFromEnv() (*Client, error) {
 	return client, nil
 }
 
-func NewDefaultClient(bffCookie string) (*Client, error) {
+func NewDefaultClient(bffCookie string, opts ...ClientOption) (*Client, error) {
 	sec, err := NewValueSecSource(bffCookie)
 	if err != nil {
 		return nil, fmt.Errorf("NewValueSecSource: %w", err)
 	}
 
-	client, err := NewClient(DefaultBaseURL, sec,
+	clientOpts := append([]ClientOption{
 		WithRequestEditor(func(ctx context.Context, req *http.Request) error {
 			req.Header.Set("User-Agent", DefaultUserAgent)
 			return nil
 		}),
-	)
+	}, opts...)
+
+	client, err := NewClient(DefaultBaseURL, sec, clientOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("NewClient: %w", err)
 	}
