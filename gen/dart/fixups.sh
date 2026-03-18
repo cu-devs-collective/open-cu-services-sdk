@@ -23,7 +23,7 @@ run_precodegen_fixups() {
         lmsapi)
             # swagger_dart_code_generator does not resolve top-level schema aliases.
             yq -i \
-                '.components.schemas.CourseSummaryByIdResponse = .components.schemas.CourseSummaryItem' \
+                'del(.components.schemas.CourseSummaryByIdResponse)' \
                 "$swagger_input_path"
             # shellcheck disable=SC2016
             yq -i \
@@ -36,6 +36,7 @@ run_precodegen_fixups() {
 
 run_postcodegen_fixups() {
     local sdk_id="$1"
+    # shellcheck disable=SC2034
     local out_dir="$2"
 
     case "$sdk_id" in
