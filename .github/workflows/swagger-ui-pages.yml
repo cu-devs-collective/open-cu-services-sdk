@@ -1,0 +1,58 @@
+name: Deploy Swagger UI
+
+on:
+  push:
+    branches:
+      - swagger-ui-pages
+    paths:
+      - ".github/workflows/swagger-ui-pages.yml"
+      - "swagger-ui/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: swagger-ui-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install Swagger UI package
+        working-directory: swagger-ui
+        run: npm install
+
+      - name: Prepare Pages artifact
+        run: |
+          rm -rf .swagger-ui-pages
+          mkdir -p .swagger-ui-pages/api-docs
+          cp -R swagger-ui/node_modules/swagger-ui-dist/* .swagger-ui-pages/api-docs/
+          cp swagger-ui/swagger-initializer.js .swagger-ui-pages/api-docs/swagger-initializer.js
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .swagger-ui-pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ format('{0}api-docs/', steps.deployment.outputs.page_url) }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
