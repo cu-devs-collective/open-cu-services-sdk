@@ -1,5 +1,5 @@
 {
-  "name": "open-cu-services-openapi-tools-swagger-ui",
+  "name": "open-cu-services-openapi-swagger-ui",
   "private": true,
   "dependencies": {
     "swagger-ui-dist": "5.31.0"
