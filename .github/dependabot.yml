@@ -1,0 +1,40 @@
+version: 2
+updates:
+  - package-ecosystem: pub
+    directory: /gen/dart/version
+    schedule:
+      interval: daily
+    versioning-strategy: increase-if-necessary
+    groups:
+      dart:
+        patterns:
+          - "*"
+  - package-ecosystem: gomod
+    directory: /gen/golang/version
+    schedule:
+      interval: daily
+    groups:
+      golang:
+        patterns:
+          - "*"
+  - package-ecosystem: uv
+    directory: /gen/python/version
+    schedule:
+      interval: daily
+    groups:
+      python:
+        patterns:
+          - "*"
+  - package-ecosystem: npm
+    directory: /gen/typescript/version
+    schedule:
+      interval: daily
+    versioning-strategy: increase-if-necessary
+    groups:
+      typescript:
+        patterns:
+          - "*"
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: daily
