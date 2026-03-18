@@ -12,6 +12,9 @@ import 'generated/lms_api.swagger.dart';
 const String defaultBaseUrl = {{ printf "%q" .BaseURL }};
 const String defaultUserAgent = {{ printf "%q" .UserAgent }};
 const String bffCookieName = "bff.cookie";
+const bool isDartVmRuntime =
+    bool.fromEnvironment("dart.library.io") &&
+    !bool.fromEnvironment("dart.library.ui");
 
 class BffCookieIsEmptyError implements Exception {
   const BffCookieIsEmptyError();
@@ -52,7 +55,7 @@ LmsApi createLmsApiClient({
   final resolvedConverter = converter ?? $JsonSerializableConverter();
   final resolvedInterceptors = <Interceptor>[
     _BffCookieInterceptor(bffCookie),
-    _UserAgentInterceptor(defaultUserAgent),
+    if (isDartVmRuntime) _UserAgentInterceptor(defaultUserAgent),
     ...?interceptors,
   ];
 
