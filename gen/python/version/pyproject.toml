@@ -1,0 +1,14 @@
+[project]
+name = "open-cu-services-gen-python-version"
+version = "0.0.0"
+requires-python = ">=3.10"
+dependencies = [
+  "openapi-python-client==0.28.3",
+  "httpx==0.28.1",
+  "attrs==25.4.0",
+  "python-dateutil==2.9.0.post0",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.0,<0.11.0"]
+build-backend = "uv_build"

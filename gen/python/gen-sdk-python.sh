@@ -8,21 +8,12 @@ set -euo pipefail
 # - lmsapi -> open-cu-services-lmsapi
 #------------------------------------------------------------------------------
 
-# codegen version
-OPENAPI_PYTHON_CLIENT_VERSION="0.28.3"
-# pyproject.toml dependencies versions
-PYTHON_VERSION=">=3.10"
-HTTPX_VERSION="==0.28.1"
-ATTRS_VERSION="==25.4.0"
-PYTHON_DATEUTIL_VERSION="==2.9.0.post0"
-# pyproject.toml build system version
-UV_VERSION=">=0.10.0,<0.11.0"
-
 SPEC_KEYS_TO_GENERATE=(
     lmsapi
 )
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+VERSION_MANIFEST="${ROOT_DIR}/gen/python/version/pyproject.toml"
 SPEC_BASE="${ROOT_DIR}/spec"
 OUT_BASE="${ROOT_DIR}/python"
 TEMPLATE_DIR="${ROOT_DIR}/gen/python/templates"
@@ -31,6 +22,22 @@ UVX_TOOL_DIR="${ROOT_DIR}/.uv-tools"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
+
+load_versions() {
+    [[ -f "$VERSION_MANIFEST" ]] || die "Version manifest not found: $VERSION_MANIFEST"
+
+    local versions_data
+    versions_data="$(parseversions export python "$VERSION_MANIFEST")" \
+        || die "Failed to parse versions from $VERSION_MANIFEST"
+    eval "$versions_data"
+
+    [[ -n "$OPENAPI_PYTHON_CLIENT_VERSION" ]] || die "Missing OPENAPI_PYTHON_CLIENT_VERSION"
+    [[ -n "$PYTHON_VERSION" ]] || die "Missing PYTHON_VERSION"
+    [[ -n "$HTTPX_VERSION" ]] || die "Missing HTTPX_VERSION"
+    [[ -n "$ATTRS_VERSION" ]] || die "Missing ATTRS_VERSION"
+    [[ -n "$PYTHON_DATEUTIL_VERSION" ]] || die "Missing PYTHON_DATEUTIL_VERSION"
+    [[ -n "$UV_VERSION" ]] || die "Missing UV_VERSION"
+}
 
 resolve_spec() {
     local key="${1:-}"
@@ -136,7 +143,7 @@ sdk_generate() {
 
     # 2) run openapi-python-client generation
     info "Running openapi-python-client generation"
-    run_uvx --from "openapi-python-client==${OPENAPI_PYTHON_CLIENT_VERSION}" openapi-python-client generate \
+    run_uvx --from "openapi-python-client${OPENAPI_PYTHON_CLIENT_VERSION}" openapi-python-client generate \
         --path "$SPEC_PATH" \
         --meta uv \
         --config "$CONFIG_PATH" \
@@ -160,10 +167,12 @@ ensure_tooling() {
     command -v python3 >/dev/null 2>&1 || die "Python 3 is required"
     command -v uv >/dev/null 2>&1 || die "uv is required"
     command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
+    command -v parseversions >/dev/null 2>&1 || die "parseversions is required, run make install-tools-generate"
 }
 
 main() {
     ensure_tooling
+    load_versions
 
     local key
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do

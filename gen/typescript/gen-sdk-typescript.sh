@@ -8,25 +8,32 @@ set -euo pipefail
 # - lmsapi -> @cu-devs-collective/open-cu-services-lmsapi
 #------------------------------------------------------------------------------
 
-# package.json dev dependencies versions
-OPENAPI_TS_VERSION="0.94.0"
-TYPESCRIPT_VERSION="5.9.3"
-# package.json dependencies versions
-ZOD_VERSION="4.3.6"
-# package.json package manager version
-PNPM_VERSION="10.31.0"
-
 SPEC_KEYS_TO_GENERATE=(
     lmsapi
 )
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+VERSION_MANIFEST="${ROOT_DIR}/gen/typescript/version/package.json"
 SPEC_BASE="${ROOT_DIR}/spec"
 OUT_BASE="${ROOT_DIR}/typescript"
 TEMPLATE_DIR="${ROOT_DIR}/gen/typescript/templates"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
+
+load_versions() {
+    [[ -f "$VERSION_MANIFEST" ]] || die "Version manifest not found: $VERSION_MANIFEST"
+
+    local versions_data
+    versions_data="$(parseversions export typescript "$VERSION_MANIFEST")" \
+        || die "Failed to parse versions from $VERSION_MANIFEST"
+    eval "$versions_data"
+
+    [[ -n "$OPENAPI_TS_VERSION" ]] || die "Missing OPENAPI_TS_VERSION"
+    [[ -n "$TYPESCRIPT_VERSION" ]] || die "Missing TYPESCRIPT_VERSION"
+    [[ -n "$ZOD_VERSION" ]] || die "Missing ZOD_VERSION"
+    [[ -n "$PNPM_VERSION" ]] || die "Missing PNPM_VERSION"
+}
 
 resolve_spec() {
     local key="${1:-}"
@@ -169,10 +176,12 @@ ensure_tooling() {
     command -v node >/dev/null 2>&1 || die "Node.js is required"
     command -v pnpm >/dev/null 2>&1 || die "pnpm is required"
     command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
+    command -v parseversions >/dev/null 2>&1 || die "parseversions is required, run make install-tools-generate"
 }
 
 main() {
     ensure_tooling
+    load_versions
 
     local key
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do

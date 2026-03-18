@@ -8,17 +8,13 @@ set -euo pipefail
 # - lmsapi -> github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi
 #------------------------------------------------------------------------------
 
-# codegen version
-OGEN_VERSION="v1.20.1"
-# go.mod version
-GO_MOD_VERSION="1.25.0"
-
 SPEC_KEYS_TO_GENERATE=(
     lmsapi
 )
 OGEN_CONFIG_PATH="../.ogen.yaml"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+VERSION_MANIFEST="${ROOT_DIR}/gen/golang/version/go.mod"
 SPEC_BASE="${ROOT_DIR}/spec"
 OUT_BASE="${ROOT_DIR}/golang"
 TEMPLATE_DIR="${ROOT_DIR}/gen/golang/templates"
@@ -27,6 +23,18 @@ MODULE_BASE="github.com/cu-devs-collective/open-cu-services-openapi/golang"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
+
+load_versions() {
+    [[ -f "$VERSION_MANIFEST" ]] || die "Version manifest not found: $VERSION_MANIFEST"
+
+    local versions_data
+    versions_data="$(parseversions export golang "$VERSION_MANIFEST")" \
+        || die "Failed to parse versions from $VERSION_MANIFEST"
+    eval "$versions_data"
+
+    [[ -n "$OGEN_VERSION" ]] || die "Missing VERSION_MANIFEST"
+    [[ -n "$GO_MOD_VERSION" ]] || die "Missing GO_MOD_VERSION"
+}
 
 resolve_spec() {
     local key="${1:-}"
@@ -174,10 +182,12 @@ sdk_generate() {
 ensure_tooling() {
     command -v go >/dev/null 2>&1 || die "Go is required: https://go.dev/doc/install"
     command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
+    command -v parseversions >/dev/null 2>&1 || die "parseversions is required, run make install-tools-generate"
 }
 
 main() {
     ensure_tooling
+    load_versions
 
     local key
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do

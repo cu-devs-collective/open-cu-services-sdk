@@ -8,24 +8,12 @@ set -euo pipefail
 # - lmsapi -> open_cu_services_lmsapi
 #------------------------------------------------------------------------------
 
-# codegen versions (dev dependencies)
-SWAGGER_DART_CODE_GENERATOR_VERSION="4.1.1"
-BUILD_RUNNER_VERSION="2.13.0"
-CHOPPER_GENERATOR_VERSION="8.6.0"
-JSON_SERIALIZABLE_VERSION="6.13.0"
-# environment version
-DART_SDK_VERSION="^3.8.0"
-# dependencies version
-CHOPPER_VERSION="^8.5.0"
-COLLECTION_VERSION="^1.19.1"
-HTTP_VERSION="^1.6.0"
-JSON_ANNOTATION_VERSION="^4.11.0"
-
 SPEC_KEYS_TO_GENERATE=(
     lmsapi
 )
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+VERSION_MANIFEST="${ROOT_DIR}/gen/dart/version/pubspec.yaml"
 SPEC_BASE="${ROOT_DIR}/spec"
 OUT_BASE="${ROOT_DIR}/dart"
 TEMPLATE_DIR="${ROOT_DIR}/gen/dart/templates"
@@ -36,6 +24,25 @@ source "${FIXUPS_SCRIPT}"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
+
+load_versions() {
+    [[ -f "$VERSION_MANIFEST" ]] || die "Version manifest not found: $VERSION_MANIFEST"
+
+    local versions_data
+    versions_data="$(parseversions export dart "$VERSION_MANIFEST")" \
+        || die "Failed to parse versions from $VERSION_MANIFEST"
+    eval "$versions_data"
+
+    [[ -n "$SWAGGER_DART_CODE_GENERATOR_VERSION" ]] || die "Missing SWAGGER_DART_CODE_GENERATOR_VERSION"
+    [[ -n "$BUILD_RUNNER_VERSION" ]] || die "Missing BUILD_RUNNER_VERSION"
+    [[ -n "$CHOPPER_GENERATOR_VERSION" ]] || die "Missing CHOPPER_GENERATOR_VERSION"
+    [[ -n "$JSON_SERIALIZABLE_VERSION" ]] || die "Missing JSON_SERIALIZABLE_VERSION"
+    [[ -n "$DART_SDK_VERSION" ]] || die "Missing DART_SDK_VERSION"
+    [[ -n "$CHOPPER_VERSION" ]] || die "Missing CHOPPER_VERSION"
+    [[ -n "$COLLECTION_VERSION" ]] || die "Missing COLLECTION_VERSION"
+    [[ -n "$HTTP_VERSION" ]] || die "Missing HTTP_VERSION"
+    [[ -n "$JSON_ANNOTATION_VERSION" ]] || die "Missing JSON_ANNOTATION_VERSION"
+}
 
 resolve_spec() {
     local key="${1:-}"
@@ -198,11 +205,13 @@ sdk_generate() {
 ensure_tooling() {
     command -v dart >/dev/null 2>&1 || die "Dart is required: https://dart.dev/get-dart"
     command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
+    command -v parseversions >/dev/null 2>&1 || die "parseversions is required, run make install-tools-generate"
     ensure_fixups_tooling
 }
 
 main() {
     ensure_tooling
+    load_versions
 
     local key
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do

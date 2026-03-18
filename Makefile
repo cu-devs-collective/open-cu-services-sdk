@@ -37,6 +37,7 @@ install-tools-lint: check-go $(LOCAL_BIN)
 install-tools-generate: check-go $(LOCAL_BIN)
 	GOBIN=$(LOCAL_BIN) $(GO) install github.com/hairyhenderson/gomplate/v5/cmd/gomplate@$(GOMPLATE_VERSION)
 	GOBIN=$(LOCAL_BIN) $(GO) install github.com/mikefarah/yq/v4@$(YQ_VERSION)
+	cd tools/parseversions && GOBIN=$(LOCAL_BIN) $(GO) install
 
 .PHONY: install-tools
 install-tools: install-tools-lint install-tools-generate
