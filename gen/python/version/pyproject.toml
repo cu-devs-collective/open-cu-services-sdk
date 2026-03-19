@@ -5,7 +5,7 @@ requires-python = ">=3.10"
 dependencies = [
   "openapi-python-client==0.28.3",
   "httpx==0.28.1",
-  "attrs==25.4.0",
+  "attrs==26.1.0",
   "python-dateutil==2.9.0.post0",
 ]
 
