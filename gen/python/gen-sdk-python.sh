@@ -45,8 +45,9 @@ resolve_spec() {
 
     case "$key" in
         lmsapi)
-            SPEC_PATH="${SPEC_BASE}/lmsapi/lmsapi.openapi.yaml"
+            SPEC_ID="lmsapi"
             SDK_ID="lmsapi"
+            SPEC_PATH="${SPEC_BASE}/${SPEC_ID}/${SPEC_ID}.re.openapi.yaml"
             PROJECT_NAME="open-cu-services-${SDK_ID}"
             PACKAGE_IMPORT_NAME="open_cu_services_${SDK_ID}"
             PACKAGE_DESC="Open CU Services LMS API Python SDK"

@@ -41,8 +41,9 @@ resolve_spec() {
 
     case "$key" in
         lmsapi)
-            SPEC_PATH="${SPEC_BASE}/lmsapi/lmsapi.openapi.yaml"
+            SPEC_ID="lmsapi"
             SDK_ID="lmsapi"
+            SPEC_PATH="${SPEC_BASE}/${SPEC_ID}/${SPEC_ID}.re.openapi.yaml"
             PACKAGE_NAME="@cu-devs-collective/open-cu-services-${SDK_ID}"
             PACKAGE_DESC="Open CU Services LMS API TypeScript SDK"
             OUT_DIR="${OUT_BASE}/${SDK_ID}"

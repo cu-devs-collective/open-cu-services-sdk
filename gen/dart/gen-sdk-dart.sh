@@ -50,9 +50,10 @@ resolve_spec() {
 
     case "$key" in
         lmsapi)
+            SPEC_ID="lmsapi"
             SDK_ID="lmsapi"
             SDK_ID_SNAKE_CASE="lms_api"
-            SPEC_PATH="${SPEC_BASE}/${SDK_ID}/${SDK_ID}.openapi.yaml"
+            SPEC_PATH="${SPEC_BASE}/${SPEC_ID}/${SPEC_ID}.re.openapi.yaml"
             PACKAGE_NAME="open_cu_services_${SDK_ID}"
             PACKAGE_DESC="Open CU Services LMS API Dart SDK"
             OUT_DIR="${OUT_BASE}/${SDK_ID}"

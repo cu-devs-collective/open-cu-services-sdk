@@ -42,8 +42,9 @@ resolve_spec() {
 
     case "$key" in
         lmsapi)
-            SPEC_PATH="${SPEC_BASE}/lmsapi/lmsapi.openapi.yaml"
+            SPEC_ID="lmsapi"
             PKG_NAME="lmsapi"
+            SPEC_PATH="${SPEC_BASE}/${SPEC_ID}/${SPEC_ID}.re.openapi.yaml"
             PKG_DESC="Package lmsapi provides SDK for the CU LMS API."
             OUT_DIR="${OUT_BASE}/${PKG_NAME}"
             MODULE_PATH="${MODULE_BASE}/${PKG_NAME}"
