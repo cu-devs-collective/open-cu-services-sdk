@@ -6,13 +6,13 @@ environment:
   sdk: "^3.8.0"
 
 dependencies:
-  chopper: "^8.5.0"
+  chopper: ^8.5.0
   collection: "^1.19.1"
   http: "^1.6.0"
   json_annotation: "^4.11.0"
 
 dev_dependencies:
   swagger_dart_code_generator: "4.1.1"
-  build_runner: "2.13.0"
-  chopper_generator: "8.6.0"
-  json_serializable: "6.13.0"
+  build_runner: 2.13.1
+  chopper_generator: 8.6.1
+  json_serializable: 6.13.1
