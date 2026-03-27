@@ -3,7 +3,7 @@ info:
   title: CU LMS API
   description: >
     Reverse engineered OpenAPI specification for the CU LMS API.
-  version: 0.1.0
+  version: 0.0.0
   license:
     name: MIT
     # yamllint disable-line rule:line-length
@@ -36,7 +36,13 @@ paths:
       operationId: currentStudent
       summary: Get current student.
       description: Returns authenticated student data.
-      x-re-notes: This endpoint appears not to be used by non-students.
+      x-re:
+        safety:
+          replayability: safe
+          dataKinds: [ personalData, accountData ]
+        operation:
+          categories: [ read ]
+          notes: This operation appears to be used only by student accounts.
       security:
         - BffCookie: [ ]
       tags: [ student ]
@@ -57,6 +63,12 @@ paths:
       summary: List courses for the current student.
       description: >
         Returns courses summary the authenticated student is enrolled in.
+      x-re:
+        safety:
+          replayability: safe
+          dataKinds: [ accountData, internalData ]
+        operation:
+          categories: [ read ]
       security:
         - BffCookie: [ ]
       tags: [ courses ]
@@ -82,6 +94,12 @@ paths:
       operationId: courseSummaryById
       summary: Get course summary by its ID.
       description: Returns summary information about a course by courseId.
+      x-re:
+        safety:
+          replayability: safe
+          dataKinds: [ internalData ]
+        operation:
+          categories: [ read ]
       security:
         - BffCookie: [ ]
       tags: [ courses ]
@@ -110,6 +128,12 @@ paths:
         Returns course overview by courseId. Overview consists of unit items
         called as themes, which are typically weekly modules of longread IDs
         and exercise items.
+      x-re:
+        safety:
+          replayability: safe
+          dataKinds: [ internalData ]
+        operation:
+          categories: [ read ]
       security:
         - BffCookie: [ ]
       tags: [ courses ]
@@ -135,6 +159,12 @@ paths:
       operationId: courseThemeSummaryById
       summary: Get course theme summary by its ID.
       description: Returns summary information about a course theme by themeId.
+      x-re:
+        safety:
+          replayability: safe
+          dataKinds: [ internalData ]
+        operation:
+          categories: [ read ]
       security:
         - BffCookie: [ ]
       tags: [ courses ]
@@ -161,6 +191,12 @@ paths:
       summary: Get longread summary by its ID.
       description: >
         Returns summary information about a longread item by longreadId.
+      x-re:
+        safety:
+          replayability: safe
+          dataKinds: [ internalData ]
+        operation:
+          categories: [ read ]
       security:
         - BffCookie: [ ]
       tags: [ courses ]
@@ -190,6 +226,12 @@ paths:
         Returns longread materials by longreadId.
         Materials are blocks like markdown, files and exercises.
         Blocks are declared for each longread.
+      x-re:
+        safety:
+          replayability: safe
+          dataKinds: [ accountData, internalData ]
+        operation:
+          categories: [ read ]
       security:
         - BffCookie: [ ]
       tags: [ courses ]
@@ -295,7 +337,10 @@ components:
       properties:
         type:  # non-required
           type: string
-          x-re-notes: Website in the URL seems to be abandoned.
+          x-re:
+            lifecycle:
+              state: inactive
+              notes: Website in the URL seems to be abandoned.
           example: "https://httpstatuscodes.io/401"
         title:
           $ref: "#/components/schemas/BaseErrorTitle"
@@ -333,29 +378,28 @@ components:
             {
               "courseId": [ "The value 'invalid-value-example' is not valid." ]
             }
-    BaseUnauthorizedError:
-      type: object
+    BaseUnauthorizedError:  # TODO: fix allOf additionalProperties flattening
       description: Base error for Unauthorized status.
-      x-re-notes: >
-        Interesting thing is that `type` is sometimes specified,
-        e.g. for notification-hub service, while for micro-lms it is not.
-      additionalProperties: false
-      required: [ title, status, traceId ]
-      properties:
-        type:  # non-required
-          type: string
-          x-re-notes: Website in the URL seems to be abandoned.
-          example: "https://httpstatuscodes.io/401"
-        title:
-          allOf:
-            - $ref: "#/components/schemas/BaseErrorTitle"
-          example: "Unauthorized"
-        status:
-          allOf:
-            - $ref: "#/components/schemas/BaseErrorStatus"
-          example: 401
-        traceId:
-          $ref: "#/components/schemas/BaseErrorTraceId"
+      x-re:
+        observation:
+          notes: >
+            `type` property is sometimes specified, e.g. for
+            notification-hub service, while for micro-lms it is not.
+      allOf:
+        - $ref: "#/components/schemas/BaseProblemError"
+        - type: object
+          additionalProperties: false
+          required: [ traceId ]
+          properties:
+            traceId:
+              $ref: "#/components/schemas/BaseErrorTraceId"
+      # example:
+      #   {
+      #     "type": "https://httpstatuscodes.io/401",
+      #     "title": "Unauthorized",
+      #     "status": 401,
+      #     "traceId": "00-00000000000000000000000000000000-0000000000000000-01"
+      #   }
     BaseNotFoundError:
       type: object
       description: Base error for Not Found status.
@@ -385,35 +429,52 @@ components:
           example: 1
         traceId:
           $ref: "#/components/schemas/BaseErrorTraceId"
-    _propertyNeedsAnalysis_SeenAsNull:
+    _x_re_propertyIncomplete_OnlyNullObserved:
       type: string
       nullable: true
-      description: Special object for values only seen as null.
+      description: Value only seen as null.
+      x-re:
+        status:
+          completeness: partial
+        analysis:
+          needsAnalysis: true
+          priority: medium
+          reasons:
+            - only-null-observed
       enum:
         - null
-      x-re-needs-analysis: true
-      x-re-needs-analysis-notes:
-        This field needs analysis, value seen only as null.
-    _propertyNeedsAnalysis_SeenAsEmptyArray:
+    _x_re_propertyIncomplete_OnlyEmptyArrayObserved:
       type: array
       minItems: 0
       maxItems: 0
+      description: Value only seen as empty array.
+      x-re:
+        status:
+          completeness: partial
+        analysis:
+          needsAnalysis: true
+          priority: medium
+          reasons:
+            - only-empty-array-observed
       items:
         type: object
         additionalProperties: true
-      x-re-needs-analysis: true
-      x-re-needs-analysis-notes:
-        This field needs analysis, value seen only as empty array.
     PublicationState:
       type: string
       description: Publication state of an item.
-      x-re-notes: >
-        Known values:
-          - "published" - filters non-archived non-draft items
-          - "archived" - filters archived items
-          - "draft" - filters draft items (those are items which were
-        not published yet, this option is almost useless as such items are
-        hidden for regular students)
+      x-re:
+        status:
+          completeness: full
+          confidence: medium
+          notes: Seems like those are all of the possible values.
+        enum:
+          descriptions:
+            "published": Filters non-archived non-draft items.
+            "archived": Filters archived items.
+            "draft": >
+              Filters draft items (those are items which were
+              not published yet, this option is almost useless as such items
+              are hidden for regular students).
       enum:
         - published
         - archived
@@ -427,17 +488,28 @@ components:
     SkillLevel:
       type: string
       description: Skill level label configured for the course.
-      x-re-notes: >
-        Unknown usage, as the only seen value is "none".
-        This field appears to be inactive/unused for now.
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: low
+          reasons:
+            - usage-unknown
+          notes: This field appears to be inactive/unused for now.
       enum:
         - none
       example: "none"
     CourseSettings:
       type: object
       description: Prerequisites for enrolling in the course.
-      x-re-notes: >
-        Seems to be incorrect right now, in the future this can change.
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: low
+          reasons:
+            - usage-unknown
+          notes: >
+            Values seem to be incorrect for now (they mismatch with their
+            expected bahavior), in the future this can change.
       additionalProperties: false
       required: [ skillLevel, isSkillLevelEnabled ]
       properties:
@@ -446,11 +518,17 @@ components:
         isSkillLevelEnabled:
           type: boolean
           description: Indicates if skill level is enabled for the course.
-          x-re-notes: >
-            Observed `skillLevel` only with value "none", so this
-            flag currently appears to have no effect.
-            This field is sometimes set to true, sometimes to false across
-            courses without any relation.
+          x-re:
+            analysis:
+              needsAnalysis: true
+              priority: low
+              reasons:
+                - usage-unknown
+              notes: >
+                Observed only value "none" for `skillLevel` property, so this
+                flag currently appears to have no effect.
+                This field is sometimes set to true, sometimes to false across
+                courses without any relation.
           example: false
     CourseName:
       type: string
@@ -459,41 +537,55 @@ components:
     CourseIsArchived:
       type: boolean
       description: Indicates if the course is archived.
-      x-re-notes: >
-        Typically set at the end of a semester to mark the course as finished.
+      x-re:
+        observation:
+          notes: >
+            Typically set at the end of a semester to mark
+            the course as finished.
       example: false
     PublishDate:
       type: string
       format: date-time
       nullable: true
       description: Scheduled item publication timestamp, if set.
-      x-re-notes: >
-        Can be unset, also can be earlier or later than `publishedAt` value.
+      x-re:
+        observation:
+          notes: >
+            Can be unset, also can be earlier or later than `publishedAt` value.
       example: "2026-01-26T07:00:00+00:00"
     PublishedAt:
       type: string
       format: date-time
       nullable: true
       description: Actual item publication timestamp.
-      x-re-notes: >
-        It looks like this field is null for items with `state` "draft".
+      x-re:
+        observation:
+          notes: >
+            It looks like this field is null for items with `state` "draft".
       example: "2026-01-26T07:00:44.919045+00:00"
     CourseCategory:
       type: string
       description: Category to which the course belongs to.
-      x-re-needs-analysis: true
-      x-re-needs-analysis-notes: >
-        Those are clearly not all of the values that exist, so other values
-        should be added as they are found.
-      x-re-notes: >
-        Known values:
-          - "withoutCategory" - not categorized stuff
-          - "general" - general courses, e.g. English
-          - "career" - career stuff, e.g. Mock Interview intensive
-          - "stem" - STEM courses
-          - "softSkills" - soft skills category courses
-          - "mathematics" - math courses
-          - "development" - courses for devs
+      x-re:
+        status:
+          completeness: partial
+        analysis:
+          needsAnalysis: true
+          priority: critical
+          reasons:
+            - enum-incomplete
+          notes: >
+            Those are clearly not all of the values that exist, so other values
+            should be added as they are found.
+        enum:
+          descriptions:
+            "withoutCategory": Not categorized stuff.
+            "general": General courses, e.g. English.
+            "career": Career stuff, e.g. Mock Interview intensive.
+            "stem": STEM courses.
+            "softSkills": Soft skills category courses.
+            "mathematics": Math courses.
+            "development": Courses for devs.
       enum:
         - withoutCategory
         - general
@@ -506,11 +598,21 @@ components:
     CourseCategoryCover:
       type: string
       description: Course card icon style identifier.
-      x-re-notes: >
-        Those may be not all of the values that exist, so it is good to add
-        new values here if this is being used for some reason by someone.
-        It seems there is some algorithm on frontend which decides
-        which color to use for the course card.
+      x-re:
+        status:
+          completeness: partial
+        analysis:
+          needsAnalysis: true
+          priority: low
+          reasons:
+            - enum-incomplete
+          notes: >
+            Those may be not all of the values that exist, so it is good to add
+            new values here if this is being used for some reason by someone.
+            It seems there is some algorithm on frontend which decides
+            which color to use for the course card.
+        enum:
+          descriptions: {}
       enum:
         - spiralLoops
         - sineWave
@@ -520,6 +622,21 @@ components:
         - symmetricCircles
         - ellipsesOverlap
       example: "symmetricCircles"
+    SubjectId:
+      type: integer
+      nullable: true
+      description: Identifier of the subject this course belongs to.
+      x-re:
+        observation:
+          notes: >
+            Courses covering the same subject typically share the same
+            `subjectId`, e.g. courses with names
+            "Архитектура компьютера и операционные системы I"
+            and "Архитектура компьютера и операционные системы 2"
+            have the same value.
+            This field is not guaranteed to be set: e.g. courses with names
+            "English 104" and "English 104. Semester 2" have `subjectId` unset.
+      example: 32
     CourseSummaryItem:
       type: object
       description: Summary information about a course, used for course listing.
@@ -540,18 +657,7 @@ components:
         settings:
           $ref: "#/components/schemas/CourseSettings"
         subjectId:
-          type: integer
-          nullable: true
-          description: Identifier of the subject this course belongs to.
-          x-re-notes: >
-            Courses covering the same subject typically share the same
-            `subjectId`, e.g. courses with names
-            "Архитектура компьютера и операционные системы I"
-            and "Архитектура компьютера и операционные системы 2"
-            have the same value.
-            This field is not guaranteed to be set: e.g. courses with names
-            "English 104" and "English 104. Semester 2" have `subjectId` unset.
-          example: 32
+          $ref: "#/components/schemas/SubjectId"
         isArchived:
           $ref: "#/components/schemas/CourseIsArchived"
         category:
@@ -593,17 +699,23 @@ components:
       type: string
       format: uuid
       description: Unique identifier of the user.
-      x-re-notes: >
-        This UUID is the primary identifier used to reference the user
-        on backend DB.
-        "00000000-0000-0000-0000-000000000000" is reserved for the System user.
+      x-re:
+        observation:
+          notes: >
+            "00000000-0000-0000-0000-000000000000" is reserved
+            for the System user.
+        notes: >
+          This UUID is the primary identifier used to reference the user
+          on backend DB.
       example: "00000000-0000-0000-0000-000000000000"
     UniversityEmail:
       type: string
       format: email
-      x-re-notes: >
-        Most emails use the edu.centraluniversity.ru domain, but other
-        domains may occur (e.g., gmail.com) in rare cases.
+      x-re:
+        observation:
+          notes: >
+            Most emails use the edu.centraluniversity.ru domain, but other
+            domains may occur (e.g., gmail.com) in rare cases.
       example: "i.ivanov@edu.centraluniversity.ru"
     TimeAccount:
       type: string
@@ -619,15 +731,27 @@ components:
     StudyLevel:
       type: string
       description: Student’s current education level.
-      x-re-notes: >
-        "none" level is given to non-enrolled users.
-        Other values may appear in the future.
+      x-re:
+        status:
+          completeness: full
+          confidence: high
+          notes: Enum seems to be complete as of observedAsOf.
+        observation:
+          observedAsOf: 2026-03-27
+        enum:
+          descriptions:
+            "none": Non-enrolled user.
+            "bachelor": Bachelor student.
+            "master": Master student.
+            "dpo": Supplementary vocational education student.
+            "dpoMaster": Supplementary master vocational education student.
       enum:
         - none
         - bachelor
         - master
         - dpo
         - dpoMaster
+      example: "bachelor"
     CurrentStudentResponse:
       type: object
       additionalProperties: false
@@ -645,16 +769,22 @@ components:
         middleName:
           type: string
           nullable: true
-          x-re-notes: This value is nullable.
+          x-re:
+            observation:
+              notes: This value is nullable.
           example: "Иванович"
         universityEmail:
           nullable: false
-          x-re-notes: This field appears to be non-nullable.
+          x-re:
+            observation:
+              notes: This field appears to be non-nullable.
           allOf:
             - $ref: "#/components/schemas/UniversityEmail"
         timeAccount:
           nullable: false
-          x-re-notes: This field appears to be non-nullable.
+          x-re:
+            observation:
+              notes: This field appears to be non-nullable.
           allOf:
             - $ref: "#/components/schemas/TimeAccount"
         studyStartYear:
@@ -662,8 +792,9 @@ components:
           minimum: 1970
           nullable: true
           description: Year the student enrolled at the university.
-          x-re-notes: >
-            It seems that null indicates the student was not enrolled.
+          x-re:
+            observation:
+              notes: It seems that null indicates the student was not enrolled.
           example: 2024
         studyLevel:
           $ref: "#/components/schemas/StudyLevel"
@@ -687,9 +818,18 @@ components:
     LongreadType:
       type: string
       description: Longread item type.
-      x-re-notes: >
-        Needs further analysis, as the only seen value is "common".
-        This field appears to be inactive/unused for now.
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: low
+          reasons:
+            - enum-incomplete
+            - usage-unknown
+          notes: >
+            Needs further analysis, as the only seen value is "common".
+            This field appears to be inactive/unused for now.
+        lifecycle:
+          state: inactive
       enum:
         - common
       example: "common"
@@ -734,7 +874,9 @@ components:
       format: date-time
       nullable: false
       description: Deadline by which the item must be completed.
-      x-re-notes: This field appears to be non-nullable.
+      x-re:
+        observation:
+          notes: This field appears to be non-nullable.
       example: "2026-02-15T19:00:00+00:00"
     MaxScore:
       type: integer
@@ -764,8 +906,11 @@ components:
     LongreadName:
       type: string
       description: Longread name shown as the header in LMS.
-      x-re-notes: >
-        Better example values are e.g. "Lesson 1A: Duolingo" or "Homework".
+      x-re:
+        observation:
+          examples:
+            - "Lesson 1A: Duolingo"
+            - "Homework"
       example: "Ссылка на силлабус"
     LongreadItem:
       type: object
@@ -804,9 +949,11 @@ components:
       description: >
         Listing order determining the item's line position in the LMS,
         lower values come first.
-      x-re-notes: >
-        Seen minimum value as 1 e.g. for course theme and longread item,
-        but 0 for longread material.
+      x-re:
+        observation:
+          notes: >
+            Seen minimum value as 1 e.g. for course theme and longread item,
+            but 0 for longread material.
       example: 1
     CourseThemeItem:
       type: object
@@ -881,9 +1028,11 @@ components:
           type: integer
           minimum: 0
           description: Numeric identifier of the category cover.
-          x-re-notes: >
-            It is guessed that the category cover means icon shown in LMS
-            when the theme summary item is opened.
+          x-re:
+            observation:
+              notes: >
+                It is guessed that the category cover means icon shown in LMS
+                when the theme summary item is opened.
           example: 0
     LongreadSummaryByIdResponse:
       type: object
@@ -912,18 +1061,21 @@ components:
     LongreadMaterialType:
       type: string
       description: Material block type identifier.
-      x-re-needs-analysis: true
-      x-re-needs-analysis-notes: >
-        This enum needs further analysis to document all of the
-        possible values.
-      x-re-notes: >
-        Known values:
-          - "markdown" - Markdown block
-          - "content" - some attachment
-          - "coding" - basically exercise where something should be attached
-          - "image" - image block
-          - "questions" - exercise with multiple questions
-          - "videoPlatform" - embedded video by link
+      x-re:
+        status:
+          completeness: full
+          confidence: medium
+          notes: It seems all of the enum values were discovered.
+        observation:
+          observedAsOf: 2026-03-27
+        enum:
+          descriptions:
+            "markdown": Markdown block.
+            "content": Some attachment.
+            "coding": Basically exercise where something should be attached.
+            "image": Image block.
+            "questions": Exercise with multiple questions.
+            "videoPlatform": Embedded video by link.
       enum:
         - markdown
         - content
@@ -935,20 +1087,24 @@ components:
     LongreadMaterialDiscriminator:
       type: string
       description: Material block discriminator used by LMS frontend.
-      x-re-needs-analysis: true
-      x-re-needs-analysis-notes: >
-        This enum needs further analysis to document all of the
-        possible values.
-      x-re-notes: >
-        Known values:
-          - "markdown" - => LongreadMaterialType "markdown"
-          - "file" - => LongreadMaterialType "content"
-          - "coding" - => LongreadMaterialType "coding"
-          - "image" - => LongreadMaterialType "image"
-          - "questions" - => LongreadMaterialType "questions"
-          - "videoPlatform" - => LongreadMaterialType "videoPlatform"
-          - "video" - => LongreadMaterialType "content"
-          - "audio" - => LongreadMaterialType "content"
+      x-re:
+        status:
+          completeness: full
+          confidence: medium
+          notes: It seems all of the enum values were discovered.
+        observation:
+          observedAsOf: 2026-03-27
+        enum:
+          descriptions:
+            "markdown": => "markdown".
+            "file": => "content".
+            "coding": => "coding".
+            "image": => "image".
+            "questions": => "questions".
+            "videoPlatform": => "videoPlatform".
+            "video": => "content".
+            "audio": => "content".
+          notes: All of the values translate to LongreadMaterialType type.
       enum:
         - markdown
         - file
@@ -962,20 +1118,23 @@ components:
     LongreadMaterialViewType:
       type: string
       description: View renderer type used by LMS frontend.
-      x-re-needs-analysis: true
-      x-re-needs-analysis-notes: >
-        This enum needs further analysis to document all of the
-        possible values.
-      x-re-notes: >
-        Known values:
-          - "ngxMarkdown" - Markdown rendered with ngx-markdown
-          - "file" - file attachment that is downloadable
-          - "exerciseCoding" - exercise that needs attachment for completion
-          - "image" - rendered image
-          - "exerciseQuestions" - exercise that has questions to complete
-          - "videoPlatform" - embedded video by link
-          - "video" - embedded video by file
-          - "audio" - embedded audio by file
+      x-re:
+        status:
+          completeness: full
+          confidence: medium
+          notes: It seems all of the enum values were discovered.
+        observation:
+          observedAsOf: 2026-03-27
+        enum:
+          descriptions:
+            "ngxMarkdown": Markdown rendered with ngx-markdown.
+            "file": File attachment that is downloadable.
+            "exerciseCoding": Exercise that needs attachment for completion.
+            "image": Rendered image.
+            "exerciseQuestions": Exercise that has questions to complete.
+            "videoPlatform": Embedded video by link.
+            "video": Embedded video by file.
+            "audio": Embedded audio by file.
       enum:
         - ngxMarkdown
         - file
@@ -989,18 +1148,19 @@ components:
     LongreadMaterialMediaType:
       type: string
       description: Media type attachment identifier.
-      x-re-needs-analysis: true
-      x-re-needs-analysis-notes: >
-        This enum needs further analysis to document all of the
-        possible values.
-      x-re-notes: >
-        This value seems to only show attachment type for downloadable file,
-        it doesn't affect frontend.
-        Known values:
-          - "file" - file attachment
-          - "image" - image attachment
-          - "video" - video attachment
-          - "audio" - audio attachment
+      x-re:
+        status:
+          completeness: full
+          confidence: medium
+          notes: It seems all of the enum values were discovered.
+        observation:
+          observedAsOf: 2026-03-27
+        enum:
+          descriptions:
+            "file": File attachment.
+            "image": Image attachment.
+            "video": Video attachment.
+            "audio": Audio attachment.
       enum:
         - file
         - image
@@ -1010,20 +1170,30 @@ components:
     LongreadMaterialMediaTypeUpper:
       type: string
       description: Media type identifier in upper.
-      x-re-needs-analysis: true
-      x-re-needs-analysis-notes: >
-        This value correlation with the real media type of
-        LongreadMaterialMediaType should be investigated.
-        The guess is that this value is just the upper version of it,
-        cuz else it makes no actual sense.
-        This enum needs further analysis to document all of the
-        possible values.
-      x-re-notes: >
-        Known values:
-          - "File" - => LongreadMaterialMediaType "file"
-          - "Image" - => LongreadMaterialMediaType "image"
-          - "Video" - => LongreadMaterialMediaType "video"
-          - "Audio" - => LongreadMaterialMediaType "audio"
+      x-re:
+        status:
+          completeness: full
+          confidence: medium
+          notes: It seems all of the enum values were discovered.
+        observation:
+          observedAsOf: 2026-03-27
+        analysis:
+          needsAnalysis: true
+          priority: medium
+          reasons:
+            - usage-unknown
+          notes: >
+            This value correlation with the real media type of
+            LongreadMaterialMediaType should be investigated.
+            The guess is that this value is just the upper-case version of it,
+            cuz else it makes no actual sense.
+        enum:
+          descriptions:
+            "File": => "file".
+            "Image": => "image".
+            "Video": => "video".
+            "Audio": => "audio".
+          notes: All of the values translate to LongreadMaterialMediaType type.
       enum:
         - File
         - Image
@@ -1035,9 +1205,11 @@ components:
       pattern: "^[0-9a-f]{8}$"
       nullable: true
       description: Material content revision identifier.
-      x-re-notes: >
-        At first longread materials didn't have a version, so for backwards
-        compatibility value can be null.
+      x-re:
+        observation:
+          notes: >
+            At first longread materials didn't have a version, so for backward
+            compatibility this value can be null.
       example: "0104f8da"
     LongreadMaterialLength:
       type: integer
@@ -1071,12 +1243,14 @@ components:
       type: string
       nullable: true
       description: JSON-serialized markdown content rendered in LMS.
-      x-re-notes: >
-        Seen 2 different versions of JSON content:
-          1. `value`, `isTuiEditor`
-          2. `description`
-        Seems to be nullable in places where can be omitted, e.g. in coding
-        exercises there can be no description.
+      x-re:
+        observation:
+          notes: >
+            Seen 2 different versions of JSON content:
+              1. `value`, `isTuiEditor`
+              2. `description`
+            Seems to be nullable in places where can be omitted, e.g. in coding
+            exercises there can be no description.
       example: '{"value":"<p>...</p>","isTuiEditor":true}'
     LongreadMaterialAttachmentItem:
       type: object
@@ -1106,7 +1280,9 @@ components:
       type: string
       nullable: true
       description: URL of coding exercise if configured.
-      x-re-notes: This URL is shown on frontend labeled as "Подробное условие".
+      x-re:
+        observation:
+          notes: This URL is shown on frontend labeled as "Подробное условие".
       example: null
     LongreadMaterialCoding:
       type: object
@@ -1115,10 +1291,12 @@ components:
       properties:
         exerciseUrl:
           $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
-    LongreadMaterialActivity:
+    LongreadMaterialActivity:  # TODO: fix allOf additionalProperties flattening
       description: Activity configuration for a longread exercise.
-      x-re-properties-order:
-        ignored: false
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
       allOf:
         - $ref: "#/components/schemas/ActivityDefinition"
         - type: object
@@ -1130,7 +1308,13 @@ components:
               minimum: 0
               nullable: true
               description: Average score threshold.
-              x-re-notes: Unknown usage.
+              x-re:
+                analysis:
+                  needsAnalysis: true
+                  priority: low
+                  reasons:
+                    - meaning-unknown
+                  notes: Unknown meaning and usage.
               example: 0
             isLateDaysEnabled:
               type: boolean
@@ -1140,17 +1324,21 @@ components:
       type: object
       additionalProperties: false
       description: Estimation and grading constraints for exercise material.
-      x-re-notes: >
-        There are rare cases when value of
-        `maxScore`, `deadline` and `activity` is null.
+      x-re:
+        observation:
+          notes: >
+            There are rare cases when value of
+            `maxScore`, `deadline` and `activity` is null.
       required: [ startDate, timer, maxScore, deadline, activity ]
       properties:
         startDate:
+          x-re:
+            observation:
+              notes: It seems that this is the same as PublishDate.
           allOf:
             - $ref: "#/components/schemas/PublishDate"
-          x-re-notes: It seems that this is the same as PublishDate.
         timer:
-          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
         maxScore:
           nullable: true
           allOf:
@@ -1168,15 +1356,28 @@ components:
       format: date-time
       nullable: true
       description: Timestamp when task was moved to backlog.
-      x-re-notes: >
-        The exact meaning of this property is unclear.
-        It does not affect the frontend, but it appears to represent the date
-        when the authors consider the exercise creation to be complete?
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: low
+          reasons:
+            - meaning-unknown
+          notes: >
+            The exact meaning of this property is unclear.
+            It does not affect the frontend, but it appears to represent
+            the date when the authors consider the exercise creation
+            to be complete?
       example: "2026-03-07T07:00:05.991326+00:00"
     LongreadExerciseQuestionsMode:
       type: string
       description: Questions mode.
-      x-re-notes: Unknown usage, as the logic behind this value is unknown.
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: low
+          reasons:
+            - usage-unknown
+          notes: Unknown usage, as the logic behind this value is unknown.
       enum:
         - atMoment
         - byDeadline
@@ -1184,9 +1385,16 @@ components:
     QuestionsSettingsEvalStrategy:
       type: string
       description: Evaluation strategy.
-      x-re-notes: >
-        Unknown usage, as the only seen value is "last".
-        It seems there is only one eval strategy for now.
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: low
+          reasons:
+            - enum-incomplete
+            - usage-unknown
+          notes: >
+            Unknown usage, as the only seen value is "last".
+            It seems there is only one eval strategy for now.
       enum:
         - last
       example: "last"
@@ -1197,7 +1405,7 @@ components:
       required: [ questionsPerAttempt, attemptsLimit, evaluationStrategy ]
       properties:
         questionsPerAttempt:
-          $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsNull"
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
         attemptsLimit:
           type: integer
           minimum: 0
@@ -1205,7 +1413,9 @@ components:
         evaluationStrategy:
           $ref: "#/components/schemas/QuestionsSettingsEvalStrategy"
     QuizId:
-      x-re-notes: It seems that this is the same as TaskId.
+      x-re:
+        observation:
+          notes: It seems that this is the same as TaskId.
       allOf:
         - $ref: "#/components/schemas/TaskId"
     QuestionId:
@@ -1216,11 +1426,18 @@ components:
     QuestionItemType:
       type: string
       description: Question type.
-      x-re-notes: >
-        Known values:
-          - "input" - question that requires input as answer
-          - "singleChoice" - question that requires the right choice as answer
-          - "multipleChoice" - question that requires chosing multiple options
+      x-re:
+        status:
+          completeness: full
+          confidence: medium
+        observation:
+          observedAsOf: 2026-03-27
+        enum:
+          descriptions:
+            "input": Question that requires input as answer.
+            "singleChoice": Question that requires the right choice as answer.
+            "multipleChoice": >
+              Question that requires chosing multiple options as answer.
       enum:
         - input
         - singleChoice
@@ -1230,7 +1447,13 @@ components:
       type: string
       nullable: true
       description: Text rendered under the option on frontend.
-      x-re-notes: Need to investigate more what actual sense this has.
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: low
+          reasons:
+            - other
+          notes: Need to investigate more what actual sense this has.
       example: "-"
     QuestionItemEvaluationBlock:
       type: object
@@ -1244,15 +1467,26 @@ components:
           description: Indicates if the question is auto evaluated.
           example: false
         recommendation:
-          x-re-notes: Only seen this exact value as null, so this is a guess.
+          nullable: true
+          x-re:
+            status: inferred
+            confidence: medium
+            analysis:
+              needsAnalysis: true
+              priority: low
+              reasons:
+                - other
+              notes: Only seen this exact value as null, so this is a guess.
           allOf:
             - $ref: "#/components/schemas/QuestionOptionRecommendation"
     QuestionItemContent:
       type: string
       description: JSON-serialized markdown question content rendered in LMS.
-      x-re-notes: >
-        Markdown blocks contain JSON with `description`.
-        Format is not the same as for LongreadMaterialViewContent.
+      x-re:
+        observation:
+          notes: >
+            Markdown blocks contain JSON with `description`.
+            Format is not the same as for LongreadMaterialViewContent.
       example: '{"description": "..."}'
     QuestionItemScore:
       type: integer
@@ -1283,8 +1517,10 @@ components:
         isCorrect:
           type: boolean
           description: Indicates if the option is the correct answer.
-          x-re-notes: >
-            Seen value to be true when there is only one possible option.
+          x-re:
+            observation:
+              notes: >
+                Seen value to be true when there is only one possible option.
           example: true
         recommendation:
           $ref: "#/components/schemas/QuestionOptionRecommendation"
@@ -1294,10 +1530,22 @@ components:
         $ref: "#/components/schemas/QuestionItemOption"
     QuestionCorrectAnswerType:
       type: string
-      x-re-notes: >
-        Known values:
-          - "inputStringCorrectAnswer" - shows correct string input answers
-          - "inputNumberCorrectAnswer" - shows correct number input answers
+      x-re:
+        status:
+          completeness: full
+          confidence: medium
+        observation:
+          observedAsOf: 2026-03-27
+        analysis:
+          needsAnalysis: true
+          priority: medium
+          reasons:
+            - enum-incomplete
+          notes: Enum can be incomplete.
+        enum:
+          descriptions:
+            "inputStringCorrectAnswer": Shows correct string input answers.
+            "inputNumberCorrectAnswer": Shows correct number input answers.
       enum:
         - inputStringCorrectAnswer
         - inputNumberCorrectAnswer
@@ -1360,8 +1608,10 @@ components:
     longreadExerciseQuestionBase:
       type: object
       additionalProperties: false
-      x-re-properties-order:
-        ignored: true
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
       required: [ type, id, order, content, score, attachments ]
       properties:
         type:
@@ -1380,9 +1630,11 @@ components:
             $ref: "#/components/schemas/LongreadMaterialAttachmentItem"
     LongreadExerciseInputQuestionItem:
       description: Question that needs input as answer.
-      x-re-properties-order:
-        ignored: true
-      allOf:
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
+      allOf:   # TODO: fix allOf additionalProperties flattening
         - $ref: "#/components/schemas/longreadExerciseQuestionBase"
         - $ref: "#/components/schemas/QuestionItemEvaluationBlock"
         - type: object
@@ -1393,9 +1645,11 @@ components:
               $ref: "#/components/schemas/QuestionItemEvaluationBlock"
     LongreadExerciseSingleChoiceQuestionitem:
       description: Question that requires the right choice as answer.
-      x-re-properties-order:
-        ignored: true
-      allOf:
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
+      allOf:  # TODO: fix allOf additionalProperties flattening
         - $ref: "#/components/schemas/longreadExerciseQuestionBase"
         - type: object
           additionalProperties: false
@@ -1414,9 +1668,11 @@ components:
                   $ref: "#/components/schemas/QuestionItemOptions"
     LongreadExerciseMultipleChoiceQuestionItem:
       description: Question that requires chosing multiple options as answer.
-      x-re-properties-order:
-        ignored: true
-      allOf:
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
+      allOf:  # TODO: fix allOf additionalProperties flattening
         - $ref: "#/components/schemas/longreadExerciseQuestionBase"
         - type: object
           additionalProperties: false
@@ -1449,8 +1705,10 @@ components:
     longreadMaterialBase:
       type: object
       additionalProperties: false
-      x-re-properties-order:
-        ignored: true
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
       required: [ discriminator, state, viewType, type, id, order ]
       properties:
         discriminator:
@@ -1475,12 +1733,25 @@ components:
     VideoPlatformState:
       type: string
       description: Video state.
-      x-re-notes: >
-        Seems to somehow show the current video state.
-        But it's hard to get the sense of it.
-        Known values:
-          - "ready" - video is ready
-          - "empty" - video is empty (unknown what that means)
+      x-re:
+        status:
+          completeness: full
+          confidence: medium
+        observation:
+          observedAsOf: 2026-03-27
+        analysis:
+          needsAnalysis: true
+          priority: low
+          reasons:
+            - enum-incomplete
+            - meaning-unknown
+          notes: >
+            Seems to somehow show the current video state.
+            But it's hard to get the sense of it.
+        enum:
+          descriptions: >
+            "ready": Video is ready.
+            "empty": Video is empty? (unknown what that means).
       enum:
         - ready
         - empty
@@ -1488,14 +1759,28 @@ components:
     VideoPlatformViewType:
       type: string
       description: View type.
-      x-re-notes: Seems useless and seen only as one value.
+      x-re:
+        status:
+          completeness: full
+          confidence: medium
+        observation:
+          observedAsOf: 2026-03-27
+        analysis:
+          needsAnalysis: true
+          priority: low
+          reasons:
+            - usage-unknown
+          notes: >
+            Seems useless and seen only as one value.
       enum:
         - videoPlatform
       example: "videoPlatform"
     longreadExerciseMaterialBase:
-      x-re-properties-order:
-        ignored: true
-      allOf:
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
+      allOf:   # TODO: fix allOf additionalProperties flattening
         - $ref: "#/components/schemas/longreadMaterialBase"
         - type: object
           additionalProperties: false
@@ -1514,20 +1799,32 @@ components:
               type: array
               minItems: 0
               description: Reviewers assigned to this exercise task.
-              x-re-notes: >
-                Reviewer is added to the list after being selected by
-                the System.
+              x-re:
+                observation:
+                  notes: >
+                    Reviewer is added to the list after being selected by
+                    the System.
               items:
                 $ref: "#/components/schemas/UserId"
             assignees:
               type: array
               minItems: 0
               description: Assignees linked to this exercise task.
-              x-re-notes: >
-                Never seen this array having items, so item type is a guess.
-                Purpose is unknown, but a guess is that this property is unused
-                for now and in the future there would be a feature of assigning
-                multiple students to the same task?
+              x-re:
+                status:
+                  classification: inferred
+                  completeness: full
+                  confidence: high
+                  notes: >
+                    Never seen this array having items, so item type
+                    is a guess.
+                    Purpose is unknown, but a guess is that this property is
+                    unused for now and in the future there would be a feature
+                    of assigning multiple students to the same task?
+                observation:
+                  observedAsOf: 2026-03-27
+                lifecycle:
+                  state: inactive
               items:
                 $ref: "#/components/schemas/UserId"
             attachments:
@@ -1539,9 +1836,11 @@ components:
             taskId:
               $ref: "#/components/schemas/TaskId"
     LongreadMarkdownMaterialItem:
-      x-re-properties-order:
-        ignored: true
-      allOf:
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
+      allOf:  # TODO: fix allOf additionalProperties flattening
         - $ref: "#/components/schemas/longreadMaterialBase"
         - type: object
           additionalProperties: false
@@ -1549,7 +1848,8 @@ components:
           properties:
             viewContent:
               nullable: false
-              x-re-notes: Logically this is never null for `type` "markdown".
+              x-re:
+                notes: Logically this is never null for `type` "markdown".
               allOf:
                 - $ref: "#/components/schemas/LongreadMaterialViewContent"
             publishDate:
@@ -1557,9 +1857,11 @@ components:
             publishedAt:
               $ref: "#/components/schemas/PublishedAt"
     LongreadFileMaterialItem:
-      x-re-properties-order:
-        ignored: true
-      allOf:
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
+      allOf:  # TODO: fix allOf additionalProperties flattening
         - $ref: "#/components/schemas/longreadMaterialBase"
         - type: object
           additionalProperties: false
@@ -1581,9 +1883,11 @@ components:
             content:
               $ref: "#/components/schemas/LongreadMaterialContent"
     LongreadExerciseCodingMaterialItem:
-      x-re-properties-order:
-        ignored: true
-      allOf:
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
+      allOf:  # TODO: fix allOf additionalProperties flattening
         - $ref: "#/components/schemas/longreadExerciseMaterialBase"
         - type: object
           additionalProperties: false
@@ -1594,9 +1898,11 @@ components:
             coding:
               $ref: "#/components/schemas/LongreadMaterialCoding"
     LongreadImageMaterialItem:
-      x-re-properties-order:
-        ignored: true
-      allOf:
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
+      allOf:  # TODO: fix allOf additionalProperties flattening
         - $ref: "#/components/schemas/longreadMaterialBase"
         - type: object
           additionalProperties: false
@@ -1607,7 +1913,13 @@ components:
               type: integer
               nullable: true
               description: Image scale.
-              x-re-notes: Not exactly known how this scale works if set.
+              x-re:
+                analysis:
+                  needsAnalysis: true
+                  priority: low
+                  reasons:
+                    - usage-unknown
+                  notes: Not exactly known how this scale works if set.
               example: 100
             mediaType:
               allOf:
@@ -1628,9 +1940,11 @@ components:
             content:
               $ref: "#/components/schemas/LongreadMaterialContent"
     LongreadExerciseQuestionsMaterialItem:
-      x-re-properties-order:
-        ignored: true
-      allOf:
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
+      allOf:  # TODO: fix allOf additionalProperties flattening
         - $ref: "#/components/schemas/longreadExerciseMaterialBase"
         - type: object
           additionalProperties: false
@@ -1652,9 +1966,11 @@ components:
               items:
                 $ref: "#/components/schemas/LongreadExerciseQuestionItem"
     LongreadVideoPlatformMaterialItem:
-      x-re-properties-order:
-        ignored: true
-      allOf:
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
+      allOf:  # TODO: fix allOf additionalProperties flattening
         - $ref: "#/components/schemas/longreadMaterialBase"
         - type: object
           additionalProperties: false
@@ -1664,19 +1980,21 @@ components:
             name:
               type: string
               description: Embedded video title.
-              x-re-notes: For some reason not shown on frontend.
+              x-re:
+                notes: For some reason not shown on frontend.
               example: "Прожарка резюме и HR-собеседования"
             description:
               type: string
               description: Embedded video description.
-              x-re-notes: >
-                Only seen as empty, so unknown if it is shown on frontend.
+              x-re:
+                notes: >
+                  Only seen as empty, so unknown if it is shown on frontend.
               example: ""
             videoId:
               $ref: "#/components/schemas/VideoId"
             timecodes:
               # yamllint disable-line rule:line-length
-              $ref: "#/components/schemas/_propertyNeedsAnalysis_SeenAsEmptyArray"
+              $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyEmptyArrayObserved"
             publishDate:
               $ref: "#/components/schemas/PublishDate"
             videoState:
@@ -1688,12 +2006,14 @@ components:
             viewType:
               $ref: "#/components/schemas/VideoPlatformViewType"
     LongreadVideoMaterialItem:
-      x-re-properties-order:
-        ignored: true
-      x-re-notes: >
-        Internally is the same as LongreadFileMaterialItem, but schema
-        is recreated as ogen doesn't support "sum types with same names".
-      allOf:
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
+        notes: >
+          Internally is the same as LongreadFileMaterialItem, but schema
+          is recreated as ogen doesn't support "sum types with same names".
+      allOf:  # TODO: fix allOf additionalProperties flattening
         - $ref: "#/components/schemas/longreadMaterialBase"
         - type: object
           additionalProperties: false
@@ -1715,12 +2035,14 @@ components:
             content:
               $ref: "#/components/schemas/LongreadMaterialContent"
     LongreadAudioMaterialItem:
-      x-re-properties-order:
-        ignored: true
-      x-re-notes: >
-        Internally is the same as LongreadFileMaterialItem, but schema
-        is recreated as ogen doesn't support "sum types with same names".
-      allOf:
+      x-re:
+        serialization:
+          propertyOrder:
+            source: unspecified
+        notes: >
+          Internally is the same as LongreadFileMaterialItem, but schema
+          is recreated as ogen doesn't support "sum types with same names".
+      allOf:  # TODO: fix allOf additionalProperties flattening
         - $ref: "#/components/schemas/longreadMaterialBase"
         - type: object
           additionalProperties: false
@@ -1778,9 +2100,11 @@ components:
   responses:
     DefaultError:
       description: Default catch-all error object, untyped.
-      x-re-notes: >
-        It seems that all service errors have the same content type,
-        which is "application/problem+json".
+      x-re:
+        observation:
+          notes: >
+            It seems that all service errors have the same content type,
+            which is "application/problem+json".
       content:
         application/problem+json:
           schema:
