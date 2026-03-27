@@ -318,6 +318,13 @@ components:
         $ref: "#/components/schemas/LongreadId"
       example: 12707
   schemas:
+    BaseErrorType:
+      type: string
+      x-re:
+        lifecycle:
+          state: inactive
+          notes: Website in the URL seems to be abandoned.
+      example: "https://httpstatuscodes.io/401"
     BaseErrorTitle:
       type: string
       description: Short, human-readable summary of the problem type.
@@ -336,12 +343,7 @@ components:
       required: [ title, status ]
       properties:
         type:  # non-required
-          type: string
-          x-re:
-            lifecycle:
-              state: inactive
-              notes: Website in the URL seems to be abandoned.
-          example: "https://httpstatuscodes.io/401"
+          $ref: "#/components/schemas/BaseErrorType"
         title:
           $ref: "#/components/schemas/BaseErrorTitle"
         status:
@@ -378,28 +380,35 @@ components:
             {
               "courseId": [ "The value 'invalid-value-example' is not valid." ]
             }
-    BaseUnauthorizedError:  # TODO: fix allOf additionalProperties flattening
+    BaseUnauthorizedError:
+      type: object
       description: Base error for Unauthorized status.
       x-re:
         observation:
           notes: >
             `type` property is sometimes specified, e.g. for
             notification-hub service, while for micro-lms it is not.
-      allOf:
-        - $ref: "#/components/schemas/BaseProblemError"
-        - type: object
-          additionalProperties: false
-          required: [ traceId ]
-          properties:
-            traceId:
-              $ref: "#/components/schemas/BaseErrorTraceId"
-      # example:
-      #   {
-      #     "type": "https://httpstatuscodes.io/401",
-      #     "title": "Unauthorized",
-      #     "status": 401,
-      #     "traceId": "00-00000000000000000000000000000000-0000000000000000-01"
-      #   }
+        notes: Based on BaseProblemError.
+      additionalProperties: false
+      required: [ title, status, traceId ]
+      properties:
+        # Inherited from BaseProblemError.
+        type:  # non-required
+          $ref: "#/components/schemas/BaseErrorType"
+        title:
+          $ref: "#/components/schemas/BaseErrorTitle"
+        status:
+          $ref: "#/components/schemas/BaseErrorStatus"
+        # Other.
+        traceId:
+          $ref: "#/components/schemas/BaseErrorTraceId"
+      example:
+        {
+          "type": "https://httpstatuscodes.io/401",
+          "title": "Unauthorized",
+          "status": 401,
+          "traceId": "00-00000000000000000000000000000000-0000000000000000-01"
+        }
     BaseNotFoundError:
       type: object
       description: Base error for Not Found status.
@@ -847,12 +856,22 @@ components:
       type: string
       description: Activity name.
       example: "Аудиторная работа на семинарах"
+    ActivityWeight:
+      type: number
+      format: float
+      description: >
+        Weight coefficient for every single activity by activity name,
+        used in the course grade formula to calculate the overall semester
+        score.
+      minimum: 0
+      maximum: 1
+      example: 0.25
     ActivityDefinition:
       type: object
-      additionalProperties: false
       description: >
         Activity definition shared across exercises. Multiple exercises
         reference the same activity definition.
+      additionalProperties: false
       required: [ id, name, weight ]
       properties:
         id:
@@ -860,15 +879,7 @@ components:
         name:
           $ref: "#/components/schemas/ActivityName"
         weight:
-          type: number
-          format: float
-          description: >
-            Weight coefficient for every single activity by activity name,
-            used in the course grade formula to calculate the overall semester
-            score.
-          minimum: 0
-          maximum: 1
-          example: 0.25
+          $ref: "#/components/schemas/ActivityWeight"
     Deadline:
       type: string
       format: date-time
@@ -886,11 +897,16 @@ components:
     ExerciseName:
       type: string
       description: Exercise name shown as the header is LMS.
+      x-re:
+        observation:
+          examples:
+            - "Seminar 1. Week 2"
+            - "HW. Week 6"
       example: "Seminar 1. Week 2"
     ExerciseItem:
       type: object
-      additionalProperties: false
       description: An exercise item within a longread item.
+      additionalProperties: false
       required: [ id, name, maxScore, activity, deadline ]
       properties:
         id:
@@ -914,10 +930,10 @@ components:
       example: "Ссылка на силлабус"
     LongreadItem:
       type: object
-      additionalProperties: false
       description: >
         A longread list item within a course theme. It may be self-contained
         content or include one or more associated exercises.
+      additionalProperties: false
       required: [ id, type, name, state, publishDate, publishedAt, exercises ]
       properties:
         id:
@@ -957,10 +973,10 @@ components:
       example: 1
     CourseThemeItem:
       type: object
-      additionalProperties: false
       description: >
         Course theme is a unit, which is typically a weekly module of
         longread IDs and exercise items.
+      additionalProperties: false
       required: [ id, name, order, state, publishDate, publishedAt, longreads ]
       properties:
         id:
@@ -1005,8 +1021,8 @@ components:
             $ref: "#/components/schemas/CourseThemeItem"
     CourseThemeSummaryByIdResponse:
       type: object
-      additionalProperties: false
       description: Summary information about a course theme by its ID.
+      additionalProperties: false
       required: [ id, name, state, publishDate, publishedAt, order, category,
                   categoryCover ]
       properties:
@@ -1291,44 +1307,50 @@ components:
       properties:
         exerciseUrl:
           $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
-    LongreadMaterialActivity:  # TODO: fix allOf additionalProperties flattening
+    LongreadMaterialActivity:
       description: Activity configuration for a longread exercise.
       x-re:
         serialization:
           propertyOrder:
             source: unspecified
-      allOf:
-        - $ref: "#/components/schemas/ActivityDefinition"
-        - type: object
-          additionalProperties: false
-          required: [ averageScoreThreshold, isLateDaysEnabled ]
-          properties:
-            averageScoreThreshold:
-              type: number
-              minimum: 0
-              nullable: true
-              description: Average score threshold.
-              x-re:
-                analysis:
-                  needsAnalysis: true
-                  priority: low
-                  reasons:
-                    - meaning-unknown
-                  notes: Unknown meaning and usage.
-              example: 0
-            isLateDaysEnabled:
-              type: boolean
-              description: Indicates if late days can be used for this activity.
-              example: true
+        notes: Based on ActivityDefinition.
+      additionalProperties: false
+      required: [ id, name, weight, averageScoreThreshold, isLateDaysEnabled ]
+      properties:
+        # Inherited from ActivityDefinition.
+        id:
+          $ref: "#/components/schemas/ActivityId"
+        name:
+          $ref: "#/components/schemas/ActivityName"
+        weight:
+          $ref: "#/components/schemas/ActivityWeight"
+        # Other.
+        averageScoreThreshold:
+          type: number
+          minimum: 0
+          nullable: true
+          description: Average score threshold.
+          x-re:
+            analysis:
+              needsAnalysis: true
+              priority: low
+              reasons:
+                - meaning-unknown
+              notes: Unknown meaning and usage.
+          example: 0
+        isLateDaysEnabled:
+          type: boolean
+          description: Indicates if late days can be used for this activity.
+          example: true
     LongreadMaterialEstimation:
       type: object
-      additionalProperties: false
       description: Estimation and grading constraints for exercise material.
       x-re:
         observation:
           notes: >
             There are rare cases when value of
             `maxScore`, `deadline` and `activity` is null.
+      additionalProperties: false
       required: [ startDate, timer, maxScore, deadline, activity ]
       properties:
         startDate:
@@ -1400,8 +1422,8 @@ components:
       example: "last"
     LongreadExerciseQuestionsSettings:
       type: object
-      additionalProperties: false
       description: Settings for questions exercise behavior.
+      additionalProperties: false
       required: [ questionsPerAttempt, attemptsLimit, evaluationStrategy ]
       properties:
         questionsPerAttempt:
@@ -1455,6 +1477,10 @@ components:
             - other
           notes: Need to investigate more what actual sense this has.
       example: "-"
+    QuestionItemAutoEvaluation:
+      type: boolean
+      description: Indicates if the question is auto evaluated.
+      example: false
     QuestionItemEvaluationBlock:
       type: object
       additionalProperties: false
@@ -1463,9 +1489,7 @@ components:
         correctAnswer:
           $ref: "#/components/schemas/QuestionItemCorrectAnswer"
         autoEvaluation:
-          type: boolean
-          description: Indicates if the question is auto evaluated.
-          example: false
+          $ref: "#/components/schemas/QuestionItemAutoEvaluation"
         recommendation:
           nullable: true
           x-re:
@@ -1500,8 +1524,8 @@ components:
       example: 471
     QuestionItemOption:
       type: object
-      additionalProperties: false
       description: Option is a possible answer that can be chosen.
+      additionalProperties: false
       required: [ id, value, order, isCorrect, recommendation ]
       properties:
         id:
@@ -1605,15 +1629,20 @@ components:
       type: boolean
       description: Indicates if options need to be shuffled on frontend.
       example: false
-    longreadExerciseQuestionBase:
-      type: object
-      additionalProperties: false
+    LongreadExerciseInputQuestionItem:
+      description: Question that needs input as answer.
       x-re:
         serialization:
           propertyOrder:
             source: unspecified
-      required: [ type, id, order, content, score, attachments ]
+        notes: >
+          Based on longreadExerciseQuestionBase
+          and QuestionItemEvaluationBlock.
+      additionalProperties: false
+      required: [ type, id, order, content, score, attachments, correctAnswer,
+                  autoEvaluation, recommendation, input ]
       properties:
+        # Inherited from longreadExerciseQuestionBase.
         type:
           $ref: "#/components/schemas/QuestionItemType"
         id:
@@ -1628,67 +1657,92 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/LongreadMaterialAttachmentItem"
-    LongreadExerciseInputQuestionItem:
-      description: Question that needs input as answer.
-      x-re:
-        serialization:
-          propertyOrder:
-            source: unspecified
-      allOf:   # TODO: fix allOf additionalProperties flattening
-        - $ref: "#/components/schemas/longreadExerciseQuestionBase"
-        - $ref: "#/components/schemas/QuestionItemEvaluationBlock"
-        - type: object
-          additionalProperties: false
-          required: [ input ]
-          properties:
-            input:
-              $ref: "#/components/schemas/QuestionItemEvaluationBlock"
+        # Inherited from QuestionItemEvaluationBlock.
+        correctAnswer:
+          $ref: "#/components/schemas/QuestionItemCorrectAnswer"
+        autoEvaluation:
+          $ref: "#/components/schemas/QuestionItemAutoEvaluation"
+        recommendation:
+          $ref: "#/components/schemas/QuestionOptionRecommendation"
+        # Other.
+        input:
+          $ref: "#/components/schemas/QuestionItemEvaluationBlock"
     LongreadExerciseSingleChoiceQuestionitem:
       description: Question that requires the right choice as answer.
       x-re:
         serialization:
           propertyOrder:
             source: unspecified
-      allOf:  # TODO: fix allOf additionalProperties flattening
-        - $ref: "#/components/schemas/longreadExerciseQuestionBase"
-        - type: object
+        notes: Based on longreadExerciseQuestionBase.
+      additionalProperties: false
+      required: [ type, id, order, content, score, attachments, options,
+                  areOptionsShuffled, singleChoice ]
+      properties:
+        # Inherited from longreadExerciseQuestionBase.
+        type:
+          $ref: "#/components/schemas/QuestionItemType"
+        id:
+          $ref: "#/components/schemas/QuestionId"
+        order:
+          $ref: "#/components/schemas/ListingOrder"
+        content:
+          $ref: "#/components/schemas/QuestionItemContent"
+        score:
+          $ref: "#/components/schemas/QuestionItemScore"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/LongreadMaterialAttachmentItem"
+        # Other.
+        options:
+          $ref: "#/components/schemas/QuestionItemOptions"
+        areOptionsShuffled:
+          $ref: "#/components/schemas/QuestionitemAreOptionsShuffled"
+        singleChoice:
+          type: object
           additionalProperties: false
-          required: [ options, areOptionsShuffled, singleChoice ]
+          required: [ options ]
           properties:
             options:
               $ref: "#/components/schemas/QuestionItemOptions"
-            areOptionsShuffled:
-              $ref: "#/components/schemas/QuestionitemAreOptionsShuffled"
-            singleChoice:
-              type: object
-              additionalProperties: false
-              required: [ options ]
-              properties:
-                options:
-                  $ref: "#/components/schemas/QuestionItemOptions"
     LongreadExerciseMultipleChoiceQuestionItem:
       description: Question that requires chosing multiple options as answer.
       x-re:
         serialization:
           propertyOrder:
             source: unspecified
-      allOf:  # TODO: fix allOf additionalProperties flattening
-        - $ref: "#/components/schemas/longreadExerciseQuestionBase"
-        - type: object
+        notes: Based on longreadExerciseQuestionBase.
+      additionalProperties: false
+      required: [ type, id, order, content, score, attachments,
+                  options, areOptionsShuffled, multipleChoice ]
+      properties:
+        # Inherited from longreadExerciseQuestionBase.
+        type:
+          $ref: "#/components/schemas/QuestionItemType"
+        id:
+          $ref: "#/components/schemas/QuestionId"
+        order:
+          $ref: "#/components/schemas/ListingOrder"
+        content:
+          $ref: "#/components/schemas/QuestionItemContent"
+        score:
+          $ref: "#/components/schemas/QuestionItemScore"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/LongreadMaterialAttachmentItem"
+        # Other.
+        options:
+          $ref: "#/components/schemas/QuestionItemOptions"
+        areOptionsShuffled:
+          $ref: "#/components/schemas/QuestionitemAreOptionsShuffled"
+        multipleChoice:
+          type: object
           additionalProperties: false
-          required: [ options, areOptionsShuffled, multipleChoice ]
+          required: [ options ]
           properties:
             options:
               $ref: "#/components/schemas/QuestionItemOptions"
-            areOptionsShuffled:
-              $ref: "#/components/schemas/QuestionitemAreOptionsShuffled"
-            multipleChoice:
-              type: object
-              additionalProperties: false
-              required: [ options ]
-              properties:
-                options:
-                  $ref: "#/components/schemas/QuestionItemOptions"
     LongreadExerciseQuestionItem:
       # yamllint disable rule:line-length
       oneOf:
@@ -1702,29 +1756,6 @@ components:
           singleChoice: "#/components/schemas/LongreadExerciseSingleChoiceQuestionitem"
           multipleChoice: "#/components/schemas/LongreadExerciseMultipleChoiceQuestionItem"
     # yamllint enable rule:line-length
-    longreadMaterialBase:
-      type: object
-      additionalProperties: false
-      x-re:
-        serialization:
-          propertyOrder:
-            source: unspecified
-      required: [ discriminator, state, viewType, type, id, order ]
-      properties:
-        discriminator:
-          $ref: "#/components/schemas/LongreadMaterialDiscriminator"
-        state:
-          $ref: "#/components/schemas/PublicationState"
-        viewType:
-          $ref: "#/components/schemas/LongreadMaterialViewType"
-        type:
-          $ref: "#/components/schemas/LongreadMaterialType"
-        id:
-          $ref: "#/components/schemas/LongreadMaterialId"
-        order:
-          allOf:
-            - $ref: "#/components/schemas/ListingOrder"
-          example: 0
     VideoId:
       type: string
       format: uuid
@@ -1756,313 +1787,429 @@ components:
         - ready
         - empty
       example: "ready"
-    VideoPlatformViewType:
-      type: string
-      description: View type.
+    LongreadExerciseMaterialReviewers:
+      type: array
+      minItems: 0
+      description: Reviewers assigned to this exercise task.
+      x-re:
+        observation:
+          notes: >
+            Reviewer is added to the list after being selected by the System.
+      items:
+        $ref: "#/components/schemas/UserId"
+    LongreadExerciseMaterialAssignees:
+      type: array
+      minItems: 0
+      description: Assignees linked to this exercise task.
       x-re:
         status:
+          classification: inferred
           completeness: full
-          confidence: medium
+          confidence: high
+          notes: >
+            Never seen this array having items, so item type
+            is a guess.
+            Purpose is unknown, but a guess is that this property is
+            unused for now and in the future there would be a feature
+            of assigning multiple students to the same task?
         observation:
           observedAsOf: 2026-03-27
-        analysis:
-          needsAnalysis: true
-          priority: low
-          reasons:
-            - usage-unknown
-          notes: >
-            Seems useless and seen only as one value.
-      enum:
-        - videoPlatform
-      example: "videoPlatform"
-    longreadExerciseMaterialBase:
-      x-re:
-        serialization:
-          propertyOrder:
-            source: unspecified
-      allOf:   # TODO: fix allOf additionalProperties flattening
-        - $ref: "#/components/schemas/longreadMaterialBase"
-        - type: object
-          additionalProperties: false
-          required: [ name, viewContent, estimation, reviewers, assignees,
-                      attachments, backloggedAt, taskId ]
-          properties:
-            name:
-              allOf:
-                - $ref: "#/components/schemas/ExerciseName"
-              example: "HW. Week 6"
-            viewContent:
-              $ref: "#/components/schemas/LongreadMaterialViewContent"
-            estimation:
-              $ref: "#/components/schemas/LongreadMaterialEstimation"
-            reviewers:
-              type: array
-              minItems: 0
-              description: Reviewers assigned to this exercise task.
-              x-re:
-                observation:
-                  notes: >
-                    Reviewer is added to the list after being selected by
-                    the System.
-              items:
-                $ref: "#/components/schemas/UserId"
-            assignees:
-              type: array
-              minItems: 0
-              description: Assignees linked to this exercise task.
-              x-re:
-                status:
-                  classification: inferred
-                  completeness: full
-                  confidence: high
-                  notes: >
-                    Never seen this array having items, so item type
-                    is a guess.
-                    Purpose is unknown, but a guess is that this property is
-                    unused for now and in the future there would be a feature
-                    of assigning multiple students to the same task?
-                observation:
-                  observedAsOf: 2026-03-27
-                lifecycle:
-                  state: inactive
-              items:
-                $ref: "#/components/schemas/UserId"
-            attachments:
-              type: array
-              items:
-                $ref: "#/components/schemas/LongreadMaterialAttachmentItem"
-            backloggedAt:
-              $ref: "#/components/schemas/BackloggedAt"
-            taskId:
-              $ref: "#/components/schemas/TaskId"
+        lifecycle:
+          state: inactive
+      items:
+        $ref: "#/components/schemas/UserId"
     LongreadMarkdownMaterialItem:
+      type: object
       x-re:
         serialization:
           propertyOrder:
             source: unspecified
-      allOf:  # TODO: fix allOf additionalProperties flattening
-        - $ref: "#/components/schemas/longreadMaterialBase"
-        - type: object
-          additionalProperties: false
-          required: [ viewContent, publishDate, publishedAt ]
-          properties:
-            viewContent:
-              nullable: false
-              x-re:
-                notes: Logically this is never null for `type` "markdown".
-              allOf:
-                - $ref: "#/components/schemas/LongreadMaterialViewContent"
-            publishDate:
-              $ref: "#/components/schemas/PublishDate"
-            publishedAt:
-              $ref: "#/components/schemas/PublishedAt"
+        notes: Based on longreadMaterialBase.
+      additionalProperties: false
+      required: [ discriminator, state, viewType, type, id, order,
+                  viewContent, publishDate, publishedAt ]
+      properties:
+        # Inherited from longreadMaterialBase.
+        discriminator:
+          $ref: "#/components/schemas/LongreadMaterialDiscriminator"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        viewType:
+          $ref: "#/components/schemas/LongreadMaterialViewType"
+        type:
+          $ref: "#/components/schemas/LongreadMaterialType"
+        id:
+          $ref: "#/components/schemas/LongreadMaterialId"
+        order:
+          allOf:
+            - $ref: "#/components/schemas/ListingOrder"
+          example: 0
+        # Other.
+        viewContent:
+          nullable: false
+          x-re:
+            notes: Logically this is never null for `type` "markdown".
+          allOf:
+            - $ref: "#/components/schemas/LongreadMaterialViewContent"
+        publishDate:
+          $ref: "#/components/schemas/PublishDate"
+        publishedAt:
+          $ref: "#/components/schemas/PublishedAt"
     LongreadFileMaterialItem:
+      type: object
       x-re:
         serialization:
           propertyOrder:
             source: unspecified
-      allOf:  # TODO: fix allOf additionalProperties flattening
-        - $ref: "#/components/schemas/longreadMaterialBase"
-        - type: object
-          additionalProperties: false
-          required: [ mediaType, filename, version, length, publishDate,
-                      publishedAt, content ]
-          properties:
-            mediaType:
-              $ref: "#/components/schemas/LongreadMaterialMediaType"
-            filename:
-              $ref: "#/components/schemas/FileNameObjectPath"
-            version:
-              $ref: "#/components/schemas/LongreadMaterialVersion"
-            length:
-              $ref: "#/components/schemas/LongreadMaterialLength"
-            publishDate:
-              $ref: "#/components/schemas/PublishDate"
-            publishedAt:
-              $ref: "#/components/schemas/PublishedAt"
-            content:
-              $ref: "#/components/schemas/LongreadMaterialContent"
+        notes: Based on longreadMaterialBase.
+      additionalProperties: false
+      required: [ discriminator, state, viewType, type, id, order,
+                  mediaType, filename, version, length, publishDate,
+                  publishedAt, content ]
+      properties:
+        # Inherited from longreadMaterialBase.
+        discriminator:
+          $ref: "#/components/schemas/LongreadMaterialDiscriminator"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        viewType:
+          $ref: "#/components/schemas/LongreadMaterialViewType"
+        type:
+          $ref: "#/components/schemas/LongreadMaterialType"
+        id:
+          $ref: "#/components/schemas/LongreadMaterialId"
+        order:
+          allOf:
+            - $ref: "#/components/schemas/ListingOrder"
+          example: 0
+        # Other.
+        mediaType:
+          $ref: "#/components/schemas/LongreadMaterialMediaType"
+        filename:
+          $ref: "#/components/schemas/FileNameObjectPath"
+        version:
+          $ref: "#/components/schemas/LongreadMaterialVersion"
+        length:
+          $ref: "#/components/schemas/LongreadMaterialLength"
+        publishDate:
+          $ref: "#/components/schemas/PublishDate"
+        publishedAt:
+          $ref: "#/components/schemas/PublishedAt"
+        content:
+          $ref: "#/components/schemas/LongreadMaterialContent"
     LongreadExerciseCodingMaterialItem:
+      type: object
       x-re:
         serialization:
           propertyOrder:
             source: unspecified
-      allOf:  # TODO: fix allOf additionalProperties flattening
-        - $ref: "#/components/schemas/longreadExerciseMaterialBase"
-        - type: object
-          additionalProperties: false
-          required: [ exerciseUrl, coding ]
-          properties:
-            exerciseUrl:
-              $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
-            coding:
-              $ref: "#/components/schemas/LongreadMaterialCoding"
+        notes: Based in longreadExerciseMaterialBase.
+      additionalProperties: false
+      required: [ discriminator, state, viewType, type, id, order,
+                  name, viewContent, estimation, reviewers, assignees,
+                  attachments, backloggedAt, taskId, exerciseUrl, coding ]
+      properties:
+        # Inherited from longreadExerciseMaterialBase.
+        discriminator:
+          $ref: "#/components/schemas/LongreadMaterialDiscriminator"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        viewType:
+          $ref: "#/components/schemas/LongreadMaterialViewType"
+        type:
+          $ref: "#/components/schemas/LongreadMaterialType"
+        id:
+          $ref: "#/components/schemas/LongreadMaterialId"
+        order:
+          allOf:
+            - $ref: "#/components/schemas/ListingOrder"
+          example: 0
+        name:
+          $ref: "#/components/schemas/ExerciseName"
+        viewContent:
+          $ref: "#/components/schemas/LongreadMaterialViewContent"
+        estimation:
+          $ref: "#/components/schemas/LongreadMaterialEstimation"
+        reviewers:
+          $ref: "#/components/schemas/LongreadExerciseMaterialReviewers"
+        assignees:
+          $ref: "#/components/schemas/LongreadExerciseMaterialAssignees"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/LongreadMaterialAttachmentItem"
+        backloggedAt:
+          $ref: "#/components/schemas/BackloggedAt"
+        taskId:
+          $ref: "#/components/schemas/TaskId"
+        # Other.
+        exerciseUrl:
+          $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
+        coding:
+          $ref: "#/components/schemas/LongreadMaterialCoding"
     LongreadImageMaterialItem:
+      type: object
       x-re:
         serialization:
           propertyOrder:
             source: unspecified
-      allOf:  # TODO: fix allOf additionalProperties flattening
-        - $ref: "#/components/schemas/longreadMaterialBase"
-        - type: object
-          additionalProperties: false
-          required: [ imageScale, mediaType, filename, version, length,
-                      publishDate, publishedAt, content ]
-          properties:
-            imageScale:
-              type: integer
-              nullable: true
-              description: Image scale.
-              x-re:
-                analysis:
-                  needsAnalysis: true
-                  priority: low
-                  reasons:
-                    - usage-unknown
-                  notes: Not exactly known how this scale works if set.
-              example: 100
-            mediaType:
-              allOf:
-                - $ref: "#/components/schemas/LongreadMaterialMediaType"
-              example: "image"
-            filename:
-              allOf:
-                - $ref: "#/components/schemas/FileNameObjectPath"
-              example: "longreads/301/Снимок экрана 2024-08-12 в 11.10.59.png"
-            version:
-              $ref: "#/components/schemas/LongreadMaterialVersion"
-            length:
-              $ref: "#/components/schemas/LongreadMaterialLength"
-            publishDate:
-              $ref: "#/components/schemas/PublishDate"
-            publishedAt:
-              $ref: "#/components/schemas/PublishedAt"
-            content:
-              $ref: "#/components/schemas/LongreadMaterialContent"
+        notes: Based on longreadMaterialBase.
+      additionalProperties: false
+      required: [ discriminator, state, viewType, type, id, order,
+                  imageScale, mediaType, filename, version, length,
+                  publishDate, publishedAt, content ]
+      properties:
+        # Inherited from longreadMaterialBase.
+        discriminator:
+          $ref: "#/components/schemas/LongreadMaterialDiscriminator"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        viewType:
+          $ref: "#/components/schemas/LongreadMaterialViewType"
+        type:
+          $ref: "#/components/schemas/LongreadMaterialType"
+        id:
+          $ref: "#/components/schemas/LongreadMaterialId"
+        order:
+          allOf:
+            - $ref: "#/components/schemas/ListingOrder"
+          example: 0
+        # Other.
+        imageScale:
+          type: integer
+          nullable: true
+          description: Image scale.
+          x-re:
+            analysis:
+              needsAnalysis: true
+              priority: low
+              reasons:
+                - usage-unknown
+              notes: Not exactly known how this scale works if set.
+          example: 100
+        mediaType:
+          allOf:
+            - $ref: "#/components/schemas/LongreadMaterialMediaType"
+          example: "image"
+        filename:
+          allOf:
+            - $ref: "#/components/schemas/FileNameObjectPath"
+          example: "longreads/301/Снимок экрана 2024-08-12 в 11.10.59.png"
+        version:
+          $ref: "#/components/schemas/LongreadMaterialVersion"
+        length:
+          $ref: "#/components/schemas/LongreadMaterialLength"
+        publishDate:
+          $ref: "#/components/schemas/PublishDate"
+        publishedAt:
+          $ref: "#/components/schemas/PublishedAt"
+        content:
+          $ref: "#/components/schemas/LongreadMaterialContent"
     LongreadExerciseQuestionsMaterialItem:
+      type: object
       x-re:
         serialization:
           propertyOrder:
             source: unspecified
-      allOf:  # TODO: fix allOf additionalProperties flattening
-        - $ref: "#/components/schemas/longreadExerciseMaterialBase"
-        - type: object
-          additionalProperties: false
-          required: [ mode, areQuestionsShuffled, settings, quizId, questions ]
-          properties:
-            mode:
-              $ref: "#/components/schemas/LongreadExerciseQuestionsMode"
-            areQuestionsShuffled:
-              type: boolean
-              description: >
-                Indicates if questions need to be shuffled on frontend.
-              example: false
-            settings:
-              $ref: "#/components/schemas/LongreadExerciseQuestionsSettings"
-            quizId:
-              $ref: "#/components/schemas/QuizId"
-            questions:
-              type: array
-              items:
-                $ref: "#/components/schemas/LongreadExerciseQuestionItem"
+        notes: Based on longreadExerciseMaterialBase.
+      additionalProperties: false
+      required: [ discriminator, state, viewType, type, id, order,
+                  name, viewContent, estimation, reviewers, assignees,
+                  attachments, backloggedAt, taskId, mode,
+                  areQuestionsShuffled, settings, quizId, questions ]
+      properties:
+        # Inherited from longreadExerciseMaterialBase.
+        discriminator:
+          $ref: "#/components/schemas/LongreadMaterialDiscriminator"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        viewType:
+          $ref: "#/components/schemas/LongreadMaterialViewType"
+        type:
+          $ref: "#/components/schemas/LongreadMaterialType"
+        id:
+          $ref: "#/components/schemas/LongreadMaterialId"
+        order:
+          allOf:
+            - $ref: "#/components/schemas/ListingOrder"
+          example: 0
+        name:
+          $ref: "#/components/schemas/ExerciseName"
+        viewContent:
+          $ref: "#/components/schemas/LongreadMaterialViewContent"
+        estimation:
+          $ref: "#/components/schemas/LongreadMaterialEstimation"
+        reviewers:
+          $ref: "#/components/schemas/LongreadExerciseMaterialReviewers"
+        assignees:
+          $ref: "#/components/schemas/LongreadExerciseMaterialAssignees"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/LongreadMaterialAttachmentItem"
+        backloggedAt:
+          $ref: "#/components/schemas/BackloggedAt"
+        taskId:
+          $ref: "#/components/schemas/TaskId"
+        # Other.
+        mode:
+          $ref: "#/components/schemas/LongreadExerciseQuestionsMode"
+        areQuestionsShuffled:
+          type: boolean
+          description: Indicates if questions need to be shuffled on frontend.
+          example: false
+        settings:
+          $ref: "#/components/schemas/LongreadExerciseQuestionsSettings"
+        quizId:
+          $ref: "#/components/schemas/QuizId"
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/LongreadExerciseQuestionItem"
     LongreadVideoPlatformMaterialItem:
+      type: object
       x-re:
         serialization:
           propertyOrder:
             source: unspecified
-      allOf:  # TODO: fix allOf additionalProperties flattening
-        - $ref: "#/components/schemas/longreadMaterialBase"
-        - type: object
-          additionalProperties: false
-          required: [ name, description, videoId, timecodes, publishDate,
-                      videoState, url, viewType ]
-          properties:
-            name:
-              type: string
-              description: Embedded video title.
-              x-re:
-                notes: For some reason not shown on frontend.
-              example: "Прожарка резюме и HR-собеседования"
-            description:
-              type: string
-              description: Embedded video description.
-              x-re:
-                notes: >
-                  Only seen as empty, so unknown if it is shown on frontend.
-              example: ""
-            videoId:
-              $ref: "#/components/schemas/VideoId"
-            timecodes:
-              # yamllint disable-line rule:line-length
-              $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyEmptyArrayObserved"
-            publishDate:
-              $ref: "#/components/schemas/PublishDate"
-            videoState:
-              $ref: "#/components/schemas/VideoPlatformState"
-            url:
-              type: string
-              format: uri
-              example: "https://vp-embed.example.com/?token=ey..."
-            viewType:
-              $ref: "#/components/schemas/VideoPlatformViewType"
+        notes: Based on longreadMaterialBase.
+      additionalProperties: false
+      required: [ discriminator, state, viewType, type, id, order,
+                  name, description, videoId, timecodes, publishDate,
+                  videoState, url ]
+      properties:
+        # Based on longreadMaterialBase.
+        discriminator:
+          $ref: "#/components/schemas/LongreadMaterialDiscriminator"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        viewType:
+          $ref: "#/components/schemas/LongreadMaterialViewType"
+        type:
+          $ref: "#/components/schemas/LongreadMaterialType"
+        id:
+          $ref: "#/components/schemas/LongreadMaterialId"
+        order:
+          allOf:
+            - $ref: "#/components/schemas/ListingOrder"
+          example: 0
+        # Other.
+        name:
+          type: string
+          description: Embedded video title.
+          x-re:
+            notes: For some reason not shown on frontend.
+          example: "Прожарка резюме и HR-собеседования"
+        description:
+          type: string
+          description: Embedded video description.
+          x-re:
+            notes: >
+              Only seen as empty, so unknown if it is shown on frontend.
+          example: ""
+        videoId:
+          $ref: "#/components/schemas/VideoId"
+        timecodes:
+          # yamllint disable-line rule:line-length
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyEmptyArrayObserved"
+        publishDate:
+          $ref: "#/components/schemas/PublishDate"
+        videoState:
+          $ref: "#/components/schemas/VideoPlatformState"
+        url:
+          type: string
+          format: uri
+          example: "https://vp-embed.example.com/?token=ey..."
     LongreadVideoMaterialItem:
+      type: object
       x-re:
         serialization:
           propertyOrder:
             source: unspecified
         notes: >
+          Based on longreadMaterialBase.
           Internally is the same as LongreadFileMaterialItem, but schema
           is recreated as ogen doesn't support "sum types with same names".
-      allOf:  # TODO: fix allOf additionalProperties flattening
-        - $ref: "#/components/schemas/longreadMaterialBase"
-        - type: object
-          additionalProperties: false
-          required: [ mediaType, filename, version, length, publishDate,
-                      publishedAt, content ]
-          properties:
-            mediaType:
-              $ref: "#/components/schemas/LongreadMaterialMediaType"
-            filename:
-              $ref: "#/components/schemas/FileNameObjectPath"
-            version:
-              $ref: "#/components/schemas/LongreadMaterialVersion"
-            length:
-              $ref: "#/components/schemas/LongreadMaterialLength"
-            publishDate:
-              $ref: "#/components/schemas/PublishDate"
-            publishedAt:
-              $ref: "#/components/schemas/PublishedAt"
-            content:
-              $ref: "#/components/schemas/LongreadMaterialContent"
+      additionalProperties: false
+      required: [ discriminator, state, viewType, type, id, order,
+                  mediaType, filename, version, length, publishDate,
+                  publishedAt, content ]
+      properties:
+        # Inherited from longreadMaterialBase.
+        discriminator:
+          $ref: "#/components/schemas/LongreadMaterialDiscriminator"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        viewType:
+          $ref: "#/components/schemas/LongreadMaterialViewType"
+        type:
+          $ref: "#/components/schemas/LongreadMaterialType"
+        id:
+          $ref: "#/components/schemas/LongreadMaterialId"
+        order:
+          allOf:
+            - $ref: "#/components/schemas/ListingOrder"
+          example: 0
+        # Other.
+        mediaType:
+          $ref: "#/components/schemas/LongreadMaterialMediaType"
+        filename:
+          $ref: "#/components/schemas/FileNameObjectPath"
+        version:
+          $ref: "#/components/schemas/LongreadMaterialVersion"
+        length:
+          $ref: "#/components/schemas/LongreadMaterialLength"
+        publishDate:
+          $ref: "#/components/schemas/PublishDate"
+        publishedAt:
+          $ref: "#/components/schemas/PublishedAt"
+        content:
+          $ref: "#/components/schemas/LongreadMaterialContent"
     LongreadAudioMaterialItem:
+      type: object
       x-re:
         serialization:
           propertyOrder:
             source: unspecified
         notes: >
+          Based on longreadMaterialBase.
           Internally is the same as LongreadFileMaterialItem, but schema
           is recreated as ogen doesn't support "sum types with same names".
-      allOf:  # TODO: fix allOf additionalProperties flattening
-        - $ref: "#/components/schemas/longreadMaterialBase"
-        - type: object
-          additionalProperties: false
-          required: [ mediaType, filename, version, length, publishDate,
-                      publishedAt, content ]
-          properties:
-            mediaType:
-              $ref: "#/components/schemas/LongreadMaterialMediaType"
-            filename:
-              $ref: "#/components/schemas/FileNameObjectPath"
-            version:
-              $ref: "#/components/schemas/LongreadMaterialVersion"
-            length:
-              $ref: "#/components/schemas/LongreadMaterialLength"
-            publishDate:
-              $ref: "#/components/schemas/PublishDate"
-            publishedAt:
-              $ref: "#/components/schemas/PublishedAt"
-            content:
-              $ref: "#/components/schemas/LongreadMaterialContent"
+      additionalProperties: false
+      required: [ discriminator, state, viewType, type, id, order,
+                  mediaType, filename, version, length, publishDate,
+                  publishedAt, content ]
+      properties:
+        # Inherited from longreadMaterialBase.
+        discriminator:
+          $ref: "#/components/schemas/LongreadMaterialDiscriminator"
+        state:
+          $ref: "#/components/schemas/PublicationState"
+        viewType:
+          $ref: "#/components/schemas/LongreadMaterialViewType"
+        type:
+          $ref: "#/components/schemas/LongreadMaterialType"
+        id:
+          $ref: "#/components/schemas/LongreadMaterialId"
+        order:
+          allOf:
+            - $ref: "#/components/schemas/ListingOrder"
+          example: 0
+        # Other.
+        mediaType:
+          $ref: "#/components/schemas/LongreadMaterialMediaType"
+        filename:
+          $ref: "#/components/schemas/FileNameObjectPath"
+        version:
+          $ref: "#/components/schemas/LongreadMaterialVersion"
+        length:
+          $ref: "#/components/schemas/LongreadMaterialLength"
+        publishDate:
+          $ref: "#/components/schemas/PublishDate"
+        publishedAt:
+          $ref: "#/components/schemas/PublishedAt"
+        content:
+          $ref: "#/components/schemas/LongreadMaterialContent"
     LongreadMaterialItem:
       # yamllint disable rule:line-length
       oneOf:
