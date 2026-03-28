@@ -41,6 +41,7 @@ paths:
           replayability: safe
           dataKinds: [ personalData, accountData ]
         operation:
+          stability: stable
           categories: [ read ]
           notes: This operation appears to be used only by student accounts.
       security:
@@ -254,6 +255,103 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         default:
           $ref: "#/components/responses/DefaultError"
+  /micro-lms/tasks/{taskId}:
+    get:
+      operationId: taskById
+      summary: Get task by its ID.
+      description: Returns task by taskId.
+      x-re:
+        safety:
+          replayability: safe
+          dataKinds: [ accountData, internalData ]
+        operation:
+          categories: [ read ]
+      security:
+        - BffCookie: [ ]
+      tags: [ courses ]
+      parameters:
+        - $ref: "#/components/parameters/TaskIdPath"
+      responses:
+        "200":
+          description: Successful response with task by its ID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskByIdResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /micro-lms/tasks/{taskId}/start:
+    put:
+      operationId: startTaskById
+      summary: Start task by its ID.
+      description: Starts task by its ID, changing task's status.
+      x-re:
+        safety:
+          replayability: caution
+          dataKinds: [ ]
+          notes: Starts task without a way of going back.
+        operation:
+          categories: [ read ]
+      security:
+        - BffCookie: [ ]
+      tags: [ courses ]
+      parameters:
+        - $ref: "#/components/parameters/TaskIdPath"
+      responses:
+        "200":
+          description: Successfully changed task status, started task.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StartTaskByIdResponse"
+        "400":
+          description: >
+            HTTP 400 - Bad Request error.
+            Returned when request validation was failed because it is invalid.
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [ title, status, detail, instance, entity, state,
+                            trigger, traceId ]
+                properties:
+                  title:
+                    allOf:
+                      - $ref: "#/components/schemas/BaseErrorTitle"
+                    example: "InvalidState"
+                  status:
+                    allOf:
+                      - $ref: "#/components/schemas/BaseErrorStatus"
+                    example: 400
+                  detail:
+                    type: string
+                    # yamllint disable-line rule:line-length
+                    example: "Для сущности задача невозможно выполнить Start в состоянии InProgress"
+                  instance:
+                    type: string
+                    example: "/tasks/1535171/start"
+                  entity:
+                    type: string
+                    example: "задача"
+                  state:
+                    type: string
+                    example: "InProgress"
+                  trigger:
+                    type: string
+                    example: "Start"
+                  traceId:
+                    $ref: "#/components/schemas/BaseErrorTraceId"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        default:
+          $ref: "#/components/responses/DefaultError"
 components:
   securitySchemes:
     BffCookie:
@@ -317,6 +415,14 @@ components:
       schema:
         $ref: "#/components/schemas/LongreadId"
       example: 12707
+    TaskIdPath:
+      name: taskId
+      in: path
+      required: true
+      description: Numeric identifier of the task item specified in URL path.
+      schema:
+        $ref: "#/components/schemas/TaskId"
+      example: 1355301
   schemas:
     BaseErrorType:
       type: string
@@ -338,7 +444,7 @@ components:
       example: 401
     BaseProblemError:
       type: object
-      description: Base problem JSON error originating from RFC 9457.
+      description: Base problem JSON error based from RFC 9457 with trace ID.
       additionalProperties: true
       required: [ title, status ]
       properties:
@@ -348,6 +454,8 @@ components:
           $ref: "#/components/schemas/BaseErrorTitle"
         status:
           $ref: "#/components/schemas/BaseErrorStatus"
+        traceId:  # non-required
+          $ref: "#/components/schemas/BaseErrorTraceId"
     BaseErrorTraceId:
       type: string
       pattern: "^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$"
@@ -413,7 +521,7 @@ components:
       type: object
       description: Base error for Not Found status.
       additionalProperties: false
-      required: [ title, status, detail, instance, entityId, traceId ]
+      required: [ title, status, traceId ]
       properties:
         title:
           allOf:
@@ -423,16 +531,16 @@ components:
           allOf:
             - $ref: "#/components/schemas/BaseErrorStatus"
           example: 404
-        detail:
+        detail:  # non-required
           type: string
           description: Details of the error.
           example: "Ресурс с идентификатором 1 не найден"
-        instance:
+        instance:  # non-required
           type: string
           description: >
             Relative request path without service prefix where error occurred.
           example: "/courses/1"
-        entityId:
+        entityId:  # non-required
           type: integer
           description: ID of the entity that was not found.
           example: 1
@@ -494,7 +602,7 @@ components:
       minimum: 0
       description: Numeric identifier of the course.
       example: 897
-    SkillLevel:
+    CourseSkillLevel:
       type: string
       description: Skill level label configured for the course.
       x-re:
@@ -507,6 +615,21 @@ components:
       enum:
         - none
       example: "none"
+    CourseIsSkillLevelEnabled:
+      type: boolean
+      description: Indicates if skill level is enabled for the course.
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: low
+          reasons:
+            - usage-unknown
+          notes: >
+            Observed only value "none" for `skillLevel` property, so this
+            flag currently appears to have no effect.
+            This field is sometimes set to true, sometimes to false across
+            courses without any relation.
+      example: false
     CourseSettings:
       type: object
       description: Prerequisites for enrolling in the course.
@@ -523,22 +646,9 @@ components:
       required: [ skillLevel, isSkillLevelEnabled ]
       properties:
         skillLevel:
-          $ref: "#/components/schemas/SkillLevel"
+          $ref: "#/components/schemas/CourseSkillLevel"
         isSkillLevelEnabled:
-          type: boolean
-          description: Indicates if skill level is enabled for the course.
-          x-re:
-            analysis:
-              needsAnalysis: true
-              priority: low
-              reasons:
-                - usage-unknown
-              notes: >
-                Observed only value "none" for `skillLevel` property, so this
-                flag currently appears to have no effect.
-                This field is sometimes set to true, sometimes to false across
-                courses without any relation.
-          example: false
+          $ref: "#/components/schemas/CourseIsSkillLevelEnabled"
     CourseName:
       type: string
       description: Course name.
@@ -858,7 +968,7 @@ components:
       example: "Аудиторная работа на семинарах"
     ActivityWeight:
       type: number
-      format: float
+      format: double
       description: >
         Weight coefficient for every single activity by activity name,
         used in the course grade formula to calculate the overall semester
@@ -885,12 +995,10 @@ components:
       format: date-time
       nullable: false
       description: Deadline by which the item must be completed.
-      x-re:
-        observation:
-          notes: This field appears to be non-nullable.
       example: "2026-02-15T19:00:00+00:00"
     MaxScore:
-      type: integer
+      type: number
+      format: double
       minimum: 0
       description: Maximum possible score for completing exercise.
       example: 10
@@ -1307,6 +1415,10 @@ components:
       properties:
         exerciseUrl:
           $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
+    ActivityIsLateDaysEnabled:
+      type: boolean
+      description: Indicates if late days can be used for this activity.
+      example: true
     LongreadMaterialActivity:
       description: Activity configuration for a longread exercise.
       x-re:
@@ -1339,9 +1451,7 @@ components:
               notes: Unknown meaning and usage.
           example: 0
         isLateDaysEnabled:
-          type: boolean
-          description: Indicates if late days can be used for this activity.
-          example: true
+          $ref: "#/components/schemas/ActivityIsLateDaysEnabled"
     LongreadMaterialEstimation:
       type: object
       description: Estimation and grading constraints for exercise material.
@@ -1493,8 +1603,9 @@ components:
         recommendation:
           nullable: true
           x-re:
-            status: inferred
-            confidence: medium
+            status:
+              classification: inferred
+              confidence: medium
             analysis:
               needsAnalysis: true
               priority: low
@@ -2244,6 +2355,153 @@ components:
             $ref: "#/components/schemas/LongreadMaterialItem"
         paging:
           $ref: "#/components/schemas/Paging"
+    TaskType:
+      type: string
+      description: Task type.
+      x-re:
+        status:
+          completeness: full
+          confidence: high
+        observation:
+          observedAsOf: 2026-03-27
+        enum:
+          descriptions:
+            "coding": Coding exercise.
+            "questions": Questions exercise.
+      enum:
+        - coding
+        - questions
+      example: "coding"
+    TaskState:
+      type: string
+      description: Task state.
+      x-re:
+        status:
+          completeness: full
+          confidence: high
+        enum:
+          descriptions:
+            "backlog": Task was not started.
+            "inProgress": Task is in progress, not completed yet by student.
+            "review": Task is being reviewed.
+            "evaluated": Task was evaluated.
+            "failed": Task was not completed.
+      enum:
+        - backlog
+        - inProgress
+        - review
+        - evaluated
+        - failed
+    TaskScore:  # TODO: TaskScore
+      type: number
+      format: double
+      x-re:
+        status:
+          completeness: partial-base
+    TaskScoreSkillLevel:  # TODO: TaskScoreSkillLevel
+      $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+    CreatedAt:  # TODO: check if not nullable
+      type: string
+      format: date-time
+      description: Task creation in LMS date.
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: high
+          reasons:
+            - optionality-uncertain
+    StartedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Task start date.
+    EvaluateAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Task evaluation by system date.
+    TaskByIdResponse:
+      type: object
+      additionalProperties: false
+      required: [ id, type, state, score, scoreSkillLevel, isSkillLevelEnabled,
+                  isLateDaysEnabled, extraScore, createdAt, startedAt,
+                  submitAt, rejectAt, evaluateAt, deadline, lateDays,
+                  exercise, course, theme, longread, student, reviewer,
+                  solution, scores, quizSessionId, evaluatedAttemptId,
+                  currentAttemptId, lastAttemptId ]
+      properties:
+        id:
+          $ref: "#/components/schemas/TaskId"
+        type:
+          $ref: "#/components/schemas/TaskType"
+        state:
+          $ref: "#/components/schemas/TaskState"
+        score:
+          $ref: "#/components/schemas/TaskScore"
+        scoreSkillLevel:
+          $ref: "#/components/schemas/TaskScoreSkillLevel"
+        isSkillLevelEnabled:
+          $ref: "#/components/schemas/CourseIsSkillLevelEnabled"
+        isLateDaysEnabled:
+          $ref: "#/components/schemas/ActivityIsLateDaysEnabled"
+        extraScore:  # TODO: extraScore
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        createdAt:
+          $ref: "#/components/schemas/CreatedAt"
+        startedAt:
+          $ref: "#/components/schemas/StartedAt"
+        submitAt:  # TODO: submitAt
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        rejectAt:  # TODO: rejectAt
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        evaluateAt:
+          $ref: "#/components/schemas/EvaluateAt"
+        deadline:
+          $ref: "#/components/schemas/Deadline"
+        lateDays:  # TODO: lateDays
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        exercise:  # TODO: exercise
+          type: object
+          additionalProperties: false
+        course:  # TODO: course
+          type: object
+          additionalProperties: false
+        theme:  # TODO: theme
+          type: object
+          additionalProperties: false
+        longread:  # TODO: longread
+          type: object
+          additionalProperties: false
+        student:
+          $ref: "#/components/schemas/CurrentStudentResponse"
+        reviewer:  # TODO: reviewer
+          type: object
+          additionalProperties: false
+        solution:  # TODO: solution
+          type: object
+          additionalProperties: false
+        scores:  # TODO: scores
+          type: object
+          additionalProperties: false
+        quizSessionId:  # TODO: quizSessionId
+          type: object
+          additionalProperties: false
+        evaluatedAttemptId:  # TODO: evaluatedAttemptId
+          type: object
+          additionalProperties: false
+        currentAttemptId:  # TODO: currentAttemptId
+          type: object
+          additionalProperties: false
+        lastAttemptId:  # TODO: lastAttemptId
+          type: object
+          additionalProperties: false
+    StartTaskByIdResponse:
+      type: object
+      additionalProperties: false
+      required: [ taskId ]
+      properties:
+        taskId:
+          $ref: "#/components/schemas/TaskId"
   responses:
     DefaultError:
       description: Default catch-all error object, untyped.
@@ -2259,7 +2517,7 @@ components:
     BadRequestError:
       description: >
         HTTP 400 - Bad Request error.
-        Returned when request validation was failed because it is invalid.
+        Returned when taskId is passed as invalid.
       content:
         application/problem+json:
           schema:
