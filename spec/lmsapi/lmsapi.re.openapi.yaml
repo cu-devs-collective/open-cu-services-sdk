@@ -30,6 +30,8 @@ tags:
     description: Endpoints for accessing data for authenticated student.
   - name: courses
     description: Endpoints for accessing courses data.
+  - name: tasks
+    description: Endpoints for accessing tasks data.
 paths:
   /micro-lms/students/me:
     get:
@@ -268,7 +270,7 @@ paths:
           categories: [ read ]
       security:
         - BffCookie: [ ]
-      tags: [ courses ]
+      tags: [ courses, tasks ]
       parameters:
         - $ref: "#/components/parameters/TaskIdPath"
       responses:
@@ -298,7 +300,7 @@ paths:
           categories: [ read ]
       security:
         - BffCookie: [ ]
-      tags: [ courses ]
+      tags: [ tasks ]
       parameters:
         - $ref: "#/components/parameters/TaskIdPath"
       responses:
@@ -833,8 +835,9 @@ components:
       x-re:
         observation:
           notes: >
-            Most emails use the edu.centraluniversity.ru domain, but other
-            domains may occur (e.g., gmail.com) in rare cases.
+            Most student emails use the edu.centraluniversity.ru domain,
+            but other domains may occur (e.g., gmail.com) in rare cases.
+            University staff emails use centraluniversity.ru domain.
       example: "i.ivanov@edu.centraluniversity.ru"
     TimeAccount:
       type: string
@@ -994,7 +997,7 @@ components:
       type: string
       format: date-time
       nullable: false
-      description: Deadline by which the item must be completed.
+      description: Deadline timestamp by which the item must be completed.
       example: "2026-02-15T19:00:00+00:00"
     MaxScore:
       type: number
@@ -2379,6 +2382,8 @@ components:
         status:
           completeness: full
           confidence: high
+        observation:
+          observedAsOf: 2026-03-27
         enum:
           descriptions:
             "backlog": Task was not started.
@@ -2392,6 +2397,7 @@ components:
         - review
         - evaluated
         - failed
+      example: "inProgress"
     TaskScore:  # TODO: TaskScore
       type: number
       format: double
@@ -2400,10 +2406,12 @@ components:
           completeness: partial-base
     TaskScoreSkillLevel:  # TODO: TaskScoreSkillLevel
       $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+    TaskExtraScore:  # TODO: TaskExtraScore
+      $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
     CreatedAt:  # TODO: check if not nullable
       type: string
       format: date-time
-      description: Task creation in LMS date.
+      description: Task creation in LMS timestamp.
       x-re:
         analysis:
           needsAnalysis: true
@@ -2414,12 +2422,131 @@ components:
       type: string
       format: date-time
       nullable: true
-      description: Task start date.
+      description: Task start timestamp.
+    SubmitAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Task submit timestamp.
+    RejectAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Task rejection timestamp.
+      x-re:
+        observation:
+          notes: This can be null even after `state` was set to "evaluated".
     EvaluateAt:
       type: string
       format: date-time
       nullable: true
-      description: Task evaluation by system date.
+      description: Task evaluation by system timestamp.
+    TaskLateDays:  # TODO: check what is non-null value
+      $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+    TaskExercise:  # TODO: check if not nullable
+      type: object
+      additionalProperties: false
+      # required: [ id, name, type, maxScore, startDate, deadline, timer,
+      #             activity, questionOrders, areQuestionsShuffled, quizId,
+      #             mode, viewContent, exerciseUrl, attachments, settings ]
+      # properties: {}  # TODO
+    TaskCourse:  # TODO: check if not nullable
+      type: object
+      additionalProperties: false
+      required: [ id, name, isArchived ]
+      properties:
+        id:
+          $ref: "#/components/schemas/CourseId"
+        name:
+          $ref: "#/components/schemas/CourseName"
+        isArchived:
+          $ref: "#/components/schemas/CourseIsArchived"
+    TaskCourseTheme:  # TODO: check if not nullable
+      type: object
+      additionalProperties: false
+      required: [ id, name ]
+      properties:
+        id:
+          $ref: "#/components/schemas/CourseThemeId"
+        name:
+          $ref: "#/components/schemas/CourseThemeName"
+    TaskLongread:
+      type: object
+      additionalProperties: false
+      required: [ id, name ]
+      properties:
+        id:
+          $ref: "#/components/schemas/LongreadId"
+        name:
+          $ref: "#/components/schemas/LongreadName"
+    TaskReviewer:
+      type: object
+      nullable: true
+      x-re:
+        observation:
+          notes: >
+            `identityEmail` and `email` seem to be the same, just as
+            `id` and `identityIdentifier`.
+      additionalProperties: false
+      required: [ id, name, identityEmail, email, identityIdentifier,
+                  timeAccount, lastName, firstName, middleName ]
+      properties:
+        id:
+          $ref: "#/components/schemas/UserId"
+        name:
+          type: string
+          description: Reviewer's full name.
+          x-re:
+            observation:
+              notes: If middle name is not set, there is space in the end.
+          example: "Иван Иванов "
+        identityEmail:
+          $ref: "#/components/schemas/UniversityEmail"
+        email:
+          $ref: "#/components/schemas/UniversityEmail"
+        identityIdentifier:
+          $ref: "#/components/schemas/UserId"
+        timeAccount:
+          $ref: "#/components/schemas/TimeAccount"
+        lastName:
+          type: string
+          example: "Иван"
+        firstName:
+          type: string
+          example: "Иванов"
+        middleName:
+          type: string
+          nullable: true
+          example: null
+    TaskSolution:
+      type: object
+      nullable: true
+      additionalProperties: false
+      required: [ type, solutionUrl, answers, attachments ]
+      properties:
+        type:
+          $ref: "#/components/schemas/TaskType"
+        solutionUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL for solution, if set.
+          example: "https://my.centraluniversity.ru"
+        answers:  # TODO: answers
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        attachments:  # TODO: attachments
+          # yamllint disable-line rule:line-length
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyEmptyArrayObserved"
+    TaskScores:  # TODO: TaskScores
+      $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+    TaskQuizSessionId:  # TODO: TaskQuizSessionId
+      $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+    TaskEvaluatedAttemptId:  # TODO: TaskEvaluatedAttemptId
+      $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+    TaskCurrentAttemptId:  # TODO: TaskCurrentAttemptId
+      $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+    TaskLastAttemptId:
+      $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
     TaskByIdResponse:
       type: object
       additionalProperties: false
@@ -2444,57 +2571,46 @@ components:
           $ref: "#/components/schemas/CourseIsSkillLevelEnabled"
         isLateDaysEnabled:
           $ref: "#/components/schemas/ActivityIsLateDaysEnabled"
-        extraScore:  # TODO: extraScore
-          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        extraScore:
+          $ref: "#/components/schemas/TaskExtraScore"
         createdAt:
           $ref: "#/components/schemas/CreatedAt"
         startedAt:
           $ref: "#/components/schemas/StartedAt"
-        submitAt:  # TODO: submitAt
-          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
-        rejectAt:  # TODO: rejectAt
-          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        submitAt:
+          $ref: "#/components/schemas/SubmitAt"
+        rejectAt:
+          $ref: "#/components/schemas/RejectAt"
         evaluateAt:
           $ref: "#/components/schemas/EvaluateAt"
         deadline:
           $ref: "#/components/schemas/Deadline"
-        lateDays:  # TODO: lateDays
-          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
-        exercise:  # TODO: exercise
-          type: object
-          additionalProperties: false
-        course:  # TODO: course
-          type: object
-          additionalProperties: false
-        theme:  # TODO: theme
-          type: object
-          additionalProperties: false
-        longread:  # TODO: longread
-          type: object
-          additionalProperties: false
+        lateDays:
+          $ref: "#/components/schemas/TaskLateDays"
+        exercise:
+          $ref: "#/components/schemas/TaskExercise"
+        course:
+          $ref: "#/components/schemas/TaskCourse"
+        theme:
+          $ref: "#/components/schemas/TaskCourseTheme"
+        longread:
+          $ref: "#/components/schemas/TaskLongread"
         student:
           $ref: "#/components/schemas/CurrentStudentResponse"
-        reviewer:  # TODO: reviewer
-          type: object
-          additionalProperties: false
-        solution:  # TODO: solution
-          type: object
-          additionalProperties: false
-        scores:  # TODO: scores
-          type: object
-          additionalProperties: false
-        quizSessionId:  # TODO: quizSessionId
-          type: object
-          additionalProperties: false
-        evaluatedAttemptId:  # TODO: evaluatedAttemptId
-          type: object
-          additionalProperties: false
-        currentAttemptId:  # TODO: currentAttemptId
-          type: object
-          additionalProperties: false
-        lastAttemptId:  # TODO: lastAttemptId
-          type: object
-          additionalProperties: false
+        reviewer:
+          $ref: "#/components/schemas/TaskReviewer"
+        solution:
+          $ref: "#/components/schemas/TaskSolution"
+        scores:
+          $ref: "#/components/schemas/TaskScores"
+        quizSessionId:
+          $ref: "#/components/schemas/TaskQuizSessionId"
+        evaluatedAttemptId:
+          $ref: "#/components/schemas/TaskEvaluatedAttemptId"
+        currentAttemptId:
+          $ref: "#/components/schemas/TaskCurrentAttemptId"
+        lastAttemptId:
+          $ref: "#/components/schemas/TaskLastAttemptId"
     StartTaskByIdResponse:
       type: object
       additionalProperties: false
