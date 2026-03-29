@@ -1,0 +1,37 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+root = true
+
+[*]
+end_of_line = lf
+indent_style = space
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.json{,.tmpl}]
+indent_size = 2
+
+[.vscode/**.json]
+indent_size = 4
+
+[*.{yml,yaml}{,.tmpl}]
+indent_size = 2
+
+[*.dart{,.tmpl}]
+indent_size = 2
+
+[*.go{,.tmpl}]
+indent_style = tab
+
+[*.py{,.tmpl}]
+indent_size = 4
+
+[*.{js,ts}{,.tmpl}]
+indent_size = 2
+
+[*.sh]
+indent_size = 4
+
+[Makefile]
+indent_style = tab
