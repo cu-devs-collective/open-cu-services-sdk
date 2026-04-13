@@ -42,7 +42,7 @@ jobs:
           cp swagger-ui/swagger-initializer.js .swagger-ui-pages/api-docs/swagger-initializer.js
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: .swagger-ui-pages
 
