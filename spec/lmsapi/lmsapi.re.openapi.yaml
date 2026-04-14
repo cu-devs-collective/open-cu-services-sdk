@@ -584,8 +584,8 @@ components:
       x-re:
         status:
           completeness: full
-          confidence: medium
-          notes: Seems like those are all of the possible values.
+          confidence: high
+          notes: Frontend defines only those values.
         enum:
           descriptions:
             "published": Filters non-archived non-draft items.
@@ -1519,19 +1519,12 @@ components:
       example: "atMoment"
     QuestionsSettingsEvalStrategy:
       type: string
-      description: Evaluation strategy.
+      description: Questions exercise evaluation strategy.
       x-re:
-        analysis:
-          needsAnalysis: true
-          priority: low
-          reasons:
-            - enum-incomplete
-            - usage-unknown
-          notes: >
-            Unknown usage, as the only seen value is "last".
-            It seems there is only one eval strategy for now.
+        notes: Frontend source defines 2 enum values, "last" and "best".
       enum:
         - last
+        - best
       example: "last"
     LongreadExerciseQuestionsSettings:
       type: object
@@ -2404,11 +2397,11 @@ components:
       x-re:
         status:
           completeness: partial-base
-    TaskScoreSkillLevel:  # TODO: TaskScoreSkillLevel
+    TaskScoreSkillLevel:
       $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
-    TaskExtraScore:  # TODO: TaskExtraScore
+    TaskExtraScore:
       $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
-    CreatedAt:  # TODO: check if not nullable
+    CreatedAt:
       type: string
       format: date-time
       description: Task creation in LMS timestamp.
@@ -2532,18 +2525,18 @@ components:
           nullable: true
           description: URL for solution, if set.
           example: "https://my.centraluniversity.ru"
-        answers:  # TODO: answers
+        answers:
           $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
-        attachments:  # TODO: attachments
+        attachments:
           # yamllint disable-line rule:line-length
           $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyEmptyArrayObserved"
-    TaskScores:  # TODO: TaskScores
+    TaskScores:
       $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
-    TaskQuizSessionId:  # TODO: TaskQuizSessionId
+    TaskQuizSessionId:
       $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
-    TaskEvaluatedAttemptId:  # TODO: TaskEvaluatedAttemptId
+    TaskEvaluatedAttemptId:
       $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
-    TaskCurrentAttemptId:  # TODO: TaskCurrentAttemptId
+    TaskCurrentAttemptId:
       $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
     TaskLastAttemptId:
       $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
