@@ -286,74 +286,6 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         default:
           $ref: "#/components/responses/DefaultError"
-  /micro-lms/tasks/{taskId}/start:
-    put:
-      operationId: startTaskById
-      summary: Start task by its ID.
-      description: Starts task by its ID, changing task's status.
-      x-re:
-        safety:
-          replayability: caution
-          dataKinds: [ ]
-          notes: Starts task without a way of going back.
-        operation:
-          categories: [ read ]
-      security:
-        - BffCookie: [ ]
-      tags: [ tasks ]
-      parameters:
-        - $ref: "#/components/parameters/TaskIdPath"
-      responses:
-        "200":
-          description: Successfully changed task status, started task.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StartTaskByIdResponse"
-        "400":
-          description: >
-            HTTP 400 - Bad Request error.
-            Returned when request validation was failed because it is invalid.
-          content:
-            application/problem+json:
-              schema:
-                type: object
-                additionalProperties: false
-                required: [ title, status, detail, instance, entity, state,
-                            trigger, traceId ]
-                properties:
-                  title:
-                    allOf:
-                      - $ref: "#/components/schemas/BaseErrorTitle"
-                    example: "InvalidState"
-                  status:
-                    allOf:
-                      - $ref: "#/components/schemas/BaseErrorStatus"
-                    example: 400
-                  detail:
-                    type: string
-                    # yamllint disable-line rule:line-length
-                    example: "Для сущности задача невозможно выполнить Start в состоянии InProgress"
-                  instance:
-                    type: string
-                    example: "/tasks/1535171/start"
-                  entity:
-                    type: string
-                    example: "задача"
-                  state:
-                    type: string
-                    example: "InProgress"
-                  trigger:
-                    type: string
-                    example: "Start"
-                  traceId:
-                    $ref: "#/components/schemas/BaseErrorTraceId"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
-        default:
-          $ref: "#/components/responses/DefaultError"
 components:
   securitySchemes:
     BffCookie:
@@ -2604,13 +2536,6 @@ components:
           $ref: "#/components/schemas/TaskCurrentAttemptId"
         lastAttemptId:
           $ref: "#/components/schemas/TaskLastAttemptId"
-    StartTaskByIdResponse:
-      type: object
-      additionalProperties: false
-      required: [ taskId ]
-      properties:
-        taskId:
-          $ref: "#/components/schemas/TaskId"
   responses:
     DefaultError:
       description: Default catch-all error object, untyped.
