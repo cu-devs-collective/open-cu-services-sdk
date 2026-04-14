@@ -1,0 +1,5 @@
+# Default state for all rules
+default: true
+
+# Heading levels should only increment by one level at a time
+MD001: false
