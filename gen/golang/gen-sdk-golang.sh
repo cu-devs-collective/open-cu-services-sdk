@@ -109,6 +109,12 @@ EOF
     render_template "$default_gen_file_tmpl" "$default_gen_file" <<EOF
 Package: $(yaml_escape "$pkg")
 EOF
+
+    local validation_errors_gen_file="${out_dir}/validation_errors_gen.go"
+    local validation_errors_gen_file_tmpl="${TEMPLATE_DIR}/lmsapi/validation_errors_gen.go.tmpl"
+    render_template "$validation_errors_gen_file_tmpl" "$validation_errors_gen_file" <<EOF
+Package: $(yaml_escape "$pkg")
+EOF
 }
 
 extract_ogen_version_from_file() {
