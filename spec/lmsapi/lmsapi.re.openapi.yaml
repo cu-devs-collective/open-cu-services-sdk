@@ -1857,6 +1857,17 @@ components:
           state: inactive
       items:
         $ref: "#/components/schemas/UserId"
+    LongreadExerciseMaterialIsTrackingStudent:
+      type: boolean
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: medium
+          reasons:
+            - meaning-unknown
+            - other
+          notes: Unknown meaning and usage.
+      example: false
     LongreadMarkdownMaterialItem:
       type: object
       x-re:
@@ -1946,7 +1957,8 @@ components:
       additionalProperties: false
       required: [ discriminator, state, viewType, type, id, order,
                   name, viewContent, estimation, reviewers, assignees,
-                  attachments, backloggedAt, taskId, exerciseUrl, coding ]
+                  attachments, backloggedAt, taskId,
+                  isTrackingStudents, exerciseUrl, coding ]
       properties:
         # Inherited from longreadExerciseMaterialBase.
         discriminator:
@@ -1982,6 +1994,9 @@ components:
         taskId:
           $ref: "#/components/schemas/TaskId"
         # Other.
+        isTrackingStudents:
+          # yamllint disable-line rule:line-length
+          $ref: "#/components/schemas/LongreadExerciseMaterialIsTrackingStudent"
         exerciseUrl:
           $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
         coding:
