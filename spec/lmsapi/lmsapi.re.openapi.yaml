@@ -1,3 +1,5 @@
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://raw.githubusercontent.com/API-RE/api-re-standard/master/schemas/v0.1.0/oas_3.0_schema_2024-10-18.yaml
 openapi: 3.0.3
 info:
   title: CU LMS API
@@ -361,9 +363,7 @@ components:
     BaseErrorType:
       type: string
       x-re:
-        lifecycle:
-          state: inactive
-          notes: Website in the URL seems to be abandoned.
+        notes: Website in the URL seems to be abandoned.
       example: "https://httpstatuscodes.io/401"
     BaseErrorTitle:
       type: string
@@ -485,8 +485,9 @@ components:
       nullable: true
       description: Value only seen as null.
       x-re:
-        status:
-          completeness: partial
+        schema:
+          modeled: stub
+          typing: full
         analysis:
           needsAnalysis: true
           priority: medium
@@ -500,8 +501,9 @@ components:
       maxItems: 0
       description: Value only seen as empty array.
       x-re:
-        status:
-          completeness: partial
+        schema:
+          modeled: stub
+          typing: full
         analysis:
           needsAnalysis: true
           priority: medium
@@ -514,9 +516,9 @@ components:
       type: string
       description: Publication state of an item.
       x-re:
-        status:
-          completeness: full
-          confidence: high
+        schema:
+          typing: full
+        observation:
           notes: Frontend defines only those values.
         enum:
           descriptions:
@@ -620,8 +622,8 @@ components:
       type: string
       description: Category to which the course belongs to.
       x-re:
-        status:
-          completeness: partial
+        schema:
+          typing: full
         analysis:
           needsAnalysis: true
           priority: critical
@@ -652,8 +654,12 @@ components:
       type: string
       description: Course card icon style identifier.
       x-re:
-        status:
-          completeness: partial
+        schema:
+          typing: full
+        observation:
+          notes: >
+            It seems there is some algorithm on frontend which decides
+            which color to use for the course card.
         analysis:
           needsAnalysis: true
           priority: low
@@ -662,8 +668,6 @@ components:
           notes: >
             Those may be not all of the values that exist, so it is good to add
             new values here if this is being used for some reason by someone.
-            It seems there is some algorithm on frontend which decides
-            which color to use for the course card.
         enum:
           descriptions: {}
       enum:
@@ -786,10 +790,8 @@ components:
       type: string
       description: Student’s current education level.
       x-re:
-        status:
-          completeness: full
-          confidence: high
-          notes: Enum seems to be complete as of observedAsOf.
+        schema:
+          typing: full
         observation:
           observedAsOf: 2026-03-27
         enum:
@@ -873,17 +875,15 @@ components:
       type: string
       description: Longread item type.
       x-re:
+        observation:
+          notes: This field appears to be inactive/unused for now.
         analysis:
           needsAnalysis: true
           priority: low
           reasons:
             - enum-incomplete
             - usage-unknown
-          notes: >
-            Needs further analysis, as the only seen value is "common".
-            This field appears to be inactive/unused for now.
-        lifecycle:
-          state: inactive
+          notes: Needs further analysis, as the only seen value is "common".
       enum:
         - common
       example: "common"
@@ -942,7 +942,8 @@ components:
       description: Exercise name shown as the header is LMS.
       x-re:
         observation:
-          examples:
+          notes: >
+            Example values:
             - "Seminar 1. Week 2"
             - "HW. Week 6"
       example: "Seminar 1. Week 2"
@@ -967,7 +968,8 @@ components:
       description: Longread name shown as the header in LMS.
       x-re:
         observation:
-          examples:
+          notes: >
+            Example values:
             - "Lesson 1A: Duolingo"
             - "Homework"
       example: "Ссылка на силлабус"
@@ -1121,10 +1123,8 @@ components:
       type: string
       description: Material block type identifier.
       x-re:
-        status:
-          completeness: full
-          confidence: medium
-          notes: It seems all of the enum values were discovered.
+        schema:
+          typing: full
         observation:
           observedAsOf: 2026-03-27
         enum:
@@ -1147,10 +1147,8 @@ components:
       type: string
       description: Material block discriminator used by LMS frontend.
       x-re:
-        status:
-          completeness: full
-          confidence: medium
-          notes: It seems all of the enum values were discovered.
+        schema:
+          typing: full
         observation:
           observedAsOf: 2026-03-27
         enum:
@@ -1178,10 +1176,8 @@ components:
       type: string
       description: View renderer type used by LMS frontend.
       x-re:
-        status:
-          completeness: full
-          confidence: medium
-          notes: It seems all of the enum values were discovered.
+        schema:
+          typing: full
         observation:
           observedAsOf: 2026-03-27
         enum:
@@ -1208,10 +1204,8 @@ components:
       type: string
       description: Media type attachment identifier.
       x-re:
-        status:
-          completeness: full
-          confidence: medium
-          notes: It seems all of the enum values were discovered.
+        schema:
+          typing: full
         observation:
           observedAsOf: 2026-03-27
         enum:
@@ -1230,10 +1224,8 @@ components:
       type: string
       description: Media type identifier in upper.
       x-re:
-        status:
-          completeness: full
-          confidence: medium
-          notes: It seems all of the enum values were discovered.
+        schema:
+          typing: full
         observation:
           observedAsOf: 2026-03-27
         analysis:
@@ -1487,9 +1479,8 @@ components:
       type: string
       description: Question type.
       x-re:
-        status:
-          completeness: full
-          confidence: medium
+        schema:
+          typing: full
         observation:
           observedAsOf: 2026-03-27
         enum:
@@ -1531,12 +1522,12 @@ components:
         recommendation:
           nullable: true
           x-re:
-            status:
-              classification: inferred
-              confidence: medium
+            schema:
+              typing: full
+              modeled: full
             analysis:
               needsAnalysis: true
-              priority: low
+              priority: medium
               reasons:
                 - other
               notes: Only seen this exact value as null, so this is a guess.
@@ -1594,9 +1585,8 @@ components:
     QuestionCorrectAnswerType:
       type: string
       x-re:
-        status:
-          completeness: full
-          confidence: medium
+        schema:
+          typing: full
         observation:
           observedAsOf: 2026-03-27
         analysis:
@@ -1604,7 +1594,6 @@ components:
           priority: medium
           reasons:
             - enum-incomplete
-          notes: Enum can be incomplete.
         enum:
           descriptions:
             "inputStringCorrectAnswer": Shows correct string input answers.
@@ -1804,9 +1793,8 @@ components:
       type: string
       description: Video state.
       x-re:
-        status:
-          completeness: full
-          confidence: medium
+        schema:
+          typing: full
         observation:
           observedAsOf: 2026-03-27
         analysis:
@@ -1819,9 +1807,9 @@ components:
             Seems to somehow show the current video state.
             But it's hard to get the sense of it.
         enum:
-          descriptions: >
+          descriptions:
             "ready": Video is ready.
-            "empty": Video is empty? (unknown what that means).
+            "empty": Video is empty? (meaning is unknown).
       enum:
         - ready
         - empty
@@ -1841,10 +1829,15 @@ components:
       minItems: 0
       description: Assignees linked to this exercise task.
       x-re:
-        status:
-          classification: inferred
-          completeness: full
-          confidence: high
+        schema:
+          typing: full
+          modeled: full
+        analysis:
+          needsAnalysis: true
+          priority: low
+          reasons:
+            - only-empty-array-observed
+            - usage-unknown
           notes: >
             Never seen this array having items, so item type
             is a guess.
@@ -1853,8 +1846,6 @@ components:
             of assigning multiple students to the same task?
         observation:
           observedAsOf: 2026-03-27
-        lifecycle:
-          state: inactive
       items:
         $ref: "#/components/schemas/UserId"
     LongreadExerciseMaterialIsTrackingStudent:
@@ -2302,9 +2293,8 @@ components:
       type: string
       description: Task type.
       x-re:
-        status:
-          completeness: full
-          confidence: high
+        schema:
+          typing: full
         observation:
           observedAsOf: 2026-03-27
         enum:
@@ -2319,9 +2309,8 @@ components:
       type: string
       description: Task state.
       x-re:
-        status:
-          completeness: full
-          confidence: high
+        schema:
+          typing: full
         observation:
           observedAsOf: 2026-03-27
         enum:
@@ -2342,8 +2331,14 @@ components:
       type: number
       format: double
       x-re:
-        status:
-          completeness: partial-base
+        schema:
+          typing: partial
+        analysis:
+          needsAnalysis: true
+          priority: high
+          reasons:
+            - other
+          notes: Typing is incomplete and needs to be analysed.
     TaskScoreSkillLevel:
       $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
     TaskExtraScore:
