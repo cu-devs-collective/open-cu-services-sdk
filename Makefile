@@ -4,9 +4,9 @@ GO        ?= go
 GEN_SDK   := $(CURDIR)/gen/gen-sdk.sh
 
 GOYAMLLINT_VERSION := v1.38.0
-VACUUM_VERSION     := v0.24.0
+VACUUM_VERSION     := v0.26.1
 GOMPLATE_VERSION   := v5.0.0
-YQ_VERSION         := v4.52.4
+YQ_VERSION         := v4.53.2
 
 YAMLLINT := $(LOCAL_BIN)/yamllint
 
