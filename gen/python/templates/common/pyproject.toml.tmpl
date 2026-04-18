@@ -4,7 +4,10 @@ name = {{ printf "%q" .ProjectName }}
 version = "0.0.0" {{- /* The real version is set on release. */}}
 description = {{ printf "%q" .PackageDescription }}
 authors = [
-  { name = "CU Devs Collective", email = "contact@centraluniversity.dev" }
+  { name = "Vadim Romanov", email = "vadim@centraluniversity.dev" }
+]
+maintainers = [
+  { name = "CU Devs Collective" }
 ]
 license = { text = "MIT" }
 requires-python = "{{ .PythonVersion }}"
