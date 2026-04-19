@@ -493,8 +493,8 @@ components:
           priority: medium
           reasons:
             - only-null-observed
-      enum:
-        - null
+      enum: [ null ]
+      example: null
     _x_re_propertyIncomplete_OnlyEmptyArrayObserved:
       type: array
       minItems: 0
@@ -566,9 +566,40 @@ components:
             This field is sometimes set to true, sometimes to false across
             courses without any relation.
       example: false
+    CourseSyllabusUrl:
+      type: string
+      nullable: true
+      description: External syllabus URL of the course.
+      x-re:
+        schema:
+          typing: full
+        analysis:
+          needsAnalysis: true
+          priority: medium
+          reasons:
+            - only-null-observed
+          notes: >
+            Observed only as null, but it seems in the future it will be used
+            to set external syllabus URL of the course.
+      example: null
+    CourseTimeChannelUrl:
+      type: string
+      nullable: true
+      description: TiMe channel of the course.
+      x-re:
+        schema:
+          typing: full
+        analysis:
+          needsAnalysis: true
+          priority: medium
+          reasons:
+            - only-null-observed
+          notes: >
+            Observed only as null, but it seems in the future it will be used
+            to set TiMe channel of the course.
     CourseSettings:
       type: object
-      description: Prerequisites for enrolling in the course.
+      description: Course settings.
       x-re:
         analysis:
           needsAnalysis: true
@@ -579,12 +610,16 @@ components:
             Values seem to be incorrect for now (they mismatch with their
             expected bahavior), in the future this can change.
       additionalProperties: false
-      required: [ skillLevel, isSkillLevelEnabled ]
+      required: [ skillLevel, isSkillLevelEnabled, syllabusUrl, timeChannelUrl ]
       properties:
         skillLevel:
           $ref: "#/components/schemas/CourseSkillLevel"
         isSkillLevelEnabled:
           $ref: "#/components/schemas/CourseIsSkillLevelEnabled"
+        syllabusUrl:
+          $ref: "#/components/schemas/CourseSyllabusUrl"
+        timeChannelUrl:
+          $ref: "#/components/schemas/CourseTimeChannelUrl"
     CourseName:
       type: string
       description: Course name.
@@ -1347,6 +1382,7 @@ components:
       description: Indicates if late days can be used for this activity.
       example: true
     LongreadMaterialActivity:
+      type: object
       description: Activity configuration for a longread exercise.
       x-re:
         serialization:
@@ -1354,7 +1390,8 @@ components:
             source: unspecified
         notes: Based on ActivityDefinition.
       additionalProperties: false
-      required: [ id, name, weight, averageScoreThreshold, isLateDaysEnabled ]
+      required: [ id, name, weight, maxExercisesCount, averageScoreThreshold,
+                  isLateDaysEnabled ]
       properties:
         # Inherited from ActivityDefinition.
         id:
@@ -1364,6 +1401,20 @@ components:
         weight:
           $ref: "#/components/schemas/ActivityWeight"
         # Other.
+        maxExercisesCount:
+          type: number
+          minimum: 1
+          description: Max exercises count.
+          x-re:
+            schema:
+              typing: full
+            analysis:
+              needsAnalysis: true
+              priority: low
+              reasons:
+                - meaning-unknown
+              notes: Meaning for the count is unknown.
+          example: 12
         averageScoreThreshold:
           type: number
           minimum: 0
@@ -1379,6 +1430,18 @@ components:
           example: 0
         isLateDaysEnabled:
           $ref: "#/components/schemas/ActivityIsLateDaysEnabled"
+    LongreadMaterialTimer:
+      type: string
+      nullable: true
+      description: Timer by which exercise should be completed.
+      x-re:
+        schema:
+          typing: full
+        observation:
+          notes: >
+            Observed for `discriminator` == "questions", sets timer value for
+            task to be completed.
+      example: "00:30:00"
     LongreadMaterialEstimation:
       type: object
       description: Estimation and grading constraints for exercise material.
@@ -1397,7 +1460,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/PublishDate"
         timer:
-          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+          $ref: "#/components/schemas/LongreadMaterialTimer"
         maxScore:
           nullable: true
           allOf:
@@ -1475,25 +1538,6 @@ components:
       minimum: 0
       description: Numeric identifier of the question.
       example: 766
-    QuestionItemType:
-      type: string
-      description: Question type.
-      x-re:
-        schema:
-          typing: full
-        observation:
-          observedAsOf: 2026-03-27
-        enum:
-          descriptions:
-            "input": Question that requires input as answer.
-            "singleChoice": Question that requires the right choice as answer.
-            "multipleChoice": >
-              Question that requires chosing multiple options as answer.
-      enum:
-        - input
-        - singleChoice
-        - multipleChoice
-      example: "input"
     QuestionOptionRecommendation:
       type: string
       nullable: true
@@ -1543,7 +1587,8 @@ components:
             Format is not the same as for LongreadMaterialViewContent.
       example: '{"description": "..."}'
     QuestionItemScore:
-      type: integer
+      type: number
+      format: double
       minimum: 0
       description: Score (max possible) for answering the question correctly.
       example: 5
@@ -1582,33 +1627,16 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/QuestionItemOption"
-    QuestionCorrectAnswerType:
-      type: string
-      x-re:
-        schema:
-          typing: full
-        observation:
-          observedAsOf: 2026-03-27
-        analysis:
-          needsAnalysis: true
-          priority: medium
-          reasons:
-            - enum-incomplete
-        enum:
-          descriptions:
-            "inputStringCorrectAnswer": Shows correct string input answers.
-            "inputNumberCorrectAnswer": Shows correct number input answers.
-      enum:
-        - inputStringCorrectAnswer
-        - inputNumberCorrectAnswer
-      example: "inputStringCorrectAnswer"
     QuestionItemCorrectAnswerInputStringCorrectAnswer:
       type: object
+      description: Shows correct string input answers.
       additionalProperties: false
       required: [ type, variants ]
       properties:
         type:
-          $ref: "#/components/schemas/QuestionCorrectAnswerType"
+          type: string
+          enum: [ inputStringCorrectAnswer ]
+          example: "inputStringCorrectAnswer"
         variants:
           type: array
           items:
@@ -1616,12 +1644,14 @@ components:
           example: [ "АБББ", "А Б Б Б", "А, Б, Б, Б" ]
     QuestionItemCorrectAnswerInputNumberCorrectAnswer:
       type: object
+      description: Shows correct number input answers.
       additionalProperties: false
-      required: [ type, variants, showPrecisionHint, autoEvaluationPrecision,
-                  precision ]
+      required: [ type, variants, showPrecisionHint, precision ]
       properties:
         type:
-          $ref: "#/components/schemas/QuestionCorrectAnswerType"
+          type: string
+          enum: [ inputNumberCorrectAnswer ]
+          example: "inputNumberCorrectAnswer"
         variants:
           type: array
           items:
@@ -1631,7 +1661,7 @@ components:
           type: boolean
           description: Indicates if precision hint should be shown on frontend.
           example: true
-        autoEvaluationPrecision:
+        autoEvaluationPrecision:  # non-required
           type: string
           pattern: "^0(\\.0+)?"
           nullable: true
@@ -1658,6 +1688,7 @@ components:
       description: Indicates if options need to be shuffled on frontend.
       example: false
     LongreadExerciseInputQuestionItem:
+      type: object
       description: Question that needs input as answer.
       x-re:
         serialization:
@@ -1672,7 +1703,9 @@ components:
       properties:
         # Inherited from longreadExerciseQuestionBase.
         type:
-          $ref: "#/components/schemas/QuestionItemType"
+          type: string
+          enum: [ input ]
+          example: "input"
         id:
           $ref: "#/components/schemas/QuestionId"
         order:
@@ -1696,6 +1729,7 @@ components:
         input:
           $ref: "#/components/schemas/QuestionItemEvaluationBlock"
     LongreadExerciseSingleChoiceQuestionitem:
+      type: object
       description: Question that requires the right choice as answer.
       x-re:
         serialization:
@@ -1708,7 +1742,9 @@ components:
       properties:
         # Inherited from longreadExerciseQuestionBase.
         type:
-          $ref: "#/components/schemas/QuestionItemType"
+          type: string
+          enum: [ singleChoice ]
+          example: "singleChoice"
         id:
           $ref: "#/components/schemas/QuestionId"
         order:
@@ -1734,6 +1770,7 @@ components:
             options:
               $ref: "#/components/schemas/QuestionItemOptions"
     LongreadExerciseMultipleChoiceQuestionItem:
+      type: object
       description: Question that requires chosing multiple options as answer.
       x-re:
         serialization:
@@ -1746,7 +1783,9 @@ components:
       properties:
         # Inherited from longreadExerciseQuestionBase.
         type:
-          $ref: "#/components/schemas/QuestionItemType"
+          type: string
+          enum: [ multipleChoice ]
+          example: "multipleChoice"
         id:
           $ref: "#/components/schemas/QuestionId"
         order:
@@ -1848,7 +1887,7 @@ components:
           observedAsOf: 2026-03-27
       items:
         $ref: "#/components/schemas/UserId"
-    LongreadExerciseMaterialIsTrackingStudent:
+    LongreadExerciseMaterialIsTrackingStudents:
       type: boolean
       x-re:
         analysis:
@@ -1987,7 +2026,7 @@ components:
         # Other.
         isTrackingStudents:
           # yamllint disable-line rule:line-length
-          $ref: "#/components/schemas/LongreadExerciseMaterialIsTrackingStudent"
+          $ref: "#/components/schemas/LongreadExerciseMaterialIsTrackingStudents"
         exerciseUrl:
           $ref: "#/components/schemas/LongreadMaterialExerciseUrl"
         coding:
@@ -2061,7 +2100,8 @@ components:
       required: [ discriminator, state, viewType, type, id, order,
                   name, viewContent, estimation, reviewers, assignees,
                   attachments, backloggedAt, taskId, mode,
-                  areQuestionsShuffled, settings, quizId, questions ]
+                  areQuestionsShuffled, settings, quizId, questions,
+                  isTrackingStudents ]
       properties:
         # Inherited from longreadExerciseMaterialBase.
         discriminator:
@@ -2097,6 +2137,9 @@ components:
         taskId:
           $ref: "#/components/schemas/TaskId"
         # Other.
+        isTrackingStudents:
+          # yamllint disable-line rule:line-length
+          $ref: "#/components/schemas/LongreadExerciseMaterialIsTrackingStudents"
         mode:
           $ref: "#/components/schemas/LongreadExerciseQuestionsMode"
         areQuestionsShuffled:
