@@ -10,19 +10,17 @@ import (
 )
 
 func main() {
-	var statusCode int
-	client, err := lmsapi.NewDefaultClientFromEnv(
-		lmsapi.WithResponseEditor(
-			func(_ context.Context, resp *http.Response) error {
-				statusCode = resp.StatusCode
-				return nil
-			}),
-	)
+	client, err := lmsapi.NewDefaultClientFromEnv()
 	if err != nil {
 		log.Fatalf("lmsapi.NewDefaultClientFromEnv error: %v", err)
 	}
 
-	res, err := client.CurrentStudent(context.Background())
+	var statusCode int
+	res, err := client.CurrentStudent(context.Background(),
+		lmsapi.WithEditResponse(func(resp *http.Response) error {
+			statusCode = resp.StatusCode
+			return nil
+		}))
 	if err != nil {
 		log.Fatalf("client.CurrentStudent error: %v", err)
 	}
