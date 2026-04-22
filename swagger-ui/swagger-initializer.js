@@ -3,7 +3,7 @@ window.onload = function () {
     urls: [
       {
         name: "CU LMS API",
-        url: "https://raw.githubusercontent.com/cu-devs-collective/open-cu-services-openapi/master/spec/lmsapi/lmsapi.re.openapi.yaml"
+        url: "https://raw.githubusercontent.com/cu-devs-collective/open-cu-services-sdk/master/spec/lmsapi/lmsapi.re.openapi.yaml"
       }
     ],
     "urls.primaryName": "CU LMS API",
