@@ -110,6 +110,12 @@ EOF
 Package: $(yaml_escape "$pkg")
 EOF
 
+    local debug_response_gen_file="${out_dir}/debug_response_gen.go"
+    local debug_response_gen_file_tmpl="${TEMPLATE_DIR}/common/debug_response_gen.go.tmpl"
+    render_template "$debug_response_gen_file_tmpl" "$debug_response_gen_file" <<EOF
+Package: $(yaml_escape "$pkg")
+EOF
+
     local default_gen_file="${out_dir}/default_gen.go"
     local default_gen_file_tmpl="${TEMPLATE_DIR}/lmsapi/default_gen.go.tmpl"
     render_template "$default_gen_file_tmpl" "$default_gen_file" <<EOF

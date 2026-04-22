@@ -19,7 +19,7 @@ var (
 	version     = "unknown"
 )
 
-func Version() string {
+func ClientVersion() string {
 	versionOnce.Do(func() {
 		buildInfo, ok := debug.ReadBuildInfo()
 		if !ok {
