@@ -22,7 +22,7 @@ rules:
       - $.components.links.*
       - $.components.callbacks.*
       - $.components.securitySchemes.*
-      - $.components.pathItems.* # OAS 3.1
+      - $.components.pathItems.*  # OAS 3.1
     then:
       field: description
       function: truthy
