@@ -104,15 +104,15 @@ BaseURL: $(yaml_escape "$BASE_URL")
 UserAgent: $(yaml_escape "$USER_AGENT")
 EOF
 
-    local default_gen_file="${out_dir}/default_gen.go"
-    local default_gen_file_tmpl="${TEMPLATE_DIR}/lmsapi/default_gen.go.tmpl"
-    render_template "$default_gen_file_tmpl" "$default_gen_file" <<EOF
+    local validation_errors_gen_file="${out_dir}/validation_errors_gen.go"
+    local validation_errors_gen_file_tmpl="${TEMPLATE_DIR}/common/validation_errors_gen.go.tmpl"
+    render_template "$validation_errors_gen_file_tmpl" "$validation_errors_gen_file" <<EOF
 Package: $(yaml_escape "$pkg")
 EOF
 
-    local validation_errors_gen_file="${out_dir}/validation_errors_gen.go"
-    local validation_errors_gen_file_tmpl="${TEMPLATE_DIR}/lmsapi/validation_errors_gen.go.tmpl"
-    render_template "$validation_errors_gen_file_tmpl" "$validation_errors_gen_file" <<EOF
+    local default_gen_file="${out_dir}/default_gen.go"
+    local default_gen_file_tmpl="${TEMPLATE_DIR}/lmsapi/default_gen.go.tmpl"
+    render_template "$default_gen_file_tmpl" "$default_gen_file" <<EOF
 Package: $(yaml_escape "$pkg")
 EOF
 }
