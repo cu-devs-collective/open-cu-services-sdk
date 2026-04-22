@@ -5,7 +5,7 @@ set -euo pipefail
 # SDKs are generated as separate Go modules.
 #
 # Current spec to module mapping:
-# - lmsapi -> github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi
+# - lmsapi -> github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi
 #------------------------------------------------------------------------------
 
 SPEC_KEYS_TO_GENERATE=(
@@ -19,7 +19,7 @@ SPEC_BASE="${ROOT_DIR}/spec"
 OUT_BASE="${ROOT_DIR}/golang"
 TEMPLATE_DIR="${ROOT_DIR}/gen/golang/templates"
 
-MODULE_BASE="github.com/cu-devs-collective/open-cu-services-openapi/golang"
+MODULE_BASE="github.com/cu-devs-collective/open-cu-services-sdk/golang"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }

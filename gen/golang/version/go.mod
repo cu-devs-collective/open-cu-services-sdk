@@ -1,4 +1,4 @@
-module github.com/cu-devs-collective/open-cu-services-openapi/gen/golang/version
+module github.com/cu-devs-collective/open-cu-services-sdk/gen/golang/version
 
 go 1.25.0
 

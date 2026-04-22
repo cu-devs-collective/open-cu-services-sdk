@@ -1,4 +1,4 @@
-# Open CU Services OpenAPI
+# Open CU Services SDK
 
-> OpenAPI specifications for the CU Service APIs, reverse engineered for
-> Open CU Services Project
+> OpenAPI specifications and clients for the CU Service APIs, reverse engineered
+> for Open CU Services Project

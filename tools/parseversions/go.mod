@@ -1,4 +1,4 @@
-module github.com/cu-devs-collective/open-cu-services-openapi/tools/parseversions
+module github.com/cu-devs-collective/open-cu-services-sdk/tools/parseversions
 
 go 1.25.0
 

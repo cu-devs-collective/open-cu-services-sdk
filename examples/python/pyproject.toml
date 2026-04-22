@@ -3,15 +3,15 @@ name = "open-cu-services-examples-python"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
-  "open-cu-services-lmsapi @ git+https://github.com/cu-devs-collective/open-cu-services-openapi.git@python/lmsapi/0.0.0#subdirectory=python/lmsapi"
+  "open-cu-services-lmsapi @ git+https://github.com/cu-devs-collective/open-cu-services-sdk.git@python/lmsapi/0.0.0#subdirectory=python/lmsapi"
   # Unfortunately there is no standard way for redefining dependency to local version,
   # because of this package managers like Poetry or uv should be used
 ]
 
 [tool.uv.sources]
-# open-cu-services-lmsapi = { git = "https://github.com/cu-devs-collective/open-cu-services-openapi", tag = "python/lmsapi/0.0.0", subdirectory = "python/lmsapi" }
+# open-cu-services-lmsapi = { git = "https://github.com/cu-devs-collective/open-cu-services-sdk", tag = "python/lmsapi/0.0.0", subdirectory = "python/lmsapi" }
 open-cu-services-lmsapi = { path = "../../python/lmsapi" }
 
 [tool.poetry.dependencies]
-# open-cu-services-lmsapi = { git = "https://github.com/cu-devs-collective/open-cu-services-openapi", tag = "python/lmsapi/0.0.0", subdirectory = "python/lmsapi" }
+# open-cu-services-lmsapi = { git = "https://github.com/cu-devs-collective/open-cu-services-sdk", tag = "python/lmsapi/0.0.0", subdirectory = "python/lmsapi" }
 open-cu-services-lmsapi = { path = "../../python/lmsapi", develop = true }

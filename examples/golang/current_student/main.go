@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi"
+	"github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi"
 )
 
 func main() {

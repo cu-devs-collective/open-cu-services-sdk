@@ -1,10 +1,10 @@
-module github.com/cu-devs-collective/open-cu-services-openapi/examples/golang
+module github.com/cu-devs-collective/open-cu-services-sdk/examples/golang
 
 go 1.25.0
 
-require github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi v0.0.0
+require github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi v0.0.0
 
-replace github.com/cu-devs-collective/open-cu-services-openapi/golang/lmsapi => ../../golang/lmsapi
+replace github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi => ../../golang/lmsapi
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

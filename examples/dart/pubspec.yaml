@@ -10,7 +10,7 @@ dependencies:
   http: ^1.6.0
   open_cu_services_lmsapi:
     git:
-      url: https://github.com/cu-devs-collective/open-cu-services-openapi.git
+      url: https://github.com/cu-devs-collective/open-cu-services-sdk.git
       ref: dart/lmsapi/0.0.0
       path: dart/lmsapi
 

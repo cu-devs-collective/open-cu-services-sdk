@@ -7,7 +7,7 @@
     "current-student": "pnpm run build && tsx current_student/main.ts"
   },
   "//(comment) dependencies": {
-    "@cu-devs-collective/open-cu-services-lmsapi": "git+https://github.com/cu-devs-collective/open-cu-services-openapi#typescript/lmsapi/0.0.0&path:/typescript/lmsapi"
+    "@cu-devs-collective/open-cu-services-lmsapi": "git+https://github.com/cu-devs-collective/open-cu-services-sdk#typescript/lmsapi/0.0.0&path:/typescript/lmsapi"
   },
   "dependencies": {
     "@cu-devs-collective/open-cu-services-lmsapi": "file:../../typescript/lmsapi"
