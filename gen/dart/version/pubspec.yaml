@@ -13,6 +13,6 @@ dependencies:
 
 dev_dependencies:
   swagger_dart_code_generator: "4.1.1"
-  build_runner: 2.13.1
+  build_runner: 2.14.0
   chopper_generator: 8.6.1
   json_serializable: 6.13.1
