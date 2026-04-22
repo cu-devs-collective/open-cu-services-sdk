@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "redhat.vscode-yaml",
-        "Arjun.swagger-viewer"
+        "Arjun.swagger-viewer",
+        "EditorConfig.EditorConfig"
     ]
 }
