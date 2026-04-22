@@ -16,11 +16,13 @@ func main() {
 	}
 
 	var statusCode int
-	res, err := client.CurrentStudent(context.Background(),
-		lmsapi.WithEditResponse(func(resp *http.Response) error {
-			statusCode = resp.StatusCode
-			return nil
-		}))
+	res, err := lmsapi.Call(func(scope *lmsapi.DebugResponse) (lmsapi.CurrentStudentRes, error) {
+		return client.CurrentStudent(context.Background(),
+			scope.RequestOptionWith(func(resp *http.Response) error {
+				statusCode = resp.StatusCode
+				return nil
+			}))
+	})
 	if err != nil {
 		log.Fatalf("client.CurrentStudent error: %v", err)
 	}
