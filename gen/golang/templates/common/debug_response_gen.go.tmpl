@@ -83,7 +83,7 @@ func (r *DebugResponse) decorate(err error) error {
 }
 
 const debugResponseMsgFormat = "⚠️ See https://github.com/cu-devs-collective/open-cu-services-sdk#reporting-issues-for-codegen-clients." +
-	" Debug response for statusCode=%d: %q"
+	" Debug response for endpoint=%q: %q"
 
 func (e *DebugResponseDataError) Error() string {
 	if e == nil {
@@ -91,7 +91,7 @@ func (e *DebugResponseDataError) Error() string {
 	}
 
 	encoded := base64.StdEncoding.EncodeToString([]byte(e.Plain()))
-	return fmt.Sprintf(debugResponseMsgFormat, e.StatusCode, encoded)
+	return fmt.Sprintf(debugResponseMsgFormat, e.Endpoint, encoded)
 }
 
 func (e *DebugResponseDataError) Plain() string {
