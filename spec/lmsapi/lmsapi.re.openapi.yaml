@@ -1235,7 +1235,7 @@ components:
         - video
         - audio
       example: "ngxMarkdown"
-    LongreadMaterialMediaType:
+    FileMediaType:
       type: string
       description: Media type attachment identifier.
       x-re:
@@ -1270,7 +1270,7 @@ components:
             - usage-unknown
           notes: >
             This value correlation with the real media type of
-            LongreadMaterialMediaType should be investigated.
+            FileMediaType should be investigated.
             The guess is that this value is just the upper-case version of it,
             cuz else it makes no actual sense.
         enum:
@@ -1279,7 +1279,7 @@ components:
             "Image": => "image".
             "Video": => "video".
             "Audio": => "audio".
-          notes: All of the values translate to LongreadMaterialMediaType type.
+          notes: All of the values translate to FileMediaType type.
       enum:
         - File
         - Image
@@ -1352,7 +1352,7 @@ components:
             - $ref: "#/components/schemas/FileNameObjectPath"
           example: "exercises/54045/English_204S4_C_HW_2e_Week _6.pdf"
         mediaType:
-          $ref: "#/components/schemas/LongreadMaterialMediaType"
+          $ref: "#/components/schemas/FileMediaType"
         length:
           $ref: "#/components/schemas/LongreadMaterialLength"
         version:
@@ -1442,6 +1442,14 @@ components:
             Observed for `discriminator` == "questions", sets timer value for
             task to be completed.
       example: "00:30:00"
+    StartDate:
+      type: string
+      format: date-time
+      description: Scheduled item start timestamp.
+      x-re:
+        observation:
+          notes: It seems that this can be the same as PublishDate.
+      example: "2026-01-26T07:00:00+00:00"
     LongreadMaterialEstimation:
       type: object
       description: Estimation and grading constraints for exercise material.
@@ -1454,11 +1462,7 @@ components:
       required: [ startDate, timer, maxScore, deadline, activity ]
       properties:
         startDate:
-          x-re:
-            observation:
-              notes: It seems that this is the same as PublishDate.
-          allOf:
-            - $ref: "#/components/schemas/PublishDate"
+          $ref: "#/components/schemas/StartDate"
         timer:
           $ref: "#/components/schemas/LongreadMaterialTimer"
         maxScore:
@@ -1964,7 +1968,7 @@ components:
           example: 0
         # Other.
         mediaType:
-          $ref: "#/components/schemas/LongreadMaterialMediaType"
+          $ref: "#/components/schemas/FileMediaType"
         filename:
           $ref: "#/components/schemas/FileNameObjectPath"
         version:
@@ -2073,7 +2077,7 @@ components:
           example: 100
         mediaType:
           allOf:
-            - $ref: "#/components/schemas/LongreadMaterialMediaType"
+            - $ref: "#/components/schemas/FileMediaType"
           example: "image"
         filename:
           allOf:
@@ -2240,7 +2244,7 @@ components:
           example: 0
         # Other.
         mediaType:
-          $ref: "#/components/schemas/LongreadMaterialMediaType"
+          $ref: "#/components/schemas/FileMediaType"
         filename:
           $ref: "#/components/schemas/FileNameObjectPath"
         version:
@@ -2285,7 +2289,7 @@ components:
           example: 0
         # Other.
         mediaType:
-          $ref: "#/components/schemas/LongreadMaterialMediaType"
+          $ref: "#/components/schemas/FileMediaType"
         filename:
           $ref: "#/components/schemas/FileNameObjectPath"
         version:
@@ -2370,18 +2374,14 @@ components:
         - evaluated
         - failed
       example: "inProgress"
-    TaskScore:  # TODO: TaskScore
+    TaskScore:
       type: number
       format: double
+      nullable: true
+      description: Task score, if it was evaluated.
       x-re:
         schema:
-          typing: partial
-        analysis:
-          needsAnalysis: true
-          priority: high
-          reasons:
-            - other
-          notes: Typing is incomplete and needs to be analysed.
+          typing: full
     TaskScoreSkillLevel:
       $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
     TaskExtraScore:
@@ -2419,17 +2419,124 @@ components:
       format: date-time
       nullable: true
       description: Task evaluation by system timestamp.
-    TaskLateDays:  # TODO: check what is non-null value
+    TaskLateDays:
       $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
-    TaskExercise:  # TODO: check if not nullable
+    TaskExerciseViewContent:
+      type: string
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: medium
+          reasons:
+            - optionality-uncertain
+      description: JSON-serialized markdown content of task rendered in LMS.
+      # yamllint disable-line rule:line-length
+      example: '{"description": "<p>Заполни “Шаблон: моя мотивация” и прикрепи в поле ниже.</p>"}'
+    TaskExerciseActivity:
       type: object
       additionalProperties: false
-      # required: [ id, name, type, maxScore, startDate, deadline, timer,
-      #             activity, questionOrders, areQuestionsShuffled, quizId,
-      #             mode, viewContent, exerciseUrl, attachments, settings ]
-      # properties: {}  # TODO
-    TaskCourse:  # TODO: check if not nullable
+      required: [ id, name, weight, isLateDaysEnabled ]
+      properties:
+        id:
+          $ref: "#/components/schemas/ActivityId"
+        name:
+          $ref: "#/components/schemas/ActivityName"
+        weight:
+          $ref: "#/components/schemas/ActivityWeight"
+        isLateDaysEnabled:
+          $ref: "#/components/schemas/ActivityIsLateDaysEnabled"
+      example:
+        {
+          "id": 1880,
+          "name": "Домашние задания",
+          "weight": 0.2,
+          "isLateDaysEnabled": true
+        }
+    TaskAttachment:
       type: object
+      x-re:
+        notes: This is not the same as LongreadMaterialContent.
+      additionalProperties: false
+      required: [ name, filename, mediaType, length, version ]
+      properties:
+        name:
+          $ref: "#/components/schemas/FileAttachmentName"
+        filename:
+          $ref: "#/components/schemas/FileNameObjectPath"
+        mediaType:
+          $ref: "#/components/schemas/FileMediaType"
+        length:
+          $ref: "#/components/schemas/LongreadMaterialLength"
+        version:
+          $ref: "#/components/schemas/LongreadMaterialVersion"
+      example:
+        # yamllint disable rule:line-length
+        {
+          "name": "6 неделя_Стресс-менеджмент_Шаблон Моя Мотивация.xlsx",
+          "filename": "exercises/60068/6 неделя_Стресс-менеджмент_Шаблон Моя Мотивация.xlsx",
+          "mediaType": "file",
+          "length": 403448,
+          "version": "01175dc5"
+        }
+        # yamllint enable rule:line-length
+    TaskExercise:
+      type: object
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: high
+          reasons:
+            - optionality-uncertain
+      additionalProperties: false
+      required: [ id, name, type, maxScore, startDate, deadline, timer,
+                  activity, questionOrders, areQuestionsShuffled, quizId,
+                  mode, viewContent, exerciseUrl, attachments, settings ]
+      properties:
+        id:
+          $ref: "#/components/schemas/ExerciseId"
+        name:
+          $ref: "#/components/schemas/ExerciseName"
+        type:
+          x-re:
+            notes: It is a guess that this is the same as TaskType.
+          allOf:
+            - $ref: "#/components/schemas/TaskType"
+        maxScore:
+          $ref: "#/components/schemas/MaxScore"
+        startDate:
+          $ref: "#/components/schemas/StartDate"
+        deadline:
+          $ref: "#/components/schemas/Deadline"
+        timer:
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        activity:
+          $ref: "#/components/schemas/TaskExerciseActivity"
+        questionOrders:
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        areQuestionsShuffled:
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        quizId:
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        mode:
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        viewContent:
+          $ref: "#/components/schemas/TaskExerciseViewContent"
+        exerciseUrl:
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaskAttachment"
+        settings:
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+    TaskCourse:
+      type: object
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: high
+          reasons:
+            - optionality-uncertain
       additionalProperties: false
       required: [ id, name, isArchived ]
       properties:
@@ -2439,8 +2546,14 @@ components:
           $ref: "#/components/schemas/CourseName"
         isArchived:
           $ref: "#/components/schemas/CourseIsArchived"
-    TaskCourseTheme:  # TODO: check if not nullable
+    TaskCourseTheme:
       type: object
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: high
+          reasons:
+            - optionality-uncertain
       additionalProperties: false
       required: [ id, name ]
       properties:
