@@ -1517,7 +1517,7 @@ components:
         - last
         - best
       example: "last"
-    LongreadExerciseQuestionsSettings:
+    ExerciseQuestionsSettings:
       type: object
       description: Settings for questions exercise behavior.
       additionalProperties: false
@@ -1532,11 +1532,13 @@ components:
         evaluationStrategy:
           $ref: "#/components/schemas/QuestionsSettingsEvalStrategy"
     QuizId:
+      type: integer
+      minimum: 0
+      description: Numeric identifier of the quiz.
       x-re:
         observation:
-          notes: It seems that this is the same as TaskId.
-      allOf:
-        - $ref: "#/components/schemas/TaskId"
+          notes: It seems that this is the same as TaskId or ExerciseId.
+      example: 841
     QuestionId:
       type: integer
       minimum: 0
@@ -1601,6 +1603,14 @@ components:
       minimum: 0
       description: Numeric identifier of the question option.
       example: 471
+    QuestionOptionIsCorrect:
+      type: boolean
+      description: Indicates if the option is the correct answer.
+      x-re:
+        observation:
+          notes: >
+            Seen value to be true when there is only one possible option.
+      example: true
     QuestionItemOption:
       type: object
       description: Option is a possible answer that can be chosen.
@@ -1618,13 +1628,7 @@ components:
             - $ref: "#/components/schemas/ListingOrder"
           example: 0
         isCorrect:
-          type: boolean
-          description: Indicates if the option is the correct answer.
-          x-re:
-            observation:
-              notes: >
-                Seen value to be true when there is only one possible option.
-          example: true
+          $ref: "#/components/schemas/QuestionOptionIsCorrect"
         recommendation:
           $ref: "#/components/schemas/QuestionOptionRecommendation"
     QuestionItemOptions:
@@ -1691,6 +1695,19 @@ components:
       type: boolean
       description: Indicates if options need to be shuffled on frontend.
       example: false
+    ExerciseQuestionItemType:
+      type: string
+      description: Exercise question type identifier.
+      x-re:
+        schema:
+          typing: full
+        observation:
+          observedAsOf: 2026-04-23
+      enum:
+        - input
+        - singleChoice
+        - multipleChoice
+      example: "singleChoice"
     LongreadExerciseInputQuestionItem:
       type: object
       description: Question that needs input as answer.
@@ -2151,7 +2168,7 @@ components:
           description: Indicates if questions need to be shuffled on frontend.
           example: false
         settings:
-          $ref: "#/components/schemas/LongreadExerciseQuestionsSettings"
+          $ref: "#/components/schemas/ExerciseQuestionsSettings"
         quizId:
           $ref: "#/components/schemas/QuizId"
         questions:
@@ -2406,7 +2423,11 @@ components:
         - intermediate
         - advanced
     TaskExtraScore:
-      $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+      type: number
+      format: double
+      nullable: true
+      description: Extra score for task, if not null.
+      example: 1
     CreatedAt:
       type: string
       format: date-time
@@ -2441,7 +2462,11 @@ components:
       nullable: true
       description: Task evaluation by system timestamp.
     TaskLateDays:
-      $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+      type: integer
+      minimum: 0
+      nullable: true
+      description: How many late days already been spent on task, if any.
+      example: 5
     TaskExerciseViewContent:
       type: string
       x-re:
@@ -2500,6 +2525,33 @@ components:
           "version": "01175dc5"
         }
         # yamllint enable rule:line-length
+    TaskExerciseQuestionOrders:
+      type: array
+      nullable: true
+      items:
+        type: object
+        additionalProperties: false
+        required: [ questionId, order, optionOrders ]
+        properties:
+          questionId:
+            $ref: "#/components/schemas/QuestionId"
+          order:
+            allOf:
+              - $ref: "#/components/schemas/ListingOrder"
+            example: 1
+          optionOrders:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              required: [ optionId, order ]
+              properties:
+                optionId:
+                  $ref: "#/components/schemas/QuestionOptionId"
+                order:
+                  allOf:
+                    - $ref: "#/components/schemas/ListingOrder"
+                  example: 0
     TaskExercise:
       type: object
       x-re:
@@ -2533,11 +2585,13 @@ components:
         activity:
           $ref: "#/components/schemas/TaskExerciseActivity"
         questionOrders:
-          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+          $ref: "#/components/schemas/TaskExerciseQuestionOrders"
         areQuestionsShuffled:
           $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
         quizId:
-          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/QuizId"
         mode:
           $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
         viewContent:
@@ -2549,7 +2603,9 @@ components:
           items:
             $ref: "#/components/schemas/TaskAttachment"
         settings:
-          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/ExerciseQuestionsSettings"
     TaskCourse:
       type: object
       x-re:
@@ -2630,6 +2686,40 @@ components:
           type: string
           nullable: true
           example: null
+    TaskSolutionAnswersQuestion:
+      type: object
+      additionalProperties: false
+      required: [ id, type, answer, options ]
+      properties:
+        id:
+          $ref: "#/components/schemas/QuestionId"
+        type:
+          $ref: "#/components/schemas/ExerciseQuestionItemType"
+        answer:
+          # yamllint disable-line rule:line-length
+          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+        options:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [ id, isCorrect, recommendation ]
+            properties:
+              id:
+                $ref: "#/components/schemas/QuestionOptionId"
+              isCorrect:
+                $ref: "#/components/schemas/QuestionOptionIsCorrect"
+              recommendation:
+                $ref: "#/components/schemas/QuestionOptionRecommendation"
+    TaskSolutionAnswersItem:
+      type: object
+      additionalProperties: false
+      required: [ answer, question ]
+      properties:
+        answer:
+          $ref: "#/components/schemas/QuestionOptionId"
+        question:
+          $ref: "#/components/schemas/TaskSolutionAnswersQuestion"
     TaskSolution:
       type: object
       nullable: true
@@ -2645,12 +2735,29 @@ components:
           description: URL for solution, if set.
           example: "https://my.centraluniversity.ru"
         answers:
-          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/TaskSolutionAnswersItem"
         attachments:
-          # yamllint disable-line rule:line-length
-          $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyEmptyArrayObserved"
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/TaskAttachment"
+    TaskScoresItem:
+      type: object
+      additionalProperties: false
+      required: [ questionId, score ]
+      properties:
+        questionId:
+          $ref: "#/components/schemas/QuestionId"
+        score:
+          $ref: "#/components/schemas/TaskScore"
     TaskScores:
-      $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
+      type: array
+      nullable: true
+      items:
+        $ref: "#/components/schemas/TaskScoresItem"
     TaskQuizSessionId:
       $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
     TaskEvaluatedAttemptId:
