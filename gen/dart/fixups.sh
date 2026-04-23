@@ -29,6 +29,30 @@ run_precodegen_fixups() {
             yq -i \
                 '.paths."/micro-lms/courses/{courseId}".get.responses."200".content."application/json".schema."$ref" = "#/components/schemas/CourseSummaryItem"' \
                 "$swagger_input_path"
+
+            # Inline stub only-null-observed schemas because alias refs to them generate
+            # InvalidType in swagger_dart_code_generator output.
+            # shellcheck disable=SC2016
+            yq -i \
+                '(.. | select(tag == "!!map" and has("$ref") and ."$ref" == "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved")) = {
+                  "type": "string",
+                  "nullable": true,
+                  "description": "Value only seen as null."
+                }' \
+                "$swagger_input_path"
+
+            # swagger_dart_code_generator emits InvalidType for nullable allOf refs
+            # to primitive aliases, so inline this schema.
+            yq -i \
+                '.components.schemas.LongreadMaterialEstimation.properties.maxScore = {
+                  "type": "number",
+                  "format": "double",
+                  "minimum": 0,
+                  "nullable": true,
+                  "description": "Maximum possible score for completing exercise.",
+                  "example": 10
+                }' \
+                "$swagger_input_path"
             ;;
         *) info "run_precodegen_fixups: Unknown sdk_id: $sdk_id, skipped";;
     esac

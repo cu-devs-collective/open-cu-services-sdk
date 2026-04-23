@@ -190,6 +190,8 @@ sdk_generate() {
     (cd "$OUT_DIR" && dart pub get)
 
     # 4) run swagger_dart_code_generator generation
+    info "Cleaning previous build_runner state"
+    (cd "$OUT_DIR" && dart run build_runner clean)
     info "Running swagger_dart_code_generator generation"
     (cd "$OUT_DIR" && dart run build_runner build --delete-conflicting-outputs)
 
