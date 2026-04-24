@@ -1,9 +1,12 @@
 version: 2
 updates:
+  # Client generators dependencies
   - package-ecosystem: pub
     directory: /gen/dart/version
     schedule:
-      interval: weekly
+      interval: daily
+    cooldown:
+      default-days: 7
     versioning-strategy: increase-if-necessary
     groups:
       dart:
@@ -12,7 +15,9 @@ updates:
   - package-ecosystem: gomod
     directory: /gen/golang/version
     schedule:
-      interval: weekly
+      interval: daily
+    cooldown:
+      default-days: 7
     groups:
       golang:
         patterns:
@@ -20,7 +25,9 @@ updates:
   - package-ecosystem: uv
     directory: /gen/python/version
     schedule:
-      interval: weekly
+      interval: daily
+    cooldown:
+      default-days: 7
     groups:
       python:
         patterns:
@@ -28,21 +35,29 @@ updates:
   - package-ecosystem: npm
     directory: /gen/typescript/version
     schedule:
-      interval: weekly
+      interval: daily
+    cooldown:
+      default-days: 7
     versioning-strategy: increase-if-necessary
     groups:
       typescript:
         patterns:
           - "*"
+  # GitHub actions
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: weekly
+      interval: daily
+    cooldown:
+      default-days: 7
+  # Swagger UI dependencies
   - package-ecosystem: npm
     target-branch: swagger-ui-pages
     directory: /swagger-ui
     schedule:
-      interval: weekly
+      interval: daily
+    cooldown:
+      default-days: 7
     versioning-strategy: increase-if-necessary
     groups:
       swagger-ui:
