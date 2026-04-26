@@ -530,6 +530,7 @@ components:
         schema:
           typing: full
         observation:
+          observedAsOf: 2026-04-26
           notes: Frontend defines only those values.
         enum:
           descriptions:
@@ -670,31 +671,36 @@ components:
       x-re:
         schema:
           typing: full
-        analysis:
-          needsAnalysis: true
-          priority: critical
-          reasons:
-            - enum-incomplete
-          notes: >
-            Those are clearly not all of the values that exist, so other values
-            should be added as they are found.
+        observation:
+          observedAsOf: 2026-04-26
+          notes: Frontend defines only those values.
         enum:
           descriptions:
             "withoutCategory": Not categorized stuff.
             "general": General courses, e.g. English.
-            "career": Career stuff, e.g. Mock Interview intensive.
+            "mathematics": Math courses.
+            "business": Courses for business guys.
+            "development": Courses for devs.
             "stem": STEM courses.
             "softSkills": Soft skills category courses.
-            "mathematics": Math courses.
-            "development": Courses for devs.
+            "ml": Courses for ML guys.
+            "design": Courses for design guys.
+            "analytics": Analytics category.
+            "career": Career stuff, e.g. Mock Interview intensive.
+            "management": Management category.
       enum:
         - withoutCategory
         - general
-        - career
+        - mathematics
+        - business
+        - development
         - stem
         - softSkills
-        - mathematics
-        - development
+        - ml
+        - design
+        - analytics
+        - career
+        - management
       example: "general"
     CourseCategoryCover:
       type: string
@@ -703,27 +709,22 @@ components:
         schema:
           typing: full
         observation:
+          observedAsOf: 2026-04-26
           notes: >
+            Frontend defines only those values.
             It seems there is some algorithm on frontend which decides
             which color to use for the course card.
-        analysis:
-          needsAnalysis: true
-          priority: low
-          reasons:
-            - enum-incomplete
-          notes: >
-            Those may be not all of the values that exist, so it is good to add
-            new values here if this is being used for some reason by someone.
         enum:
-          descriptions: {}
+          descriptions: {}  # This is not needed.
       enum:
-        - spiralLoops
         - sineWave
         - curvesGrid
+        - ellipsesOverlap
         - geometricTriangle
         - verticalLines
+        - gridPlanes
+        - spiralLoops
         - symmetricCircles
-        - ellipsesOverlap
       example: "symmetricCircles"
     SubjectId:
       type: integer
@@ -840,7 +841,8 @@ components:
         schema:
           typing: full
         observation:
-          observedAsOf: 2026-03-27
+          observedAsOf: 2026-04-26
+          notes: Frontend defines only those values.
         enum:
           descriptions:
             "none": Non-enrolled user.
@@ -929,11 +931,14 @@ components:
           needsAnalysis: true
           priority: low
           reasons:
-            - enum-incomplete
             - usage-unknown
-          notes: Needs further analysis, as the only seen value is "common".
+            - other
+          notes: >
+            Needs further analysis, as the only seen value is "common".
+            "handout" value is guessed to exist.
       enum:
         - common
+        - handout
       example: "common"
     ExerciseId:
       type: integer
@@ -1511,6 +1516,8 @@ components:
       type: string
       description: Questions mode.
       x-re:
+        observation:
+          observedAsOf: 2026-04-26
         analysis:
           needsAnalysis: true
           priority: low
@@ -1857,23 +1864,29 @@ components:
         schema:
           typing: full
         observation:
-          observedAsOf: 2026-03-27
+          observedAsOf: 2026-04-26
         analysis:
           needsAnalysis: true
           priority: low
           reasons:
-            - enum-incomplete
             - meaning-unknown
           notes: >
             Seems to somehow show the current video state.
             But it's hard to get the sense of it.
+            It seems it shows KTalk's video status?
         enum:
           descriptions:
-            "ready": Video is ready.
             "empty": Video is empty? (meaning is unknown).
+            "ready": Video is ready.
       enum:
-        - ready
+        - unspecified
         - empty
+        - uploaded
+        - transcoding
+        - viewable
+        - ready
+        - partiallyReady
+        - error
       example: "ready"
     LongreadExerciseMaterialReviewers:
       type: array
@@ -2699,6 +2712,16 @@ components:
           nullable: true
           example: null
     TaskSolutionAnswersQuestionInputAnswerValue:
+      x-re:
+        analysis:
+          needsAnalysis: true
+          priority: medium
+          reasons:
+            - only-null-observed
+            - usage-unknown
+          notes: >
+            Usage unknown as only observed value is null, but it seems
+            this value is non-null for task authors?
       allOf:
         - $ref: "#/components/schemas/_x_re_propertyIncomplete_OnlyNullObserved"
     TaskSolutionAnswersQuestionInputAnswerRecommendation:
