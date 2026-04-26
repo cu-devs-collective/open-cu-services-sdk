@@ -21,15 +21,6 @@ run_precodegen_fixups() {
 
     case "$sdk_id" in
         lmsapi)
-            # swagger_dart_code_generator does not resolve top-level schema aliases.
-            yq -i \
-                'del(.components.schemas.CourseSummaryByIdResponse)' \
-                "$swagger_input_path"
-            # shellcheck disable=SC2016
-            yq -i \
-                '.paths."/micro-lms/courses/{courseId}".get.responses."200".content."application/json".schema."$ref" = "#/components/schemas/CourseSummaryItem"' \
-                "$swagger_input_path"
-
             # Inline stub only-null-observed schemas because alias refs to them generate
             # InvalidType in swagger_dart_code_generator output.
             # shellcheck disable=SC2016
