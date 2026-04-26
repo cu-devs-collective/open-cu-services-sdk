@@ -1,10 +1,11 @@
 extends: "spectral:oas"
 rules:
-  # spectral rules
-  oas3-missing-example: off
-  # vacuum rules
-  component-description: off
-  # custom rules
+  # Spectral rules
+  oas3-missing-example: off  # Too strict.
+  # Vacuum rules
+  component-description: off  # Too strict.
+  no-unnecessary-combinator: off  # Breaks dart generator.
+  # Custom rules
   component-description-except-schemas:
     description: >
       Require descriptions for components (excluding components.schemas).
