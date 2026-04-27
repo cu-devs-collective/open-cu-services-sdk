@@ -91,7 +91,7 @@ format_go_byte_array_literal() {
         else
             line+=","
         fi
-        if (( (i / 2 + 1) % 8 == 0 )); then
+        if (( (i / 2 + 1) % 16 == 0 )); then
             printf "    %s\n" "$line"
             line=""
         fi
