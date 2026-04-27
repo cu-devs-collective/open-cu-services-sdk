@@ -4,111 +4,461 @@
 package {{ .Package }}
 
 import (
-	"bytes"
+	"crypto/rand"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
+	"sync"
 	"sync/atomic"
+
+	"github.com/go-faster/jx"
+	"github.com/klauspost/compress/zstd"
+	"golang.org/x/crypto/blake2b"
+	"golang.org/x/crypto/nacl/box"
 )
 
-func Call[T any](fn func(*DebugResponse) (T, error)) (T, error) {
-	scope := new(DebugResponse)
-	res, err := fn(scope)
+const debugResponseNotice = "⚠️ See https://github.com/cu-devs-collective/open-cu-services-sdk#reporting-issues-for-codegen-clients."
+
+type DebugResponseLogline struct {
+	// Client identifies the client implementation.
+	Client string `json:"client"`
+	// ClientVersion is the version of the client SDK.
+	ClientVersion string `json:"clientVersion"`
+	// Endpoint is the endpoint that was called.
+	Endpoint string `json:"endpoint"`
+	// StatusCode is the HTTP response status code, if a response was received.
+	StatusCode int `json:"statusCode"`
+	// ContentType is the value of the Content-Type response header.
+	ContentType string `json:"contentType"`
+	// Err is the error returned by the client method.
+	Err error `json:"error"`
+	// Body is the raw response body.
+	Body []byte `json:"-"`
+}
+
+type debugResponserConfig struct {
+	showNotice            bool
+	includePrivateLogline bool
+	includePublicLogline  bool
+}
+
+type DebugResponseOption func(*debugResponserConfig)
+
+func newDebugResponse() *DebugResponse {
+	return new(DebugResponse)
+}
+
+// WithDebugResponseOptions appends debug response options to the Client config.
+func WithDebugResponseOptions(opts ...DebugResponseOption) ClientOption {
+	return optionFunc[clientConfig](func(cfg *clientConfig) {
+		if cfg.DebugResponseOptions == nil {
+			cfg.DebugResponseOptions = DefaultDebugResponseOptions()
+		}
+		cfg.DebugResponseOptions = append(cfg.DebugResponseOptions, opts...)
+	})
+}
+
+// SetDebugResponseOptions replaces debug response options on the Client config.
+func SetDebugResponseOptions(opts ...DebugResponseOption) ClientOption {
+	return optionFunc[clientConfig](func(cfg *clientConfig) {
+		cfg.DebugResponseOptions = append([]DebugResponseOption{}, opts...)
+	})
+}
+
+// DisableDebugResponses disables debug response wrapping for the whole Client.
+func DisableDebugResponses() ClientOption {
+	return optionFunc[clientConfig](func(cfg *clientConfig) {
+		cfg.DisableDebugResponses = true
+	})
+}
+
+// WithDebugResponseNotice enables the issue-reporting notice
+// in debug response errors.
+func WithDebugResponseNotice() DebugResponseOption {
+	return func(r *debugResponserConfig) {
+		r.showNotice = true
+	}
+}
+
+// WithPrivateDebugResponseLogline enables private encrypted loglines meant
+// for maintainers in debug response errors.
+func WithPrivateDebugResponseLogline() DebugResponseOption {
+	return func(r *debugResponserConfig) {
+		r.includePrivateLogline = true
+	}
+}
+
+// WithPublicDebugResponseLogline enables public loglines meant
+// for SDK users in debug response errors.
+func WithPublicDebugResponseLogline() DebugResponseOption {
+	return func(r *debugResponserConfig) {
+		r.includePublicLogline = true
+	}
+}
+
+func DefaultDebugResponseOptions() []DebugResponseOption {
+	return []DebugResponseOption{
+		WithDebugResponseNotice(),
+		WithPrivateDebugResponseLogline(),
+	}
+}
+
+func defaultDebugResponserConfig() *debugResponserConfig {
+	responserCfg := new(debugResponserConfig)
+	applyDebugResponseOptions(responserCfg, DefaultDebugResponseOptions()...)
+	return responserCfg
+}
+
+func applyDebugResponseOptions(responser *debugResponserConfig, opts ...DebugResponseOption) {
+	for _, opt := range opts {
+		if opt != nil {
+			opt(responser)
+		}
+	}
+}
+
+func callDebugResponse[T any](fn func(*DebugResponse) (T, error), responserCfg *debugResponserConfig) (T, error) {
+	debugResponse := newDebugResponse()
+	res, err := fn(debugResponse)
 	if err != nil {
-		return res, scope.decorate(err)
+		return res, debugResponse.decorate(err, responserCfg)
 	}
 	return res, nil
 }
 
-type DebugResponse struct {
-	data atomic.Pointer[DebugResponseData]
-}
-
-type DebugResponseData struct {
-	ClientVersion string
-	Endpoint      string
-	StatusCode    int
-	ContentType   string
-	Body          []byte
-}
-
-type DebugResponseDataError DebugResponseData
-
-func (r *DebugResponse) RequestOption() RequestOption {
-	return WithEditResponse(r.OnResponse)
-}
-
-func (r *DebugResponse) RequestOptionWith(fn func(resp *http.Response) error) RequestOption {
-	return WithEditResponse(func(resp *http.Response) error {
-		if fn != nil {
-			if err := fn(resp); err != nil {
-				return err
-			}
-		}
-		return r.OnResponse(resp)
-	})
-}
-
-func (r *DebugResponse) OnResponse(resp *http.Response) error {
-	body, err := readResponseBody(resp)
-	if err != nil {
-		return fmt.Errorf("read response body: %w", err)
+// callClientDebugResponse is used by patched exported Client methods. It reads
+// client-level debug options and passes the per-call DebugResponse into send.
+func callClientDebugResponse[T any](c *Client, fn func(*DebugResponse) (T, error)) (T, error) {
+	if c != nil && c.cfg.DisableDebugResponses {
+		return fn(nil)
 	}
+	responserCfg := defaultDebugResponserConfig()
+	if c == nil {
+		return callDebugResponse(fn, responserCfg)
+	}
+	if c.cfg.DebugResponseOptions != nil {
+		responserCfg = new(debugResponserConfig)
+		applyDebugResponseOptions(responserCfg, c.cfg.DebugResponseOptions...)
+	}
+	return callDebugResponse(fn, responserCfg)
+}
 
-	r.data.Store(&DebugResponseData{
-		Endpoint: fmt.Sprintf("%s %s",
-			resp.Request.Method, resp.Request.URL.Path),
-		StatusCode:  resp.StatusCode,
-		ContentType: resp.Header.Get("Content-Type"),
+// appendDebugResponseRequestOption adds the internal RequestOption that carries
+// per-call capture state into generated send methods.
+func appendDebugResponseRequestOption(options []RequestOption, debugResponse *DebugResponse) []RequestOption {
+	out := make([]RequestOption, 0, len(options)+1)
+	out = append(out, options...)
+	out = append(out, debugResponseRequestOption(debugResponse))
+	return out
+}
+
+// debugResponseRequestOption stores per-call capture state in requestConfig so
+// patched response decoders can record status, content type, and body.
+func debugResponseRequestOption(debugResponse *DebugResponse) RequestOption {
+	return func(cfg *requestConfig) {
+		cfg.DebugResponse = debugResponse
+	}
+}
+
+// DebugResponse is the internal per-call capture state shared between a patched
+// Client wrapper and patched response decoder.
+type DebugResponse struct {
+	data atomic.Pointer[DebugResponseLogline]
+}
+
+// captureResponse stores response metadata and full body after the decoder reads
+// the body once.
+func (r *DebugResponse) captureResponse(resp *http.Response, body []byte) {
+	r.data.Store(&DebugResponseLogline{
+		Endpoint:    debugResponseEndpoint(resp),
+		StatusCode:  debugResponseStatusCode(resp),
+		ContentType: debugResponseContentType(resp),
 		Body:        body,
 	})
-	return nil
 }
 
-func (r *DebugResponse) decorate(err error) error {
+// readDebugResponseBody reads and restores resp.Body for normal decoding, while
+// also saving the full body into the per-call DebugResponse when enabled.
+func readDebugResponseBody(resp *http.Response, debugResponse *DebugResponse) ([]byte, error) {
+	body, err := readResponseBody(resp)
+	if err != nil {
+		return nil, err
+	}
+	if debugResponse != nil {
+		debugResponse.captureResponse(resp, body)
+	}
+	return body, nil
+}
+
+// decorate joins the original error with a DebugResponseLoglineError only when
+// the error is a response spec error. Other errors are returned unchanged.
+func (r *DebugResponse) decorate(err error, responserCfg *debugResponserConfig) error {
+	if r == nil {
+		return err
+	}
+
 	specErr, ok := AsResponseSpecError(err)
 	if !ok {
 		return err
 	}
 
-	data := new(DebugResponseData)
+	logline := new(DebugResponseLogline)
 	if snapshot := r.data.Load(); snapshot != nil {
-		*data = *snapshot
+		*logline = *snapshot
 	}
-	data.ClientVersion = ClientVersion()
+	if len(logline.Body) == 0 && len(specErr.Body) > 0 {
+		logline.Body = specErr.Body
+	}
+	if logline.ContentType == "" {
+		logline.ContentType = specErr.ContentType
+	}
 
-	return errors.Join(specErr, (*DebugResponseDataError)(data))
+	logline.Client = DefaultUserAgent
+	logline.ClientVersion = ClientVersion()
+	logline.Err = err
+
+	return errors.Join(err, &DebugResponseLoglineError{
+		logline:      logline,
+		responserCfg: responserCfg,
+	})
 }
 
-const debugResponseMsgFormat = "⚠️ See https://github.com/cu-devs-collective/open-cu-services-sdk#reporting-issues-for-codegen-clients." +
-	" Debug response for endpoint=%q: %q"
+// DebugResponseLoglineError is joined with the original client error. Its
+// Error method renders the configured notice and debug loglines.
+type DebugResponseLoglineError struct {
+	logline           *DebugResponseLogline
+	responserCfg      *debugResponserConfig
+	privateOnce       sync.Once
+	privateLogline    string
+	privateLoglineErr error
+	publicOnce        sync.Once
+	publicLogline     string
+}
 
-func (e *DebugResponseDataError) Error() string {
+// Error renders the user-facing debug response text that appears alongside the
+// original client error.
+func (e *DebugResponseLoglineError) Error() string {
 	if e == nil {
-		return "<nil>"
+		return "Debug response logline is empty"
 	}
 
-	encoded := base64.StdEncoding.EncodeToString([]byte(e.Plain()))
-	return fmt.Sprintf(debugResponseMsgFormat, e.Endpoint, encoded)
+	var parts []string
+
+	logline := e.copy()
+
+	if e.responserCfg.includePrivateLogline {
+		if e.responserCfg.showNotice {
+			parts = append(parts, debugResponseNotice, "\n")
+		}
+		parts = append(parts, fmt.Sprintf("Debug response logline for maintainers (endpoint %q):", logline.Endpoint))
+		private, err := e.privateLoglineValue()
+		if err != nil {
+			parts = append(parts, fmt.Sprintf("private debug logline build error: %v.", err))
+		} else {
+			parts = append(parts, private)
+		}
+	}
+	if e.responserCfg.includePublicLogline {
+		if e.responserCfg.includePrivateLogline {
+			parts = append(parts, "\n")
+		}
+
+		parts = append(parts, fmt.Sprintf("Debug response logline for developer (endpoint %q):", logline.Endpoint))
+		public, err := e.publicLoglineValue()
+		if err != nil {
+			parts = append(parts, fmt.Sprintf("debug logline build error: %v.", err))
+		} else {
+			parts = append(parts, public)
+		}
+	}
+
+	return strings.Join(parts, " ")
 }
 
-func (e *DebugResponseDataError) Plain() string {
+func (e *DebugResponseLoglineError) copy() DebugResponseLogline {
+	if e == nil || e.logline == nil {
+		return DebugResponseLogline{}
+	}
+	return *e.logline
+}
+
+// publicLoglineValue returns the cached public JSON logline.
+func (e *DebugResponseLoglineError) publicLoglineValue() (string, error) {
 	if e == nil {
-		return "<nil>"
+		return "<nil>", nil
 	}
 
-	return fmt.Sprintf(
-		"clientVersion=%q endpoint=%q statusCode=%d contentType=%q responseBody:\n%s",
-		e.ClientVersion,
-		e.Endpoint,
-		e.StatusCode,
-		e.ContentType,
-		string(e.Body), // This is formatted as string.
-	)
+	e.publicOnce.Do(func() {
+		e.publicLogline = string(e.marshalDebugResponseLogline(true))
+	})
+	return e.publicLogline, nil
 }
 
+// privateLoglineValue returns the cached encrypted maintainer logline and the
+// cached build error, if compression/encryption failed.
+func (e *DebugResponseLoglineError) privateLoglineValue() (string, error) {
+	if e == nil {
+		return "<nil>", nil
+	}
+
+	e.privateOnce.Do(func() {
+		e.privateLogline, e.privateLoglineErr = e.buildPrivateLogline()
+	})
+	return e.privateLogline, e.privateLoglineErr
+}
+
+const privateLoglinePrefix = "log_v1_" // TODO(zguydev): maybe later move to template.
+
+// buildPrivateLogline builds the encrypted maintainer logline:
+// JSON metadata + newline + raw body, then zstd, sealed box, and base64url.
+func (e *DebugResponseLoglineError) buildPrivateLogline() (string, error) {
+	payload, err := e.privatePayload()
+	if err != nil {
+		return "", err
+	}
+
+	compressor, err := zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedFastest))
+	if err != nil {
+		return "", fmt.Errorf("create zstd writer: %w", err)
+	}
+	compressed := compressor.EncodeAll(payload, nil)
+	if err := compressor.Close(); err != nil {
+		return "", fmt.Errorf("close zstd writer: %w", err)
+	}
+
+	sealed, err := sealDebugResponse(compressed)
+	if err != nil {
+		return "", fmt.Errorf("seal debug response: %w", err)
+	}
+
+	return privateLoglinePrefix + base64.RawURLEncoding.EncodeToString(sealed), nil
+}
+
+// privatePayload creates the plaintext private payload before compression and
+// encryption.
+func (e *DebugResponseLoglineError) privatePayload() ([]byte, error) {
+	data := e.marshalDebugResponseLogline(false)
+	logline := e.copy()
+
+	payload := make([]byte, 0, len(data)+1+len(logline.Body))
+	payload = append(payload, data...)
+	payload = append(payload, '\n')
+	payload = append(payload, logline.Body...)
+	return payload, nil
+}
+
+// marshalDebugResponseLogline serializes logline metadata with jx.
+// If includeBody is true, the body is encoded as base64.
+func (e *DebugResponseLoglineError) marshalDebugResponseLogline(includeBody bool) []byte {
+	logline := e.copy()
+
+	var enc jx.Encoder
+	enc.ObjStart()
+	enc.FieldStart("client")
+	enc.Str(logline.Client)
+	enc.FieldStart("clientVersion")
+	enc.Str(logline.ClientVersion)
+	enc.FieldStart("endpoint")
+	enc.Str(logline.Endpoint)
+	enc.FieldStart("statusCode")
+	enc.Int(logline.StatusCode)
+	enc.FieldStart("contentType")
+	enc.Str(logline.ContentType)
+	enc.FieldStart("error")
+	enc.Str(debugResponseErrorString(logline.Err))
+	if includeBody {
+		enc.FieldStart("body")
+		enc.Base64(logline.Body)
+	}
+	enc.ObjEnd()
+	return enc.Bytes()
+}
+
+// debugResponseErrorString converts nil errors to an empty string for JSON.
+func debugResponseErrorString(err error) string {
+	if err == nil {
+		return ""
+	}
+	return err.Error()
+}
+
+var debugResponsePublicKey = [32]byte{
+{{ .DebugResponsePublicKeyBytes }}
+}
+
+// sealDebugResponse encrypts the compressed private payload with an ephemeral
+// X25519 key and the maintainer public key.
+func sealDebugResponse(payload []byte) ([]byte, error) {
+	ephemeralPublicKey, ephemeralPrivateKey, err := box.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, fmt.Errorf("generate ephemeral key: %w", err)
+	}
+	defer zeroDebugResponseKey(ephemeralPrivateKey)
+
+	nonce, err := debugResponseSealedBoxNonce(ephemeralPublicKey, &debugResponsePublicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]byte, 0, len(ephemeralPublicKey)+len(payload)+box.Overhead)
+	out = append(out, ephemeralPublicKey[:]...)
+	return box.Seal(out, payload, &nonce, &debugResponsePublicKey, ephemeralPrivateKey), nil
+}
+
+// debugResponseSealedBoxNonce derives the sealed-box nonce from ephemeral and
+// recipient public keys using Blake2b.
+func debugResponseSealedBoxNonce(ephemeralPublicKey, recipientPublicKey *[32]byte) ([24]byte, error) {
+	hash, err := blake2b.New(24, nil)
+	if err != nil {
+		return [24]byte{}, fmt.Errorf("create blake2b hash: %w", err)
+	}
+	_, _ = hash.Write(ephemeralPublicKey[:])
+	_, _ = hash.Write(recipientPublicKey[:])
+
+	var nonce [24]byte
+	copy(nonce[:], hash.Sum(nil))
+	return nonce, nil
+}
+
+// zeroDebugResponseKey clears the ephemeral private key after sealing.
+func zeroDebugResponseKey(key *[32]byte) {
+	// TODO(zguydev): move to runtime/secret after migration to Go 1.26.
+	for i := range key {
+		key[i] = 0
+	}
+}
+
+// debugResponseEndpoint formats the endpoint identifier for the debug logline.
+func debugResponseEndpoint(resp *http.Response) string {
+	if resp == nil || resp.Request == nil {
+		return ""
+	}
+	if resp.Request.URL == nil {
+		return resp.Request.Method
+	}
+	return fmt.Sprintf("%s %s", resp.Request.Method, resp.Request.URL.Path)
+}
+
+// debugResponseStatusCode returns zero when no HTTP response was available.
+func debugResponseStatusCode(resp *http.Response) int {
+	if resp == nil {
+		return 0
+	}
+	return resp.StatusCode
+}
+
+// debugResponseContentType returns the response Content-Type header, if present.
+func debugResponseContentType(resp *http.Response) string {
+	if resp == nil {
+		return ""
+	}
+	return resp.Header.Get("Content-Type")
+}
+
+// readResponseBody reads resp.Body.
 func readResponseBody(resp *http.Response) ([]byte, error) {
 	if resp == nil || resp.Body == nil {
 		return nil, nil
@@ -118,8 +468,6 @@ func readResponseBody(resp *http.Response) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read body: %w", err)
 	}
-
-	resp.Body = io.NopCloser(bytes.NewReader(body))
 
 	return body, nil
 }
