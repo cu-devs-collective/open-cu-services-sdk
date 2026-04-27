@@ -23,6 +23,7 @@ list_langs() {
         [[ -d "$d" ]] || continue
         local lang
         lang="$(basename "$d")"
+        [[ "$lang" != _* ]] || continue
         [[ -f "${d}/gen-sdk-${lang}.sh" ]] || continue
         found=1
         echo "  - ${lang}"
@@ -58,6 +59,7 @@ main() {
 
     local lang="$1"
     shift || true
+    [[ "$lang" != _* ]] || die "'${lang}' is treated as special directory and is not supported for generation"
 
     local -a passthru=()
     if [[ "${1:-}" == "--" ]]; then
