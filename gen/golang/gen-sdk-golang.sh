@@ -18,6 +18,7 @@ VERSION_MANIFEST="${ROOT_DIR}/gen/golang/version/go.mod"
 SPEC_BASE="${ROOT_DIR}/spec"
 OUT_BASE="${ROOT_DIR}/golang"
 TEMPLATE_DIR="${ROOT_DIR}/gen/golang/templates"
+PUBLIC_KEY_HEX_FILE="${ROOT_DIR}/gen/_common/cert/2026-04-26/pub.hex"
 
 MODULE_BASE="github.com/cu-devs-collective/open-cu-services-sdk/golang"
 
@@ -71,6 +72,30 @@ render_template() {
     gomplate -f "$tmpl_path" -o "$out_path" -c ".=stdin:///data.yaml"
 }
 
+format_go_byte_array_literal() {
+    local hex="$1"
+    hex="${hex//$'\n'/}"
+    hex="${hex//$'\r'/}"
+    hex="${hex//[[:space:]]/}"
+
+    [[ ${#hex} -eq 64 ]] || die "Expected 32-byte hex key, got ${#hex} hex chars"
+
+    local i
+    local line=""
+    for ((i = 0; i < 64; i += 2)); do
+        line+="0x${hex:i:2}"
+        if (( i < 62 )); then
+            line+=", "
+        else
+            line+=","
+        fi
+        if (( (i / 2 + 1) % 8 == 0 )); then
+            printf "    %s\n" "$line"
+            line=""
+        fi
+    done
+}
+
 write_gen_file() {
     local out_dir="$1"
     local pkg="$2"
@@ -112,8 +137,14 @@ EOF
 
     local debug_response_gen_file="${out_dir}/debug_response_gen.go"
     local debug_response_gen_file_tmpl="${TEMPLATE_DIR}/common/debug_response_gen.go.tmpl"
+    [[ -f "$PUBLIC_KEY_HEX_FILE" ]] \
+        || die "Public key not found: $PUBLIC_KEY_HEX_FILE"
+    local public_key_bytes
+    public_key_bytes="$(format_go_byte_array_literal "$(cat "$PUBLIC_KEY_HEX_FILE")")"
     render_template "$debug_response_gen_file_tmpl" "$debug_response_gen_file" <<EOF
 Package: $(yaml_escape "$pkg")
+DebugResponsePublicKeyBytes: |
+$(printf "%s\n" "$public_key_bytes" | sed 's/^/  /')
 EOF
 
     local default_gen_file="${out_dir}/default_gen.go"
@@ -121,6 +152,9 @@ EOF
     render_template "$default_gen_file_tmpl" "$default_gen_file" <<EOF
 Package: $(yaml_escape "$pkg")
 EOF
+
+    info "Patching ${pkg} client debug response wrappers"
+    goclientpatcher --dir "$out_dir"
 }
 
 extract_ogen_version_from_file() {
@@ -188,14 +222,15 @@ sdk_generate() {
         "${EXTRA_FILES_WRITER}" "$OUT_DIR" "$PKG_NAME" "$PKG_DESC"
     fi
 
-    # 6) go mod tidy
-    (cd "$OUT_DIR" && go mod tidy)
+    # 6) go mod tidy && go fmt
+    (cd "$OUT_DIR" && go mod tidy && go fmt ./...)
 }
 
 ensure_tooling() {
     command -v go >/dev/null 2>&1 || die "Go is required: https://go.dev/doc/install"
     command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
     command -v parseversions >/dev/null 2>&1 || die "parseversions is required, run make install-tools-generate"
+    command -v goclientpatcher >/dev/null 2>&1 || die "goclientpatcher is required, run make install-tools-generate"
 }
 
 main() {
