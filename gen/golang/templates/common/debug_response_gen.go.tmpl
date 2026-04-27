@@ -40,9 +40,9 @@ type DebugResponseLogline struct {
 }
 
 type debugResponserConfig struct {
-	showNotice            bool
-	includePrivateLogline bool
-	includePublicLogline  bool
+	showNotice               bool
+	includeMaintainerLogline bool
+	includeDiagnosticLog     bool
 }
 
 type DebugResponseOption func(*debugResponserConfig)
@@ -83,26 +83,32 @@ func WithDebugResponseNotice() DebugResponseOption {
 	}
 }
 
-// WithPrivateDebugResponseLogline enables private encrypted loglines meant
-// for maintainers in debug response errors.
-func WithPrivateDebugResponseLogline() DebugResponseOption {
+// WithMaintainerDebugResponseLogline enables encrypted loglines in debug
+// response errors. These loglines are intended for maintainers and are safe
+// to share in issue reports.
+//
+// See [Reporting Issues for Codegen Clients] for more information.
+//
+// [Reporting Issues for Codegen Clients]: https://github.com/cu-devs-collective/open-cu-services-sdk#reporting-issues-for-codegen-clients
+func WithMaintainerDebugResponseLogline() DebugResponseOption {
 	return func(r *debugResponserConfig) {
-		r.includePrivateLogline = true
+		r.includeMaintainerLogline = true
 	}
 }
 
-// WithPublicDebugResponseLogline enables public loglines meant
-// for SDK users in debug response errors.
-func WithPublicDebugResponseLogline() DebugResponseOption {
+// WithDiagnosticDebugResponseLogline enables diagnostic loglines in debug
+// response errors. These logs may contain sensitive data and are intended
+// for developers using the SDK to debug issues locally.
+func WithDiagnosticDebugResponseLogline() DebugResponseOption {
 	return func(r *debugResponserConfig) {
-		r.includePublicLogline = true
+		r.includeDiagnosticLog = true
 	}
 }
 
 func DefaultDebugResponseOptions() []DebugResponseOption {
 	return []DebugResponseOption{
 		WithDebugResponseNotice(),
-		WithPrivateDebugResponseLogline(),
+		WithMaintainerDebugResponseLogline(),
 	}
 }
 
@@ -249,7 +255,7 @@ func (e *DebugResponseLoglineError) Error() string {
 
 	logline := e.copy()
 
-	if e.responserCfg.includePrivateLogline {
+	if e.responserCfg.includeMaintainerLogline {
 		if e.responserCfg.showNotice {
 			parts = append(parts, debugResponseNotice, "\n")
 		}
@@ -261,12 +267,12 @@ func (e *DebugResponseLoglineError) Error() string {
 			parts = append(parts, private)
 		}
 	}
-	if e.responserCfg.includePublicLogline {
-		if e.responserCfg.includePrivateLogline {
+	if e.responserCfg.includeDiagnosticLog {
+		if e.responserCfg.includeMaintainerLogline {
 			parts = append(parts, "\n")
 		}
 
-		parts = append(parts, fmt.Sprintf("Debug response logline for developer (endpoint %q):", logline.Endpoint))
+		parts = append(parts, fmt.Sprintf("Debug response logline for local debug (endpoint %q):", logline.Endpoint))
 		public, err := e.publicLoglineValue()
 		if err != nil {
 			parts = append(parts, fmt.Sprintf("debug logline build error: %v.", err))
@@ -386,7 +392,7 @@ func debugResponseErrorString(err error) string {
 }
 
 var debugResponsePublicKey = [32]byte{
-{{ .DebugResponsePublicKeyBytes }}
+{{ .DebugResponsePublicKeyBytes -}}
 }
 
 // sealDebugResponse encrypts the compressed private payload with an ephemeral
