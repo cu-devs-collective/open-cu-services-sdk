@@ -16,13 +16,14 @@ func main() {
 	}
 
 	var statusCode int
-	res, err := lmsapi.Call(func(scope *lmsapi.DebugResponse) (lmsapi.CurrentStudentRes, error) {
-		return client.CurrentStudent(context.Background(),
-			scope.RequestOptionWith(func(resp *http.Response) error {
-				statusCode = resp.StatusCode
-				return nil
-			}))
-	})
+	res, err := client.CurrentStudent(context.Background(),
+		// This option is used here only to capture the raw HTTP response status code.
+		// It is made here for parity with examples in other languages.
+		// This is usually unnecessary, as the response is already strongly typed.
+		lmsapi.WithEditResponse(func(resp *http.Response) error {
+			statusCode = resp.StatusCode
+			return nil
+		}))
 	if err != nil {
 		log.Fatalf("client.CurrentStudent error: %v", err)
 	}
