@@ -35,6 +35,8 @@ load_versions() {
 
     [[ -n "$OGEN_VERSION" ]] || die "Missing VERSION_MANIFEST"
     [[ -n "$GO_MOD_VERSION" ]] || die "Missing GO_MOD_VERSION"
+    [[ -n "$KLAUSPOST_COMPRESS_VERSION" ]] || die "Missing KLAUSPOST_COMPRESS_VERSION"
+    [[ -n "$X_CRYPTO_VERSION" ]] || die "Missing X_CRYPTO_VERSION"
 }
 
 resolve_spec() {
@@ -183,8 +185,11 @@ sdk_generate() {
         info "go.mod exists, skipping go mod init"
     fi
 
-    # 2) go get ogen@version
-    (cd "$OUT_DIR" && go get "github.com/ogen-go/ogen@${OGEN_VERSION}")
+    # 2) go get dependencies pinned by VERSION_MANIFEST
+    (cd "$OUT_DIR" && go get \
+        "github.com/ogen-go/ogen@${OGEN_VERSION}" \
+        "github.com/klauspost/compress@${KLAUSPOST_COMPRESS_VERSION}" \
+        "golang.org/x/crypto@${X_CRYPTO_VERSION}")
 
     # 3) write/update gen.go
     local gen_file="${OUT_DIR}/gen.go"

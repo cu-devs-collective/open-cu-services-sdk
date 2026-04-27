@@ -26,7 +26,9 @@ func loadGoValues(manifestPath string) (map[string]string, error) {
 	values := map[string]string{
 		"GO_MOD_VERSION": doc.Go.Version,
 
-		"OGEN_VERSION": requirements["github.com/ogen-go/ogen"],
+		"KLAUSPOST_COMPRESS_VERSION": requirements["github.com/klauspost/compress"],
+		"OGEN_VERSION":               requirements["github.com/ogen-go/ogen"],
+		"X_CRYPTO_VERSION":           requirements["golang.org/x/crypto"],
 	}
 
 	return values, requireKeys(manifestPath, values)
