@@ -4,7 +4,7 @@ description: Open CU Services Dart SDK examples
 version: 0.0.0
 
 environment:
-  sdk: "^3.8.0"
+  sdk: "^3.11.0"
 
 dependencies:
   http: ^1.6.0
