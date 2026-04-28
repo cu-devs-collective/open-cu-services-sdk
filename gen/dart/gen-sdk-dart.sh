@@ -34,7 +34,6 @@ load_versions() {
         || die "Failed to parse versions from $VERSION_MANIFEST"
     eval "$versions_data"
 
-    PACKAGE_VERSION="${PACKAGE_VERSION:-0.0.0}"
     [[ -n "$SWAGGER_DART_CODE_GENERATOR_VERSION" ]] || die "Missing SWAGGER_DART_CODE_GENERATOR_VERSION"
     [[ -n "$BUILD_RUNNER_VERSION" ]] || die "Missing BUILD_RUNNER_VERSION"
     [[ -n "$CHOPPER_GENERATOR_VERSION" ]] || die "Missing CHOPPER_GENERATOR_VERSION"
@@ -191,6 +190,7 @@ sdk_generate() {
     info "  spec : $SPEC_PATH"
     info "  out  : $OUT_DIR"
     info "  pkg  : $PACKAGE_NAME"
+    info "  ver  : $PACKAGE_VERSION"
     info "  swagger_dart_code_generator: $SWAGGER_DART_CODE_GENERATOR_VERSION"
 
     mkdir -p "$OUT_DIR"
@@ -239,6 +239,8 @@ ensure_tooling() {
 main() {
     ensure_tooling
     load_versions
+
+    PACKAGE_VERSION="${PACKAGE_VERSION:-0.0.0}"
 
     local key
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do
