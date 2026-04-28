@@ -94,6 +94,7 @@ write_pyproject_file() {
     local tmpl="${TEMPLATE_DIR}/common/pyproject.toml.tmpl"
     render_template "$tmpl" "$file" <<EOF
 ProjectName: $(yaml_escape "$PROJECT_NAME")
+PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
 PythonVersion: $(yaml_escape "$PYTHON_VERSION")
 HttpxVersion: $(yaml_escape "$HTTPX_VERSION")
@@ -135,6 +136,7 @@ sdk_generate() {
     info "  out  : $OUT_DIR"
     info "  dist : $PROJECT_NAME"
     info "  pkg  : $PACKAGE_IMPORT_NAME"
+    info "  ver  : $PACKAGE_VERSION"
     info "  openapi-python-client: $OPENAPI_PYTHON_CLIENT_VERSION"
 
     mkdir -p "$OUT_DIR"
@@ -174,6 +176,8 @@ ensure_tooling() {
 main() {
     ensure_tooling
     load_versions
+
+    PACKAGE_VERSION="${PACKAGE_VERSION:-0.0.0}"
 
     local key
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do

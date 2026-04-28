@@ -78,6 +78,7 @@ write_package_json_file() {
     local tmpl="${TEMPLATE_DIR}/common/package.json.tmpl"
     render_template "$tmpl" "$file" <<EOF
 PackageName: $(yaml_escape "$PACKAGE_NAME")
+PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
 OpenapiTsVersion: $(yaml_escape "$OPENAPI_TS_VERSION")
 TypescriptVersion: $(yaml_escape "$TYPESCRIPT_VERSION")
@@ -144,6 +145,7 @@ sdk_generate() {
     info "  spec : $SPEC_PATH"
     info "  out  : $OUT_DIR"
     info "  pkg  : $PACKAGE_NAME"
+    info "  ver  : $PACKAGE_VERSION"
     info "  openapi-ts: $OPENAPI_TS_VERSION"
 
     mkdir -p "$OUT_DIR"
@@ -183,6 +185,8 @@ ensure_tooling() {
 main() {
     ensure_tooling
     load_versions
+
+    PACKAGE_VERSION="${PACKAGE_VERSION:-0.0.0}"
 
     local key
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do

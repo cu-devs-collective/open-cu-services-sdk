@@ -1,6 +1,6 @@
 {{- /* Template pubspec.yaml for generated Dart SDKs. */ -}}
 name: {{ .PackageName }}
-version: {{ or .PackageVersion "0.0.0" }} {{- /* The real version is set on release. */}}
+version: {{ printf "%q" .PackageVersion }} {{- /* The real version is set on release. */}}
 publish_to: none
 description: {{ .PackageDescription }}
 homepage: https://github.com/cu-devs-collective/open-cu-services-sdk
