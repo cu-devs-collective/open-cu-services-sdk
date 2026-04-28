@@ -48,9 +48,9 @@ Future<int> main() async {
     print("currentStudent response:");
     print(const JsonEncoder.withIndent("  ").convert(body.toJson()));
     return 0;
-  } catch (error, stackTrace) {
+  } catch (error) {
     stderr.writeln("client.currentStudent failed: $error");
-    Error.throwWithStackTrace(error, stackTrace);
+    return 1;
   } finally {
     httpClient.close();
   }
