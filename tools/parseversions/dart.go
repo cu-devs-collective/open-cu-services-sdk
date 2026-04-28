@@ -17,10 +17,12 @@ func loadDartValues(manifestPath string) (map[string]string, error) {
 	values := map[string]string{
 		"DART_SDK_VERSION": doc.Environment.SDK,
 
+		"ARCHIVE_VERSION":         doc.Dependencies["archive"],
 		"CHOPPER_VERSION":         doc.Dependencies["chopper"],
 		"COLLECTION_VERSION":      doc.Dependencies["collection"],
 		"HTTP_VERSION":            doc.Dependencies["http"],
 		"JSON_ANNOTATION_VERSION": doc.Dependencies["json_annotation"],
+		"SODIUM_VERSION":          doc.Dependencies["sodium"],
 
 		"SWAGGER_DART_CODE_GENERATOR_VERSION": doc.DevDependencies["swagger_dart_code_generator"],
 		"BUILD_RUNNER_VERSION":                doc.DevDependencies["build_runner"],

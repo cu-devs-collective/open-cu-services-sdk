@@ -255,11 +255,11 @@ func (e *DebugResponseLoglineError) Error() string {
 
 	logline := e.copy()
 
+	if e.responserCfg.showNotice {
+		parts = append(parts, debugResponseNotice, "\n")
+	}
 	if e.responserCfg.includeMaintainerLogline {
-		if e.responserCfg.showNotice {
-			parts = append(parts, debugResponseNotice, "\n")
-		}
-		parts = append(parts, fmt.Sprintf("Debug response logline for maintainers (endpoint %q):", logline.Endpoint))
+		parts = append(parts, fmt.Sprintf(" Debug response logline for maintainers (endpoint %q): ", logline.Endpoint))
 		private, err := e.privateLoglineValue()
 		if err != nil {
 			parts = append(parts, fmt.Sprintf("private debug logline build error: %v.", err))
@@ -272,7 +272,7 @@ func (e *DebugResponseLoglineError) Error() string {
 			parts = append(parts, "\n")
 		}
 
-		parts = append(parts, fmt.Sprintf("Debug response logline for local debug (endpoint %q):", logline.Endpoint))
+		parts = append(parts, fmt.Sprintf(" Debug response logline for local debug (endpoint %q): ", logline.Endpoint))
 		public, err := e.publicLoglineValue()
 		if err != nil {
 			parts = append(parts, fmt.Sprintf("debug logline build error: %v.", err))
@@ -281,7 +281,7 @@ func (e *DebugResponseLoglineError) Error() string {
 		}
 	}
 
-	return strings.Join(parts, " ")
+	return strings.Join(parts, "")
 }
 
 func (e *DebugResponseLoglineError) copy() DebugResponseLogline {

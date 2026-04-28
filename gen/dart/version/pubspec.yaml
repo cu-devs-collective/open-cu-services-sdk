@@ -3,13 +3,15 @@ version: 0.0.0
 publish_to: none
 
 environment:
-  sdk: "^3.8.0"
+  sdk: "^3.11.0"
 
 dependencies:
+  archive: ^4.0.9
   chopper: ^8.5.0
   collection: "^1.19.1"
   http: "^1.6.0"
   json_annotation: "^4.11.0"
+  sodium: ^4.0.2
 
 dev_dependencies:
   swagger_dart_code_generator: "4.1.1"
