@@ -18,6 +18,7 @@ SPEC_BASE="${ROOT_DIR}/spec"
 OUT_BASE="${ROOT_DIR}/dart"
 TEMPLATE_DIR="${ROOT_DIR}/gen/dart/templates"
 FIXUPS_SCRIPT="${ROOT_DIR}/gen/dart/fixups.sh"
+PUBLIC_KEY_HEX_FILE="${ROOT_DIR}/gen/_common/cert/2026-04-26/pub.hex"
 
 # shellcheck source=gen/dart/fixups.sh
 source "${FIXUPS_SCRIPT}"
@@ -33,15 +34,18 @@ load_versions() {
         || die "Failed to parse versions from $VERSION_MANIFEST"
     eval "$versions_data"
 
+    PACKAGE_VERSION="${PACKAGE_VERSION:-0.0.0}"
     [[ -n "$SWAGGER_DART_CODE_GENERATOR_VERSION" ]] || die "Missing SWAGGER_DART_CODE_GENERATOR_VERSION"
     [[ -n "$BUILD_RUNNER_VERSION" ]] || die "Missing BUILD_RUNNER_VERSION"
     [[ -n "$CHOPPER_GENERATOR_VERSION" ]] || die "Missing CHOPPER_GENERATOR_VERSION"
     [[ -n "$JSON_SERIALIZABLE_VERSION" ]] || die "Missing JSON_SERIALIZABLE_VERSION"
     [[ -n "$DART_SDK_VERSION" ]] || die "Missing DART_SDK_VERSION"
+    [[ -n "$ARCHIVE_VERSION" ]] || die "Missing ARCHIVE_VERSION"
     [[ -n "$CHOPPER_VERSION" ]] || die "Missing CHOPPER_VERSION"
     [[ -n "$COLLECTION_VERSION" ]] || die "Missing COLLECTION_VERSION"
     [[ -n "$HTTP_VERSION" ]] || die "Missing HTTP_VERSION"
     [[ -n "$JSON_ANNOTATION_VERSION" ]] || die "Missing JSON_ANNOTATION_VERSION"
+    [[ -n "$SODIUM_VERSION" ]] || die "Missing SODIUM_VERSION"
 }
 
 resolve_spec() {
@@ -91,12 +95,15 @@ write_pubspec_file() {
     local tmpl="${TEMPLATE_DIR}/common/pubspec.yaml.tmpl"
     render_template "$tmpl" "$file" <<EOF
 PackageName: $(yaml_escape "$PACKAGE_NAME")
+PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
 DartSdkVersion: $(yaml_escape "$DART_SDK_VERSION")
+ArchiveVersion: $(yaml_escape "$ARCHIVE_VERSION")
 ChopperVersion: $(yaml_escape "$CHOPPER_VERSION")
 CollectionVersion: $(yaml_escape "$COLLECTION_VERSION")
 HttpVersion: $(yaml_escape "$HTTP_VERSION")
 JsonAnnotationVersion: $(yaml_escape "$JSON_ANNOTATION_VERSION")
+SodiumVersion: $(yaml_escape "$SODIUM_VERSION")
 BuildRunnerVersion: $(yaml_escape "$BUILD_RUNNER_VERSION")
 ChopperGeneratorVersion: $(yaml_escape "$CHOPPER_GENERATOR_VERSION")
 JsonSerializableVersion: $(yaml_escape "$JSON_SERIALIZABLE_VERSION")
@@ -139,8 +146,10 @@ write_library_file() {
 
     local file="${out_dir}/lib/${LIBRARY_FILE}"
     local tmpl="${TEMPLATE_DIR}/common/library.dart.tmpl"
+    local debug_response_library_path="debug_response.dart"
     render_template "$tmpl" "$file" <<EOF
 GeneratedLibraryPath: $(yaml_escape "$GENERATED_REL_PATH")
+DebugResponseLibraryPath: $(yaml_escape "$debug_response_library_path")
 EOF
 }
 
@@ -154,11 +163,23 @@ copy_swagger_input() {
 write_lmsapi_files() {
     local out_dir="$1"
 
+    [[ -f "$PUBLIC_KEY_HEX_FILE" ]] \
+        || die "Public key not found: $PUBLIC_KEY_HEX_FILE"
+    local public_key_hex
+    public_key_hex="$(tr -d '[:space:]' < "$PUBLIC_KEY_HEX_FILE")"
+
+    local debug_response_file="${out_dir}/lib/debug_response.dart"
+    local debug_response_tmpl="${TEMPLATE_DIR}/common/debug_response.dart.tmpl"
+    render_template "$debug_response_tmpl" "$debug_response_file" <<EOF
+DebugResponsePublicKeyHex: $(yaml_escape "$public_key_hex")
+EOF
+
     local defaults_file="${out_dir}/lib/defaults.dart"
     local defaults_tmpl="${TEMPLATE_DIR}/lmsapi/defaults.dart.tmpl"
     render_template "$defaults_tmpl" "$defaults_file" <<EOF
 BaseURL: $(yaml_escape "$BASE_URL")
 UserAgent: $(yaml_escape "$USER_AGENT")
+PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
 $(emit_defaults_template_data "$SDK_ID")
 EOF
 }
@@ -182,27 +203,30 @@ sdk_generate() {
     write_library_file "$OUT_DIR"
     copy_swagger_input "$OUT_DIR"
 
-    # 2) run precodegen fixups
+    # 2) write extra package-specific files
+    if [[ -n "${EXTRA_FILES_WRITER:-}" ]]; then
+        info "Writing extra files via ${EXTRA_FILES_WRITER}"
+        "${EXTRA_FILES_WRITER}" "$OUT_DIR"
+    fi
+
+    # 3) run precodegen fixups
     run_precodegen_fixups "$SDK_ID" "$SWAGGER_INPUT_PATH"
 
-    # 3) install pub dependencies
+    # 4) install pub dependencies
     info "Installing Dart dependencies"
     (cd "$OUT_DIR" && dart pub get)
 
-    # 4) run swagger_dart_code_generator generation
+    # 5) run swagger_dart_code_generator generation
     info "Cleaning previous build_runner state"
     (cd "$OUT_DIR" && dart run build_runner clean)
     info "Running swagger_dart_code_generator generation"
     (cd "$OUT_DIR" && dart run build_runner build --delete-conflicting-outputs)
 
-    # 5) run postcodegen fixups
+    # 6) run postcodegen fixups
     run_postcodegen_fixups "$SDK_ID" "$OUT_DIR"
 
-    # 6) write extra package-specific files
-    if [[ -n "${EXTRA_FILES_WRITER:-}" ]]; then
-        info "Writing extra files via ${EXTRA_FILES_WRITER}"
-        "${EXTRA_FILES_WRITER}" "$OUT_DIR"
-    fi
+    # 7) dart format
+    (cd "$OUT_DIR" && dart format . >/dev/null)
 }
 
 ensure_tooling() {
