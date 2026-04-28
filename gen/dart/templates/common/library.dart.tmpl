@@ -7,3 +7,6 @@ library;
 
 export {{ printf "%q" .GeneratedLibraryPath }};
 export "defaults.dart";
+{{- if .DebugResponseLibraryPath }}
+export {{ printf "%q" .DebugResponseLibraryPath }};
+{{- end }}
