@@ -6,8 +6,8 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "0.94.4",
-    "typescript": "6.0.2"
+    "@hey-api/openapi-ts": "0.96.1",
+    "typescript": "6.0.3"
   },
   "packageManager": "pnpm@10.31.0"
 }
