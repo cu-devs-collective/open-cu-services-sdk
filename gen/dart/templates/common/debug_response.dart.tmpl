@@ -81,19 +81,19 @@ class DebugResponseErrorConverter implements ErrorConverter {
 
   @override
   FutureOr<Response> convertError<BodyType, InnerType>(Response response) async {
-    final converted = await delegate.convertError<BodyType, InnerType>(
-      response,
-    );
-    final error = converted.error ?? converted.body;
-    if (error == null) {
-      return converted;
-    }
+    try {
+      return await delegate.convertError<BodyType, InnerType>(response);
+    } catch (error, stackTrace) {
+      if (!isResponseSpecValidationError(error)) {
+        Error.throwWithStackTrace(error, stackTrace);
+      }
 
-    final decorated = await debugResponses.decorate(
-      response: response,
-      error: error,
-    );
-    return converted.copyWith(bodyError: decorated);
+      final decorated = await debugResponses.decorate(
+        response: response,
+        error: error,
+      );
+      Error.throwWithStackTrace(decorated, stackTrace);
+    }
   }
 }
 
@@ -118,6 +118,10 @@ class DebugResponseConverter implements Converter {
     try {
       return await delegate.convertResponse<BodyType, InnerType>(response);
     } catch (error, stackTrace) {
+      if (!isResponseSpecValidationError(error)) {
+        Error.throwWithStackTrace(error, stackTrace);
+      }
+
       final decorated = await debugResponses.decorate(
         response: response,
         error: error,
@@ -223,6 +227,8 @@ class DebugResponseError implements Exception {
   final Object? maintainerLoglineError;
   final String? diagnosticLogline;
 
+  bool get isSpecValidationError => isResponseSpecValidationError(error);
+
   Object? toJson() {
     try {
       final dynamic value = error;
@@ -266,6 +272,19 @@ class DebugResponseError implements Exception {
     }
     return "${error.toString()}\n$renderedDebugResponse";
   }
+}
+
+bool isResponseSpecValidationError(Object error) {
+  if (error is DebugResponseError) {
+    return error.isSpecValidationError;
+  }
+  if (error is TypeError || error is FormatException) {
+    return true;
+  }
+  if (error is String) {
+    return error.startsWith("Could not find factory for type ");
+  }
+  return false;
 }
 
 String _debugResponseEndpoint(Response response) {
