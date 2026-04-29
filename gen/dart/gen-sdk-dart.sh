@@ -26,6 +26,53 @@ source "${FIXUPS_SCRIPT}"
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
 
+usage() {
+    cat >&2 <<EOF
+Usage:
+  $(basename "$0") [--sdk-id <id> ...]
+
+Generate Dart SDKs.
+
+Options:
+  --sdk-id <id>       Run SDK generation only for specified SDK ID. Argument can be repeated.
+  -h, --help          Show this help.
+
+Default SDK IDs:
+  ${SPEC_KEYS_TO_GENERATE[*]}
+EOF
+}
+
+parse_args() {
+    local -a sdk_ids=()
+
+    while (($#)); do
+        case "$1" in
+            --sdk-id)
+                shift || true
+                [[ -n "${1:-}" && "${1:-}" != -* ]] || die "--sdk-id requires a value"
+                sdk_ids+=("$1")
+                ;;
+            --sdk-id=*)
+                local sdk_id="${1#--sdk-id=}"
+                [[ -n "$sdk_id" && "$sdk_id" != -* ]] || die "--sdk-id requires a value"
+                sdk_ids+=("$sdk_id")
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                die "Unknown argument: $1"
+                ;;
+        esac
+        shift || true
+    done
+
+    if (( ${#sdk_ids[@]} > 0 )); then
+        SPEC_KEYS_TO_GENERATE=("${sdk_ids[@]}")
+    fi
+}
+
 load_versions() {
     [[ -f "$VERSION_MANIFEST" ]] || die "Version manifest not found: $VERSION_MANIFEST"
 
@@ -266,6 +313,7 @@ ensure_tooling() {
 }
 
 main() {
+    parse_args "$@"
     ensure_tooling
     load_versions
 

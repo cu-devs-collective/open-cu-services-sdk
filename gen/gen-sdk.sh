@@ -8,7 +8,7 @@ set -euo pipefail
 #
 # Usage:
 #   gen-sdk.sh --help
-#   gen-sdk.sh <lang> [-- <args...>]
+#   gen-sdk.sh <lang> [-- <generator-args...>]
 #------------------------------------------------------------------------------
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -37,10 +37,13 @@ usage() {
     cat >&2 <<EOF
 Usage:
   $(basename "$0") --help
-  $(basename "$0") <lang> [-- <args...>]
+  $(basename "$0") <lang> [-- <generator-args...>]
 
 Orchestrator for SDK generation scripts for languages.
 Args are being forwarded to selected script.
+
+Common generator args:
+  --sdk-id <id>       Run SDK generation only for specified SDK ID. Argument can be repeated.
 
 Available languages:
 $(list_langs)
