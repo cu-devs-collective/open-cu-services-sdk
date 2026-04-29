@@ -11,6 +11,8 @@ from .client import AuthenticatedClient
 
 DEFAULT_BASE_URL = {{ printf "%q" .BaseURL }}
 DEFAULT_USER_AGENT = {{ printf "%q" .UserAgent }}
+SDK_VERSION = {{ printf "%q" .PackageVersion }}
+SPEC_VERSION = {{ printf "%q" .SpecVersion }}
 BFF_COOKIE_NAME = "bff.cookie"
 
 
