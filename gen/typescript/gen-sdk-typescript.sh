@@ -63,6 +63,15 @@ yaml_escape() {
     printf "\"%s\"" "$s"
 }
 
+read_spec_version() {
+    local spec_path="$1"
+    local version
+    version="$(yq -r '.info.version' "$spec_path")"
+    [[ -n "$version" && "$version" != "null" ]] \
+        || die "Missing info.version in spec: $spec_path"
+    printf "%s" "$version"
+}
+
 render_template() {
     local tmpl_path="$1"
     local out_path="$2"
@@ -79,6 +88,8 @@ write_package_json_file() {
     render_template "$tmpl" "$file" <<EOF
 PackageName: $(yaml_escape "$PACKAGE_NAME")
 PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
+SpecVersion: $(yaml_escape "$SPEC_VERSION")
+SpecRef: $(yaml_escape "spec/${SDK_ID}/${SPEC_VERSION}")
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
 OpenapiTsVersion: $(yaml_escape "$OPENAPI_TS_VERSION")
 TypescriptVersion: $(yaml_escape "$TYPESCRIPT_VERSION")
@@ -127,6 +138,8 @@ write_lmsapi_files() {
 BaseURL: $(yaml_escape "$BASE_URL")
 UserAgent: $(yaml_escape "$USER_AGENT")
 ClientFactoryName: $(yaml_escape "$CLIENT_FACTORY_NAME")
+PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
+SpecVersion: $(yaml_escape "$SPEC_VERSION")
 EOF
 }
 
@@ -145,7 +158,8 @@ sdk_generate() {
     info "  spec : $SPEC_PATH"
     info "  out  : $OUT_DIR"
     info "  pkg  : $PACKAGE_NAME"
-    info "  ver  : $PACKAGE_VERSION"
+    info "  sdk  : $PACKAGE_VERSION"
+    info "  spec : $SPEC_VERSION"
     info "  openapi-ts: $OPENAPI_TS_VERSION"
 
     mkdir -p "$OUT_DIR"
@@ -178,6 +192,7 @@ sdk_generate() {
 ensure_tooling() {
     command -v node >/dev/null 2>&1 || die "Node.js is required"
     command -v pnpm >/dev/null 2>&1 || die "pnpm is required"
+    command -v yq >/dev/null 2>&1 || die "yq is required, run make install-tools-generate"
     command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
     command -v parseversions >/dev/null 2>&1 || die "parseversions is required, run make install-tools-generate"
 }
@@ -192,6 +207,7 @@ main() {
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do
         resolve_spec "$key"
         [[ -f "$SPEC_PATH" ]] || die "Spec not found for '$key': $SPEC_PATH"
+        SPEC_VERSION="$(read_spec_version "$SPEC_PATH")"
         sdk_generate "$key"
     done
 }

@@ -7,6 +7,8 @@ type ClientConfig = Parameters<typeof client.setConfig>[0];
 
 export const DEFAULT_BASE_URL = {{ printf "%q" .BaseURL }};
 export const DEFAULT_USER_AGENT = {{ printf "%q" .UserAgent }};
+export const SDK_VERSION = {{ printf "%q" .PackageVersion }};
+export const SPEC_VERSION = {{ printf "%q" .SpecVersion }};
 
 const isNodeRuntime = (() => {
   if (typeof globalThis !== "object" || !("process" in globalThis)) {
