@@ -12,7 +12,8 @@ import 'generated/lms_api.swagger.dart';
 
 const String defaultBaseUrl = {{ printf "%q" .BaseURL }};
 const String defaultUserAgent = {{ printf "%q" .UserAgent }};
-const String clientVersion = {{ printf "%q" .PackageVersion }};
+const String sdkVersion = {{ printf "%q" .PackageVersion }};
+const String specVersion = {{ printf "%q" .SpecVersion }};
 const String bffCookieName = "bff.cookie";
 const bool isDartVmRuntime =
     bool.fromEnvironment("dart.library.io") &&
@@ -58,7 +59,8 @@ LmsApi createLmsApiClient({
   final resolvedConverter = converter ?? $JsonSerializableConverter();
   final resolvedDebugResponses = DebugResponses(
     client: defaultUserAgent,
-    clientVersion: clientVersion,
+    sdkVersion: sdkVersion,
+    specVersion: specVersion,
     options: debugResponseOptions ?? DebugResponseOptions.defaults,
   );
   final resolvedInterceptors = <Interceptor>[
