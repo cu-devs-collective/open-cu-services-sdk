@@ -25,8 +25,10 @@ const debugResponseNotice = "⚠️ See https://github.com/cu-devs-collective/op
 type DebugResponseLogline struct {
 	// Client identifies the client implementation.
 	Client string `json:"client"`
-	// ClientVersion is the version of the client SDK.
-	ClientVersion string `json:"clientVersion"`
+	// SDKVersion is the version of the client SDK.
+	SDKVersion string `json:"sdkVersion"`
+	// SpecVersion is the OpenAPI spec version this SDK was generated from.
+	SpecVersion string `json:"specVersion"`
 	// Endpoint is the endpoint that was called.
 	Endpoint string `json:"endpoint"`
 	// StatusCode is the HTTP response status code, if a response was received.
@@ -223,7 +225,8 @@ func (r *DebugResponse) decorate(err error, responserCfg *debugResponserConfig) 
 	}
 
 	logline.Client = DefaultUserAgent
-	logline.ClientVersion = ClientVersion()
+	logline.SDKVersion = SDKVersion()
+	logline.SpecVersion = SpecVersion()
 	logline.Err = err
 
 	return errors.Join(err, &DebugResponseLoglineError{
@@ -365,8 +368,10 @@ func (e *DebugResponseLoglineError) marshalDebugResponseLogline(includeBody bool
 	enc.ObjStart()
 	enc.FieldStart("client")
 	enc.Str(logline.Client)
-	enc.FieldStart("clientVersion")
-	enc.Str(logline.ClientVersion)
+	enc.FieldStart("sdkVersion")
+	enc.Str(logline.SDKVersion)
+	enc.FieldStart("specVersion")
+	enc.Str(logline.SpecVersion)
 	enc.FieldStart("endpoint")
 	enc.Str(logline.Endpoint)
 	enc.FieldStart("statusCode")

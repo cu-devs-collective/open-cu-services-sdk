@@ -2,7 +2,7 @@
 name: {{ .PackageName }}
 version: {{ printf "%q" .PackageVersion }} {{- /* The real version is set on release. */}}
 publish_to: none
-description: {{ .PackageDescription }}
+description: {{ .PackageDescription }} (based on {{ .SpecRef }})
 homepage: https://github.com/cu-devs-collective/open-cu-services-sdk
 repository: https://github.com/cu-devs-collective/open-cu-services-sdk
 issue_tracker: https://github.com/cu-devs-collective/open-cu-services-sdk/issues

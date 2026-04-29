@@ -68,6 +68,15 @@ yaml_escape() {
     printf "\"%s\"" "$s"
 }
 
+read_spec_version() {
+    local spec_path="$1"
+    local version
+    version="$(yq -r '.info.version' "$spec_path")"
+    [[ -n "$version" && "$version" != "null" ]] \
+        || die "Missing info.version in spec: $spec_path"
+    printf "%s" "$version"
+}
+
 render_template() {
     local tmpl_path="$1"
     local out_path="$2"
@@ -95,6 +104,8 @@ write_pyproject_file() {
     render_template "$tmpl" "$file" <<EOF
 ProjectName: $(yaml_escape "$PROJECT_NAME")
 PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
+SpecVersion: $(yaml_escape "$SPEC_VERSION")
+SpecRef: $(yaml_escape "spec/${SDK_ID}/${SPEC_VERSION}")
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
 PythonVersion: $(yaml_escape "$PYTHON_VERSION")
 HttpxVersion: $(yaml_escape "$HTTPX_VERSION")
@@ -119,12 +130,17 @@ write_lmsapi_files() {
     render_template "$defaults_file_tmpl" "$defaults_file" <<EOF
 BaseURL: $(yaml_escape "$BASE_URL")
 UserAgent: $(yaml_escape "$USER_AGENT")
+PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
+SpecVersion: $(yaml_escape "$SPEC_VERSION")
 EOF
 
     local init_file="${out_dir}/$pkg_import_name/__init__.py"
     local init_file_tmpl="${TEMPLATE_DIR}/lmsapi/__init__.py.tmpl"
     render_template "$init_file_tmpl" "$init_file" <<EOF
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
+PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
+SpecVersion: $(yaml_escape "$SPEC_VERSION")
+SpecRef: $(yaml_escape "spec/${SDK_ID}/${SPEC_VERSION}")
 EOF
 }
 
@@ -136,7 +152,8 @@ sdk_generate() {
     info "  out  : $OUT_DIR"
     info "  dist : $PROJECT_NAME"
     info "  pkg  : $PACKAGE_IMPORT_NAME"
-    info "  ver  : $PACKAGE_VERSION"
+    info "  sdk  : $PACKAGE_VERSION"
+    info "  spec : $SPEC_VERSION"
     info "  openapi-python-client: $OPENAPI_PYTHON_CLIENT_VERSION"
 
     mkdir -p "$OUT_DIR"
@@ -169,6 +186,7 @@ sdk_generate() {
 ensure_tooling() {
     command -v python3 >/dev/null 2>&1 || die "Python 3 is required"
     command -v uv >/dev/null 2>&1 || die "uv is required"
+    command -v yq >/dev/null 2>&1 || die "yq is required, run make install-tools-generate"
     command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
     command -v parseversions >/dev/null 2>&1 || die "parseversions is required, run make install-tools-generate"
 }
@@ -183,6 +201,7 @@ main() {
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do
         resolve_spec "$key"
         [[ -f "$SPEC_PATH" ]] || die "Spec not found for '$key': $SPEC_PATH"
+        SPEC_VERSION="$(read_spec_version "$SPEC_PATH")"
         sdk_generate "$key"
     done
 }

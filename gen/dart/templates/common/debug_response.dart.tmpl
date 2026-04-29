@@ -41,7 +41,8 @@ class DebugResponseOptions {
 class DebugResponseLogline {
   const DebugResponseLogline({
     required this.client,
-    required this.clientVersion,
+    required this.sdkVersion,
+    required this.specVersion,
     required this.endpoint,
     required this.statusCode,
     required this.contentType,
@@ -50,7 +51,8 @@ class DebugResponseLogline {
   });
 
   final String client;
-  final String clientVersion;
+  final String sdkVersion;
+  final String specVersion;
   final String endpoint;
   final int statusCode;
   final String contentType;
@@ -60,10 +62,11 @@ class DebugResponseLogline {
   String marshal({required bool includeBody}) {
     return jsonEncode(<String, Object>{
       "client": client,
-      "clientversion": clientVersion,
+      "sdkVersion": sdkVersion,
+      "specVersion": specVersion,
       "endpoint": endpoint,
-      "statuscode": statusCode,
-      "contenttype": contentType,
+      "statusCode": statusCode,
+      "contentType": contentType,
       "error": error.toString(),
       if (includeBody) "body": base64.encode(body),
     });
@@ -134,12 +137,14 @@ class DebugResponseConverter implements Converter {
 class DebugResponses {
   DebugResponses({
     required this.client,
-    required this.clientVersion,
+    required this.sdkVersion,
+    required this.specVersion,
     required this.options,
   });
 
   final String client;
-  final String clientVersion;
+  final String sdkVersion;
+  final String specVersion;
   final DebugResponseOptions options;
   Future<Sodium>? _sodium;
 
@@ -153,7 +158,8 @@ class DebugResponses {
 
     final logline = DebugResponseLogline(
       client: client,
-      clientVersion: clientVersion,
+      sdkVersion: sdkVersion,
+      specVersion: specVersion,
       endpoint: _debugResponseEndpoint(response),
       statusCode: response.statusCode,
       contentType: _debugResponseContentType(response),

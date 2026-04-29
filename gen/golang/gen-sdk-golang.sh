@@ -66,6 +66,15 @@ yaml_escape() {
     printf "\"%s\"" "$s"
 }
 
+read_spec_version() {
+    local spec_path="$1"
+    local version
+    version="$(yq -r '.info.version' "$spec_path")"
+    [[ -n "$version" && "$version" != "null" ]] \
+        || die "Missing info.version in spec: $spec_path"
+    printf "%s" "$version"
+}
+
 render_template() {
     local tmpl_path="$1"
     local out_path="$2"
@@ -129,6 +138,9 @@ Package: $(yaml_escape "$pkg")
 PackageDescription: $(yaml_escape "$pkg_desc")
 BaseURL: $(yaml_escape "$BASE_URL")
 UserAgent: $(yaml_escape "$USER_AGENT")
+PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
+SpecVersion: $(yaml_escape "$SPEC_VERSION")
+SpecRef: $(yaml_escape "spec/${pkg}/${SPEC_VERSION}")
 EOF
 
     local validation_errors_gen_file="${out_dir}/validation_errors_gen.go"
@@ -173,6 +185,8 @@ sdk_generate() {
     info "  pkg : $PKG_NAME"
     info "  out : $OUT_DIR"
     info "  mod : $MODULE_PATH"
+    info "  sdk : $PACKAGE_VERSION"
+    info "  spec: $SPEC_VERSION"
     info "  ogen: $OGEN_VERSION"
 
     mkdir -p "$OUT_DIR"
@@ -233,6 +247,7 @@ sdk_generate() {
 
 ensure_tooling() {
     command -v go >/dev/null 2>&1 || die "Go is required: https://go.dev/doc/install"
+    command -v yq >/dev/null 2>&1 || die "yq is required, run make install-tools-generate"
     command -v gomplate >/dev/null 2>&1 || die "gomplate is required, run make install-tools-generate"
     command -v parseversions >/dev/null 2>&1 || die "parseversions is required, run make install-tools-generate"
     command -v goclientpatcher >/dev/null 2>&1 || die "goclientpatcher is required, run make install-tools-generate"
@@ -241,11 +256,13 @@ ensure_tooling() {
 main() {
     ensure_tooling
     load_versions
+    PACKAGE_VERSION="${PACKAGE_VERSION:-0.0.0}"
 
     local key
     for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do
         resolve_spec "$key"
         [[ -f "$SPEC_PATH" ]] || die "Spec not found for '$key': $SPEC_PATH"
+        SPEC_VERSION="$(read_spec_version "$SPEC_PATH")"
         sdk_generate "$key"
     done
 }

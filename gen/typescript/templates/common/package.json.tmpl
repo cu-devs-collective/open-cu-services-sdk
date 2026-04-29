@@ -3,7 +3,7 @@
   "name": {{ printf "%q" .PackageName }},
   "version": {{ printf "%q" .PackageVersion }}, {{- /* The real version is set on release. */}}
   "private": true,
-  "description": {{ printf "%q" .PackageDescription }},
+  "description": {{ printf "%q" (printf "%s (based on %s)" .PackageDescription .SpecRef) }},
   "bugs": {
     "url": "https://github.com/cu-devs-collective/open-cu-services-sdk/issues"
   },
