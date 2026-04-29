@@ -195,6 +195,18 @@ $(emit_defaults_template_data "$SDK_ID")
 EOF
 }
 
+verify_sdk() {
+    local out_dir="$1"
+
+    if [[ "${VERIFY_SDK:-1}" == "0" ]]; then
+        info "Skipping Dart SDK verification"
+        return
+    fi
+
+    info "Verifying Dart SDK"
+    (cd "$out_dir" && dart analyze)
+}
+
 sdk_generate() {
     local key="$1"
 
@@ -240,6 +252,9 @@ sdk_generate() {
 
     # 7) dart format
     (cd "$OUT_DIR" && dart format . >/dev/null)
+
+    # 8) verify generated package
+    verify_sdk "$OUT_DIR"
 }
 
 ensure_tooling() {

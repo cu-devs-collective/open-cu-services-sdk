@@ -121,6 +121,22 @@ run_uvx() {
     UV_CACHE_DIR="$UVX_CACHE_DIR" UV_TOOL_DIR="$UVX_TOOL_DIR" uvx "$@"
 }
 
+verify_sdk() {
+    local out_dir="$1"
+
+    if [[ "${VERIFY_SDK:-1}" == "0" ]]; then
+        info "Skipping Python SDK verification"
+        return
+    fi
+
+    info "Verifying Python SDK"
+    (
+        cd "$out_dir"
+        run_uvx ruff check . --no-respect-gitignore --select F,E9
+        uv build
+    )
+}
+
 write_lmsapi_files() {
     local out_dir="$1"
     local pkg_import_name="$2"
@@ -181,6 +197,9 @@ sdk_generate() {
         info "Writing extra files via ${EXTRA_FILES_WRITER}"
         "${EXTRA_FILES_WRITER}" "$OUT_DIR" "$PACKAGE_IMPORT_NAME"
     fi
+
+    # 5) verify generated package
+    verify_sdk "$OUT_DIR"
 }
 
 ensure_tooling() {

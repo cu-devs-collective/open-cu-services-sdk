@@ -177,6 +177,18 @@ extract_ogen_version_from_file() {
         | head -n 1
 }
 
+verify_sdk() {
+    local out_dir="$1"
+
+    if [[ "${VERIFY_SDK:-1}" == "0" ]]; then
+        info "Skipping Go SDK verification"
+        return
+    fi
+
+    info "Verifying Go SDK"
+    (cd "$out_dir" && go vet ./... && go test ./...)
+}
+
 sdk_generate() {
     local key="$1"
 
@@ -243,6 +255,9 @@ sdk_generate() {
 
     # 6) go mod tidy && go fmt
     (cd "$OUT_DIR" && go mod tidy && go fmt ./...)
+
+    # 7) verify generated package
+    verify_sdk "$OUT_DIR"
 }
 
 ensure_tooling() {

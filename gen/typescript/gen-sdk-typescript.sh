@@ -151,6 +151,18 @@ ensure_default_export() {
     grep -Fqx "$export_line" "$index_file" || printf '\n%s\n' "$export_line" >>"$index_file"
 }
 
+verify_sdk() {
+    local out_dir="$1"
+
+    if [[ "${VERIFY_SDK:-1}" == "0" ]]; then
+        info "Skipping TypeScript SDK verification"
+        return
+    fi
+
+    info "Verifying TypeScript SDK"
+    (cd "$out_dir" && pnpm run build)
+}
+
 sdk_generate() {
     local key="$1"
 
@@ -187,6 +199,9 @@ sdk_generate() {
 
     # 5) ensure default helpers are exported from package entrypoint
     ensure_default_export "$OUT_DIR"
+
+    # 6) verify generated package
+    verify_sdk "$OUT_DIR"
 }
 
 ensure_tooling() {
