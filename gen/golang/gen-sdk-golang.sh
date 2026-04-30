@@ -111,7 +111,7 @@ BaseURL: $(yaml_escape "$BASE_URL")
 UserAgent: $(yaml_escape "$USER_AGENT")
 PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
 SpecVersion: $(yaml_escape "$SPEC_VERSION")
-SpecRef: $(yaml_escape "spec/${pkg}/${SPEC_VERSION}")
+SpecRef: $(yaml_escape "spec/${pkg}/v${SPEC_VERSION}")
 EOF
 
     local validation_errors_gen_file="${out_dir}/validation_errors_gen.go"
@@ -168,8 +168,8 @@ sdk_generate() {
     info "  pkg : $PKG_NAME"
     info "  out : $OUT_DIR"
     info "  mod : $MODULE_PATH"
-    info "  sdk : $PACKAGE_VERSION"
-    info "  spec: $SPEC_VERSION"
+    info "  sdk : v$PACKAGE_VERSION"
+    info "  spec: v$SPEC_VERSION"
     info "  ogen: $OGEN_VERSION"
 
     mkdir -p "$OUT_DIR"

@@ -75,7 +75,7 @@ write_pubspec_file() {
 PackageName: $(yaml_escape "$PACKAGE_NAME")
 PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
 SpecVersion: $(yaml_escape "$SPEC_VERSION")
-SpecRef: $(yaml_escape "spec/${SDK_ID}/${SPEC_VERSION}")
+SpecRef: $(yaml_escape "spec/${SDK_ID}/v${SPEC_VERSION}")
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
 DartSdkVersion: $(yaml_escape "$DART_SDK_VERSION")
 ArchiveVersion: $(yaml_escape "$ARCHIVE_VERSION")
@@ -184,8 +184,8 @@ sdk_generate() {
     info "  spec : $SPEC_PATH"
     info "  out  : $OUT_DIR"
     info "  pkg  : $PACKAGE_NAME"
-    info "  sdk  : $PACKAGE_VERSION"
-    info "  spec : $SPEC_VERSION"
+    info "  sdk  : v$PACKAGE_VERSION"
+    info "  spec : v$SPEC_VERSION"
     info "  swagger_dart_code_generator: $SWAGGER_DART_CODE_GENERATOR_VERSION"
 
     mkdir -p "$OUT_DIR"

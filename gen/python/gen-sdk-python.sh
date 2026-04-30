@@ -76,7 +76,7 @@ write_pyproject_file() {
 ProjectName: $(yaml_escape "$PROJECT_NAME")
 PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
 SpecVersion: $(yaml_escape "$SPEC_VERSION")
-SpecRef: $(yaml_escape "spec/${SDK_ID}/${SPEC_VERSION}")
+SpecRef: $(yaml_escape "spec/${SDK_ID}/v${SPEC_VERSION}")
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
 PythonVersion: $(yaml_escape "$PYTHON_VERSION")
 HttpxVersion: $(yaml_escape "$HTTPX_VERSION")
@@ -127,7 +127,7 @@ EOF
 PackageDescription: $(yaml_escape "$PACKAGE_DESC")
 PackageVersion: $(yaml_escape "$PACKAGE_VERSION")
 SpecVersion: $(yaml_escape "$SPEC_VERSION")
-SpecRef: $(yaml_escape "spec/${SDK_ID}/${SPEC_VERSION}")
+SpecRef: $(yaml_escape "spec/${SDK_ID}/v${SPEC_VERSION}")
 EOF
 }
 
@@ -139,8 +139,8 @@ sdk_generate() {
     info "  out  : $OUT_DIR"
     info "  dist : $PROJECT_NAME"
     info "  pkg  : $PACKAGE_IMPORT_NAME"
-    info "  sdk  : $PACKAGE_VERSION"
-    info "  spec : $SPEC_VERSION"
+    info "  sdk  : v$PACKAGE_VERSION"
+    info "  spec : v$SPEC_VERSION"
     info "  openapi-python-client: $OPENAPI_PYTHON_CLIENT_VERSION"
 
     mkdir -p "$OUT_DIR"
