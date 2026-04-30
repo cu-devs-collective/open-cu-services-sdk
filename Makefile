@@ -28,8 +28,8 @@ check-go:
 $(LOCAL_BIN):
 	@mkdir -p $@
 
-.PHONY: install-tools-lint
-install-tools-lint: check-go $(LOCAL_BIN)
+.PHONY: install-tools-lint-specs
+install-tools-lint-specs: check-go $(LOCAL_BIN)
 	GOBIN=$(LOCAL_BIN) $(GO) install github.com/daveshanley/vacuum@$(VACUUM_VERSION)
 	GOBIN=$(LOCAL_BIN) $(GO) install github.com/wasilibs/go-yamllint/cmd/yamllint@$(GOYAMLLINT_VERSION)
 
@@ -41,13 +41,16 @@ install-tools-generate: check-go $(LOCAL_BIN)
 	cd tools/patchers/goclientpatcher && GOBIN=$(LOCAL_BIN) $(GO) install
 
 .PHONY: install-tools
-install-tools: install-tools-lint install-tools-generate
+install-tools: install-tools-lint-specs install-tools-generate
 
 .PHONY: install
 install: install-tools
 
 .PHONY: lint
-lint: lint-yamllint lint-vacuum
+lint: lint-specs
+
+.PHONY: lint-specs
+lint-specs: lint-yamllint lint-vacuum
 
 .PHONY: lint-yamllint
 lint-yamllint:

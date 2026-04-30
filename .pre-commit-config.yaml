@@ -1,9 +1,9 @@
 repos:
 - repo: local
   hooks:
-  - id: make-lint
-    name: make lint
-    entry: make lint
+  - id: make-lint-specs
+    name: make lint-specs
+    entry: make lint-specs
     language: system
     pass_filenames: false
     files: ^(spec/.*openapi\.yaml)$
