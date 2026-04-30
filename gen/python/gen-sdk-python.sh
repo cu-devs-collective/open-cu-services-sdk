@@ -12,6 +12,7 @@ SPEC_KEYS_TO_GENERATE=(
     lmsapi
 )
 
+SDK_GEN_LANGUAGE="Python"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 VERSION_MANIFEST="${ROOT_DIR}/gen/python/version/pyproject.toml"
 SPEC_BASE="${ROOT_DIR}/spec"
@@ -20,70 +21,17 @@ TEMPLATE_DIR="${ROOT_DIR}/gen/python/templates"
 UVX_CACHE_DIR="${ROOT_DIR}/.uv-cache"
 UVX_TOOL_DIR="${ROOT_DIR}/.uv-tools"
 
-die() { echo "ERROR: $*" >&2; exit 1; }
-info() { echo "==> $*" >&2; }
-
-usage() {
-    cat >&2 <<EOF
-Usage:
-  $(basename "$0") [--sdk-id <id> ...]
-
-Generate Python SDKs.
-
-Options:
-  --sdk-id <id>       Run SDK generation only for specified SDK ID. Argument can be repeated.
-  -h, --help          Show this help.
-
-Default SDK IDs:
-  ${SPEC_KEYS_TO_GENERATE[*]}
-EOF
-}
-
-parse_args() {
-    local -a sdk_ids=()
-
-    while (($#)); do
-        case "$1" in
-            --sdk-id)
-                shift || true
-                [[ -n "${1:-}" && "${1:-}" != -* ]] || die "--sdk-id requires a value"
-                sdk_ids+=("$1")
-                ;;
-            --sdk-id=*)
-                local sdk_id="${1#--sdk-id=}"
-                [[ -n "$sdk_id" && "$sdk_id" != -* ]] || die "--sdk-id requires a value"
-                sdk_ids+=("$sdk_id")
-                ;;
-            -h|--help)
-                usage
-                exit 0
-                ;;
-            *)
-                die "Unknown argument: $1"
-                ;;
-        esac
-        shift || true
-    done
-
-    if (( ${#sdk_ids[@]} > 0 )); then
-        SPEC_KEYS_TO_GENERATE=("${sdk_ids[@]}")
-    fi
-}
+# shellcheck source=gen/_common/sdk-gen-common.sh
+source "${ROOT_DIR}/gen/_common/sdk-gen-common.sh"
 
 load_versions() {
-    [[ -f "$VERSION_MANIFEST" ]] || die "Version manifest not found: $VERSION_MANIFEST"
-
-    local versions_data
-    versions_data="$(parseversions export python "$VERSION_MANIFEST")" \
-        || die "Failed to parse versions from $VERSION_MANIFEST"
-    eval "$versions_data"
-
-    [[ -n "$OPENAPI_PYTHON_CLIENT_VERSION" ]] || die "Missing OPENAPI_PYTHON_CLIENT_VERSION"
-    [[ -n "$PYTHON_VERSION" ]] || die "Missing PYTHON_VERSION"
-    [[ -n "$HTTPX_VERSION" ]] || die "Missing HTTPX_VERSION"
-    [[ -n "$ATTRS_VERSION" ]] || die "Missing ATTRS_VERSION"
-    [[ -n "$PYTHON_DATEUTIL_VERSION" ]] || die "Missing PYTHON_DATEUTIL_VERSION"
-    [[ -n "$UV_VERSION" ]] || die "Missing UV_VERSION"
+    load_version_manifest python "$VERSION_MANIFEST" \
+        OPENAPI_PYTHON_CLIENT_VERSION \
+        PYTHON_VERSION \
+        HTTPX_VERSION \
+        ATTRS_VERSION \
+        PYTHON_DATEUTIL_VERSION \
+        UV_VERSION
 }
 
 resolve_spec() {
@@ -106,30 +54,6 @@ resolve_spec() {
             ;;
         *) die "Unknown spec key: '$key'";;
     esac
-}
-
-yaml_escape() {
-    local s="$1"
-    s="${s//\\/\\\\}"
-    s="${s//\"/\\\"}"
-    printf "\"%s\"" "$s"
-}
-
-read_spec_version() {
-    local spec_path="$1"
-    local version
-    version="$(yq -r '.info.version' "$spec_path")"
-    [[ -n "$version" && "$version" != "null" ]] \
-        || die "Missing info.version in spec: $spec_path"
-    printf "%s" "$version"
-}
-
-render_template() {
-    local tmpl_path="$1"
-    local out_path="$2"
-
-    [[ -f "$tmpl_path" ]] || die "Template not found: $tmpl_path"
-    gomplate -f "$tmpl_path" -o "$out_path" -c ".=stdin:///data.yaml"
 }
 
 write_generator_config_file() {
@@ -257,20 +181,4 @@ ensure_tooling() {
     command -v parseversions >/dev/null 2>&1 || die "parseversions is required, run make install-tools-generate"
 }
 
-main() {
-    parse_args "$@"
-    ensure_tooling
-    load_versions
-
-    PACKAGE_VERSION="${PACKAGE_VERSION:-0.0.0}"
-
-    local key
-    for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do
-        resolve_spec "$key"
-        [[ -f "$SPEC_PATH" ]] || die "Spec not found for '$key': $SPEC_PATH"
-        SPEC_VERSION="$(read_spec_version "$SPEC_PATH")"
-        sdk_generate "$key"
-    done
-}
-
-main "$@"
+sdk_gen_main "$@"

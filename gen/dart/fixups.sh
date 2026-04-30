@@ -7,8 +7,13 @@ set -euo pipefail
 # fixups for the generated SDKs.
 #------------------------------------------------------------------------------
 
-die() { echo "ERROR: $*" >&2; exit 1; }
-info() { echo "==> $*" >&2; }
+if ! declare -F die >/dev/null 2>&1; then
+    die() { echo "ERROR: $*" >&2; exit 1; }
+fi
+
+if ! declare -F info >/dev/null 2>&1; then
+    info() { echo "==> $*" >&2; }
+fi
 
 ensure_fixups_tooling() {
     command -v yq >/dev/null 2>&1 || die "yq is required, run make install-tools-generate"

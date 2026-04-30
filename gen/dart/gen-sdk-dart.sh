@@ -12,6 +12,7 @@ SPEC_KEYS_TO_GENERATE=(
     lmsapi
 )
 
+SDK_GEN_LANGUAGE="Dart"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 VERSION_MANIFEST="${ROOT_DIR}/gen/dart/version/pubspec.yaml"
 SPEC_BASE="${ROOT_DIR}/spec"
@@ -20,78 +21,25 @@ TEMPLATE_DIR="${ROOT_DIR}/gen/dart/templates"
 FIXUPS_SCRIPT="${ROOT_DIR}/gen/dart/fixups.sh"
 PUBLIC_KEY_HEX_FILE="${ROOT_DIR}/gen/_common/cert/2026-04-26/pub.hex"
 
+# shellcheck source=gen/_common/sdk-gen-common.sh
+source "${ROOT_DIR}/gen/_common/sdk-gen-common.sh"
+
 # shellcheck source=gen/dart/fixups.sh
 source "${FIXUPS_SCRIPT}"
 
-die() { echo "ERROR: $*" >&2; exit 1; }
-info() { echo "==> $*" >&2; }
-
-usage() {
-    cat >&2 <<EOF
-Usage:
-  $(basename "$0") [--sdk-id <id> ...]
-
-Generate Dart SDKs.
-
-Options:
-  --sdk-id <id>       Run SDK generation only for specified SDK ID. Argument can be repeated.
-  -h, --help          Show this help.
-
-Default SDK IDs:
-  ${SPEC_KEYS_TO_GENERATE[*]}
-EOF
-}
-
-parse_args() {
-    local -a sdk_ids=()
-
-    while (($#)); do
-        case "$1" in
-            --sdk-id)
-                shift || true
-                [[ -n "${1:-}" && "${1:-}" != -* ]] || die "--sdk-id requires a value"
-                sdk_ids+=("$1")
-                ;;
-            --sdk-id=*)
-                local sdk_id="${1#--sdk-id=}"
-                [[ -n "$sdk_id" && "$sdk_id" != -* ]] || die "--sdk-id requires a value"
-                sdk_ids+=("$sdk_id")
-                ;;
-            -h|--help)
-                usage
-                exit 0
-                ;;
-            *)
-                die "Unknown argument: $1"
-                ;;
-        esac
-        shift || true
-    done
-
-    if (( ${#sdk_ids[@]} > 0 )); then
-        SPEC_KEYS_TO_GENERATE=("${sdk_ids[@]}")
-    fi
-}
-
 load_versions() {
-    [[ -f "$VERSION_MANIFEST" ]] || die "Version manifest not found: $VERSION_MANIFEST"
-
-    local versions_data
-    versions_data="$(parseversions export dart "$VERSION_MANIFEST")" \
-        || die "Failed to parse versions from $VERSION_MANIFEST"
-    eval "$versions_data"
-
-    [[ -n "$SWAGGER_DART_CODE_GENERATOR_VERSION" ]] || die "Missing SWAGGER_DART_CODE_GENERATOR_VERSION"
-    [[ -n "$BUILD_RUNNER_VERSION" ]] || die "Missing BUILD_RUNNER_VERSION"
-    [[ -n "$CHOPPER_GENERATOR_VERSION" ]] || die "Missing CHOPPER_GENERATOR_VERSION"
-    [[ -n "$JSON_SERIALIZABLE_VERSION" ]] || die "Missing JSON_SERIALIZABLE_VERSION"
-    [[ -n "$DART_SDK_VERSION" ]] || die "Missing DART_SDK_VERSION"
-    [[ -n "$ARCHIVE_VERSION" ]] || die "Missing ARCHIVE_VERSION"
-    [[ -n "$CHOPPER_VERSION" ]] || die "Missing CHOPPER_VERSION"
-    [[ -n "$COLLECTION_VERSION" ]] || die "Missing COLLECTION_VERSION"
-    [[ -n "$HTTP_VERSION" ]] || die "Missing HTTP_VERSION"
-    [[ -n "$JSON_ANNOTATION_VERSION" ]] || die "Missing JSON_ANNOTATION_VERSION"
-    [[ -n "$SODIUM_VERSION" ]] || die "Missing SODIUM_VERSION"
+    load_version_manifest dart "$VERSION_MANIFEST" \
+        SWAGGER_DART_CODE_GENERATOR_VERSION \
+        BUILD_RUNNER_VERSION \
+        CHOPPER_GENERATOR_VERSION \
+        JSON_SERIALIZABLE_VERSION \
+        DART_SDK_VERSION \
+        ARCHIVE_VERSION \
+        CHOPPER_VERSION \
+        COLLECTION_VERSION \
+        HTTP_VERSION \
+        JSON_ANNOTATION_VERSION \
+        SODIUM_VERSION
 }
 
 resolve_spec() {
@@ -116,31 +64,6 @@ resolve_spec() {
             ;;
         *) die "Unknown spec key: '$key'";;
     esac
-}
-
-yaml_escape() {
-    local s="$1"
-    s="${s//\\/\\\\}"
-    s="${s//\"/\\\"}"
-    printf "\"%s\"" "$s"
-}
-
-read_spec_version() {
-    local spec_path="$1"
-    local version
-    version="$(yq -r '.info.version' "$spec_path")"
-    [[ -n "$version" && "$version" != "null" ]] \
-        || die "Missing info.version in spec: $spec_path"
-    printf "%s" "$version"
-}
-
-render_template() {
-    local tmpl_path="$1"
-    local out_path="$2"
-
-    [[ -f "$tmpl_path" ]] || die "Template not found: $tmpl_path"
-    mkdir -p "$(dirname "$out_path")"
-    gomplate -f "$tmpl_path" -o "$out_path" -c ".=stdin:///data.yaml"
 }
 
 write_pubspec_file() {
@@ -312,20 +235,4 @@ ensure_tooling() {
     ensure_fixups_tooling
 }
 
-main() {
-    parse_args "$@"
-    ensure_tooling
-    load_versions
-
-    PACKAGE_VERSION="${PACKAGE_VERSION:-0.0.0}"
-
-    local key
-    for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do
-        resolve_spec "$key"
-        [[ -f "$SPEC_PATH" ]] || die "Spec not found for '$key': $SPEC_PATH"
-        SPEC_VERSION="$(read_spec_version "$SPEC_PATH")"
-        sdk_generate "$key"
-    done
-}
-
-main "$@"
+sdk_gen_main "$@"

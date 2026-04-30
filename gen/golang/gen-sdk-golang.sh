@@ -13,6 +13,7 @@ SPEC_KEYS_TO_GENERATE=(
 )
 OGEN_CONFIG_PATH="../.ogen.yaml"
 
+SDK_GEN_LANGUAGE="Go"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 VERSION_MANIFEST="${ROOT_DIR}/gen/golang/version/go.mod"
 SPEC_BASE="${ROOT_DIR}/spec"
@@ -22,68 +23,15 @@ PUBLIC_KEY_HEX_FILE="${ROOT_DIR}/gen/_common/cert/2026-04-26/pub.hex"
 
 MODULE_BASE="github.com/cu-devs-collective/open-cu-services-sdk/golang"
 
-die() { echo "ERROR: $*" >&2; exit 1; }
-info() { echo "==> $*" >&2; }
-
-usage() {
-    cat >&2 <<EOF
-Usage:
-  $(basename "$0") [--sdk-id <id> ...]
-
-Generate Go SDKs.
-
-Options:
-  --sdk-id <id>       Run SDK generation only for specified SDK ID. Argument can be repeated.
-  -h, --help          Show this help.
-
-Default SDK IDs:
-  ${SPEC_KEYS_TO_GENERATE[*]}
-EOF
-}
-
-parse_args() {
-    local -a sdk_ids=()
-
-    while (($#)); do
-        case "$1" in
-            --sdk-id)
-                shift || true
-                [[ -n "${1:-}" && "${1:-}" != -* ]] || die "--sdk-id requires a value"
-                sdk_ids+=("$1")
-                ;;
-            --sdk-id=*)
-                local sdk_id="${1#--sdk-id=}"
-                [[ -n "$sdk_id" && "$sdk_id" != -* ]] || die "--sdk-id requires a value"
-                sdk_ids+=("$sdk_id")
-                ;;
-            -h|--help)
-                usage
-                exit 0
-                ;;
-            *)
-                die "Unknown argument: $1"
-                ;;
-        esac
-        shift || true
-    done
-
-    if (( ${#sdk_ids[@]} > 0 )); then
-        SPEC_KEYS_TO_GENERATE=("${sdk_ids[@]}")
-    fi
-}
+# shellcheck source=gen/_common/sdk-gen-common.sh
+source "${ROOT_DIR}/gen/_common/sdk-gen-common.sh"
 
 load_versions() {
-    [[ -f "$VERSION_MANIFEST" ]] || die "Version manifest not found: $VERSION_MANIFEST"
-
-    local versions_data
-    versions_data="$(parseversions export golang "$VERSION_MANIFEST")" \
-        || die "Failed to parse versions from $VERSION_MANIFEST"
-    eval "$versions_data"
-
-    [[ -n "$OGEN_VERSION" ]] || die "Missing VERSION_MANIFEST"
-    [[ -n "$GO_MOD_VERSION" ]] || die "Missing GO_MOD_VERSION"
-    [[ -n "$KLAUSPOST_COMPRESS_VERSION" ]] || die "Missing KLAUSPOST_COMPRESS_VERSION"
-    [[ -n "$X_CRYPTO_VERSION" ]] || die "Missing X_CRYPTO_VERSION"
+    load_version_manifest golang "$VERSION_MANIFEST" \
+        OGEN_VERSION \
+        GO_MOD_VERSION \
+        KLAUSPOST_COMPRESS_VERSION \
+        X_CRYPTO_VERSION
 }
 
 resolve_spec() {
@@ -104,30 +52,6 @@ resolve_spec() {
             ;;
         *) die "Unknown spec key: '$key'";;
     esac
-}
-
-yaml_escape() {
-    local s="$1"
-    s="${s//\\/\\\\}"
-    s="${s//\"/\\\"}"
-    printf "\"%s\"" "$s"
-}
-
-read_spec_version() {
-    local spec_path="$1"
-    local version
-    version="$(yq -r '.info.version' "$spec_path")"
-    [[ -n "$version" && "$version" != "null" ]] \
-        || die "Missing info.version in spec: $spec_path"
-    printf "%s" "$version"
-}
-
-render_template() {
-    local tmpl_path="$1"
-    local out_path="$2"
-
-    [[ -f "$tmpl_path" ]] || die "Template not found: $tmpl_path"
-    gomplate -f "$tmpl_path" -o "$out_path" -c ".=stdin:///data.yaml"
 }
 
 format_go_byte_array_literal() {
@@ -315,19 +239,4 @@ ensure_tooling() {
     command -v goclientpatcher >/dev/null 2>&1 || die "goclientpatcher is required, run make install-tools-generate"
 }
 
-main() {
-    parse_args "$@"
-    ensure_tooling
-    load_versions
-    PACKAGE_VERSION="${PACKAGE_VERSION:-0.0.0}"
-
-    local key
-    for key in "${SPEC_KEYS_TO_GENERATE[@]}"; do
-        resolve_spec "$key"
-        [[ -f "$SPEC_PATH" ]] || die "Spec not found for '$key': $SPEC_PATH"
-        SPEC_VERSION="$(read_spec_version "$SPEC_PATH")"
-        sdk_generate "$key"
-    done
-}
-
-main "$@"
+sdk_gen_main "$@"
