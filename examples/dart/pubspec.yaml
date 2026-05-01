@@ -1,7 +1,7 @@
 name: open_cu_services_examples_dart
 publish_to: none
 description: Open CU Services Dart SDK examples
-version: 0.0.0
+version: 0.1.0
 
 environment:
   sdk: "^3.11.0"
@@ -11,9 +11,9 @@ dependencies:
   open_cu_services_lmsapi:
     git:
       url: https://github.com/cu-devs-collective/open-cu-services-sdk.git
-      ref: dart/lmsapi/0.0.0
+      ref: dart/lmsapi/v0.1.0
       path: dart/lmsapi
 
-dependency_overrides:
-  open_cu_services_lmsapi:
-    path: ../../dart/lmsapi
+# dependency_overrides:
+#   open_cu_services_lmsapi:
+#     path: ../../dart/lmsapi

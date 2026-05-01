@@ -1,5 +1,7 @@
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
+github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi v0.1.0 h1:BTl/YJpv3Xtzk7C8JX5vB1EeytINsF8HL+mlGSByCKE=
+github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi v0.1.0/go.mod h1:WhHub2YXx522A6i7Uul6K48PM2WUVc4QRkqJSGAEVk0=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dlclark/regexp2 v1.11.5 h1:Q/sSnsKerHeCkc/jSTNq1oCm7KiVgUMZRDUoRu0JQZQ=
