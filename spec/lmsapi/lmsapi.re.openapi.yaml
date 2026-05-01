@@ -272,7 +272,7 @@ paths:
           categories: [ read ]
       security:
         - BffCookie: [ ]
-      tags: [ courses, tasks ]
+      tags: [ tasks ]
       parameters:
         - $ref: "#/components/parameters/TaskIdPath"
       responses:
@@ -286,6 +286,41 @@ paths:
           $ref: "#/components/responses/UnauthorizedError"
         "404":
           $ref: "#/components/responses/NotFoundError"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /micro-lms/content/download-link:
+    get:
+      operationId: generateContentDownloadLink
+      summary: Generate content download link.
+      description: Returns generated content download link by filename.
+      x-re:
+        replayability: safe
+        dataKinds: [ internalData ]
+        operation:
+          categories: [ read, generate ]
+          notes: >
+            There is no 404 response, so link is generated for unexistent
+            content too.
+      security:
+        - BffCookie: [ ]
+      tags: [ tasks ]
+      parameters:
+        - $ref: "#/components/parameters/FileNameQuery"
+        - $ref: "#/components/parameters/VersionQuery"
+      responses:
+        "200":
+          description: Successful response generated content download link.
+          content:
+            application/json:
+              schema:
+                # yamllint disable-line rule:line-length
+                $ref: "#/components/schemas/GenerateContentDownloadLinkResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
         default:
           $ref: "#/components/responses/DefaultError"
 components:
@@ -326,6 +361,22 @@ components:
         type: array
         items:
           $ref: "#/components/schemas/PublicationState"
+    FileNameQuery:
+      name: filename
+      in: query
+      required: true
+      description: File object path in storage specified in URL query.
+      schema:
+        $ref: "#/components/schemas/FileNameObjectPath"
+    VersionQuery:
+      name: version
+      in: query
+      required: false
+      description: Material content revision identifier specified in URL query.
+      x-re:
+        notes: Schema is nullable, but parameter is non-required so it's ok.
+      schema:
+        $ref: "#/components/schemas/LongreadMaterialVersion"
     CourseIdPath:
       name: courseId
       in: path
@@ -376,6 +427,15 @@ components:
       maximum: 599
       description: HTTP status code.
       example: 401
+    BaseErrorDetail:
+      type: string
+      description: Details of the error.
+      example: "Ресурс с идентификатором 1 не найден"
+    BaseErrorInstance:
+      type: string
+      description: >
+        Relative request path without service prefix where error occurred.
+      example: "/courses/1"
     BaseProblemError:
       type: object
       description: Base problem JSON error based from RFC 9457 with trace ID.
@@ -404,13 +464,9 @@ components:
       required: [ title, status, errors ]
       properties:
         title:
-          allOf:
-            - $ref: "#/components/schemas/BaseErrorTitle"
-          example: "One or more validation errors occurred."
+          $ref: "#/components/schemas/BaseErrorTitle"
         status:
-          allOf:
-            - $ref: "#/components/schemas/BaseErrorStatus"
-          example: 400
+          $ref: "#/components/schemas/BaseErrorStatus"
         errors:
           type: object
           description: Field-level validation errors keyed by property name.
@@ -422,6 +478,14 @@ components:
             {
               "courseId": [ "The value 'invalid-value-example' is not valid." ]
             }
+      example:
+        {
+          "title": "One or more validation errors occurred.",
+          "status": 400,
+          "errors": {
+            "courseId": [ "The value 'invalid-value-example' is not valid." ]
+          }
+        }
     BaseUnauthorizedError:
       type: object
       description: Base error for Unauthorized status.
@@ -451,6 +515,34 @@ components:
           "status": 401,
           "traceId": "00-00000000000000000000000000000000-0000000000000000-01"
         }
+    BaseForbiddenError:
+      type: object
+      description: Base error for Forbidden error.
+      additionalProperties: false
+      required: [ title, status, traceId ]
+      properties:
+        # Inherited from BaseProblemError.
+        type:  # non-required
+          $ref: "#/components/schemas/BaseErrorType"
+        title:
+          $ref: "#/components/schemas/BaseErrorTitle"
+        status:
+          $ref: "#/components/schemas/BaseErrorStatus"
+        # Other.
+        detail:  # non-required
+          $ref: "#/components/schemas/BaseErrorDetail"
+        instance:  # non-required
+          $ref: "#/components/schemas/BaseErrorInstance"
+        traceId:
+          $ref: "#/components/schemas/BaseErrorTraceId"
+      example:
+        {
+          "title": "Forbidden",
+          "status": 403,
+          "detail": "Нет доступа к ресурсу ",
+          "instance": "/content/download-link?filename=example",
+          "traceId": "00-00000000000000000000000000000000-0000000000000000-01"
+        }
     BaseNotFoundError:
       type: object
       description: Base error for Not Found status.
@@ -458,28 +550,28 @@ components:
       required: [ title, status, traceId ]
       properties:
         title:
-          allOf:
-            - $ref: "#/components/schemas/BaseErrorTitle"
-          example: "NotFound"
+          $ref: "#/components/schemas/BaseErrorTitle"
         status:
-          allOf:
-            - $ref: "#/components/schemas/BaseErrorStatus"
-          example: 404
+          $ref: "#/components/schemas/BaseErrorStatus"
         detail:  # non-required
-          type: string
-          description: Details of the error.
-          example: "Ресурс с идентификатором 1 не найден"
+          $ref: "#/components/schemas/BaseErrorDetail"
         instance:  # non-required
-          type: string
-          description: >
-            Relative request path without service prefix where error occurred.
-          example: "/courses/1"
+          $ref: "#/components/schemas/BaseErrorInstance"
         entityId:  # non-required
           type: integer
           description: ID of the entity that was not found.
           example: 1
         traceId:
           $ref: "#/components/schemas/BaseErrorTraceId"
+      example:
+        {
+          "title": "NotFound",
+          "status": 404,
+          "detail": "Ресурс с идентификатором 1 не найден",
+          "instance": "/courses/1",
+          "entityId": 1,
+          "traceId": "00-00000000000000000000000000000000-0000000000000000-01"
+        }
     _x_re_propertyIncomplete_OnlyNullObserved:
       type: string
       nullable: true
@@ -3032,6 +3124,22 @@ components:
           $ref: "#/components/schemas/TaskCurrentAttemptId"
         lastAttemptId:
           $ref: "#/components/schemas/TaskLastAttemptId"
+    ObjectStorageUrl:
+      type: string
+      description: >
+        S3-compatible temporary presigned URL for file object to download.
+      x-re:
+        observation:
+          notes: Link expires in 12 hours after creation.
+      # yamllint disable-line rule:line-length
+      example: "https://storage.yandexcloud.net/...?AWSAccessKeyId=abcdef&Expires=1777680299&Signature=ghijkl"
+    GenerateContentDownloadLinkResponse:
+      type: object
+      additionalProperties: false
+      required: [ url ]
+      properties:
+        url:
+          $ref: "#/components/schemas/ObjectStorageUrl"
   responses:
     DefaultError:
       description: Default catch-all error object, untyped.
@@ -3060,6 +3168,14 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/BaseUnauthorizedError"
+    ForbiddenError:
+      description: >
+        HTTP 403 - Forbidden error.
+        Returned when the resource is forbidden.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/BaseForbiddenError"
     NotFoundError:
       description: >
         HTTP 404 - Not Found error.
