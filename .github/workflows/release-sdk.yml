@@ -1,0 +1,334 @@
+name: Release SDK Minor
+
+on:
+  workflow_dispatch:
+    inputs:
+      spec:
+        description: Spec key to release SDKs for
+        required: true
+        type: choice
+        options:
+          - lmsapi
+      langs:
+        description: Comma-separated SDK languages to release
+        required: true
+        type: string
+        default: golang,typescript,python,dart
+      expected_spec_version:
+        description: Guard OpenAPI info.version
+        required: true
+      dry_run:
+        description: Generate, verify and tag locally without pushing
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-sdk-minor-${{ github.ref }}-${{ inputs.spec }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release SDK Minor
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Validate inputs
+        id: validate
+        shell: bash
+        env:
+          SUPPORTED_LANGS: golang,typescript,python,dart
+          INPUT_LANGS: ${{ inputs.langs }}
+        run: |
+          set -euo pipefail
+
+          raw_langs="${INPUT_LANGS// /}"
+          raw_langs="${raw_langs,,}"
+          supported_langs="${SUPPORTED_LANGS// /}"
+          supported_langs="${supported_langs,,}"
+          supported_langs_space="${supported_langs//,/ }"
+          langs="${raw_langs//,/ }"
+          if [[ -z "$langs" ]]; then
+            echo "At least one language must be selected for generation" >&2
+            exit 1
+          fi
+
+          for language in $langs; do
+            if [[ " $supported_langs_space " != *" $language "* ]]; then
+              echo "Unsupported language: $language" >&2
+              echo "Supported languages: ${supported_langs_space// /, }" >&2
+              exit 1
+            fi
+          done
+
+          echo "langs=$langs" >>"$GITHUB_OUTPUT"
+          echo "Languages: $langs"
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.x"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24
+
+      - name: Set up Dart
+        uses: dart-lang/setup-dart@65eb853c7ba17dde3be364c3d2858773e7144260 # v1.7.2
+
+      - name: Install Python tools
+        run: python3 -m pip install --upgrade pip uv
+
+      - name: Enable Corepack for Node
+        run: corepack enable
+
+      - name: Install tools to generate
+        run: make install-tools-generate
+
+      - name: Resolve release
+        id: release
+        shell: bash
+        env:
+          INPUT_SPEC: ${{ inputs.spec }}
+          INPUT_LANGS: ${{ steps.validate.outputs.langs }}
+          INPUT_EXPECTED_SPEC_VERSION: ${{ inputs.expected_spec_version }}
+        run: |
+          set -euo pipefail
+
+          semver_re='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?(\+[0-9A-Za-z][0-9A-Za-z.-]*)?$'
+
+          semver_core() {
+            local version="$1"
+            version="${version%%+*}"
+            printf "%s" "${version%%-*}"
+          }
+
+          spec="$INPUT_SPEC"
+          spec_path="spec/${spec}/${spec}.re.openapi.yaml"
+          if [[ ! -f "$spec_path" ]]; then
+            echo "Spec file not found: $spec_path" >&2
+            exit 1
+          fi
+
+          spec_version="$(bin/yq -r '.info.version' "$spec_path")"
+          if [[ ! "$spec_version" =~ $semver_re ]]; then
+            echo "Spec version must be SemVer without leading v: $spec_version" >&2
+            exit 1
+          fi
+          if [[ -n "$INPUT_EXPECTED_SPEC_VERSION" && "$INPUT_EXPECTED_SPEC_VERSION" != "$spec_version" ]]; then
+            echo "Expected spec version does not match OpenAPI info.version:" >&2
+            echo "  input: v$INPUT_EXPECTED_SPEC_VERSION" >&2
+            echo "  spec : v$spec_version" >&2
+            exit 1
+          fi
+
+          langs="$INPUT_LANGS"
+
+          {
+            echo "spec=$spec"
+            echo "spec_version=$spec_version"
+            echo "langs=$langs"
+          } >>"$GITHUB_OUTPUT"
+
+          echo "Spec: $spec"
+          echo "Spec version: $spec_version"
+          echo "Languages: $langs"
+
+      - name: Generate and verify SDKs
+        id: generate
+        shell: bash
+        env:
+          SPEC: ${{ steps.release.outputs.spec }}
+          SPEC_VERSION: ${{ steps.release.outputs.spec_version }}
+          LANGS: ${{ steps.release.outputs.langs }}
+        run: |
+          set -euo pipefail
+
+          latest_sdk_version() {
+            local language="$1"
+            local spec="$2"
+            local pattern="${language}/${spec}/v*"
+
+            git tag -l "$pattern" \
+              | sed -E 's#.*/v?([0-9]+\.[0-9]+\.[0-9]+.*)$#\1#' \
+              | sort -V \
+              | tail -n 1
+          }
+
+          semver_core() {
+            local version="$1"
+            version="${version%%+*}"
+            printf "%s" "${version%%-*}"
+          }
+
+          bump_minor() {
+            local version="$1"
+            local core
+            core="$(semver_core "$version")"
+            IFS=. read -r major minor patch <<<"$core"
+            printf "%s.%s.0" "$major" "$((minor + 1))"
+          }
+
+          spec_major="${SPEC_VERSION%%.*}"
+          sdk_tags=()
+
+          for language in $LANGS; do
+            current_sdk_version="$(latest_sdk_version "$language" "$SPEC")"
+            if [[ -z "$current_sdk_version" ]]; then
+              echo "No existing SDK tag found for ${language}/${SPEC}, release-spec workflow should be used for the first release" >&2
+              exit 1
+            fi
+
+            sdk_version="$(bump_minor "$current_sdk_version")"
+            sdk_major="${sdk_version%%.*}"
+            if [[ "$sdk_major" != "$spec_major" ]]; then
+              echo "SDK major must match spec major for ${language}:" >&2
+              echo "  sdk : v$sdk_version" >&2
+              echo "  spec: v$SPEC_VERSION" >&2
+              exit 1
+            fi
+
+            echo "Generating ${language}/${SPEC}/v${sdk_version} for spec ${SPEC}/v${SPEC_VERSION}"
+            PACKAGE_VERSION="$sdk_version" \
+              gen/gen-sdk.sh "$language" -- --sdk-id "$SPEC"
+
+            sdk_tags+=("${language}/${SPEC}/v${sdk_version}")
+          done
+
+          {
+            echo "sdk_tags=${sdk_tags[*]}"
+          } >>"$GITHUB_OUTPUT"
+
+      - name: Create SDK branches and tags
+        id: tag
+        shell: bash
+        env:
+          SPEC: ${{ steps.release.outputs.spec }}
+          SPEC_VERSION: ${{ steps.release.outputs.spec_version }}
+          SDK_TAGS: ${{ steps.generate.outputs.sdk_tags }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          add_sdk_files_to_index() {
+            local language="$1"
+            local spec="$2"
+            local index_file="$3"
+
+            GIT_INDEX_FILE="$index_file" git add "${language}/${spec}"
+          }
+
+          fetch_existing_sdk_branch() {
+            local branch="$1"
+            if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+              git fetch origin "refs/heads/${branch}:refs/remotes/origin/${branch}"
+              git rev-parse "refs/remotes/origin/${branch}"
+            fi
+          }
+
+          create_sdk_branch_commit() {
+            local language="$1"
+            local spec="$2"
+            local base_sha="$3"
+            local sdk_version="$4"
+            local spec_version="$5"
+            local previous_branch_sha="${6:-}"
+            local index_file
+            index_file="$(mktemp)"
+
+            GIT_INDEX_FILE="$index_file" git read-tree "$base_sha"
+            rm -f .gitignore "${language}/.gitignore"
+            GIT_INDEX_FILE="$index_file" git update-index \
+              --remove \
+              -- "${language}/.gitignore" >/dev/null 2>&1 || true
+            add_sdk_files_to_index "$language" "$spec" "$index_file"
+
+            local tree
+            tree="$(GIT_INDEX_FILE="$index_file" git write-tree)"
+            local -a parents=(-p "$base_sha")
+            if [[ -n "$previous_branch_sha" ]]; then
+              parents+=(-p "$previous_branch_sha")
+            fi
+            git commit-tree "$tree" \
+              "${parents[@]}" \
+              -m "chore(release): SDK ${language}/${spec} v${sdk_version}" -m "SDK based on spec/${spec}/v${spec_version}"
+          }
+
+          base_sha="$(git rev-parse HEAD)"
+          sdk_branches=()
+          for tag in $SDK_TAGS; do
+            if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+              echo "Tag already exists: $tag" >&2
+              exit 1
+            fi
+            language="${tag%%/*}"
+            sdk_version="${tag##*/}"
+            sdk_version="${sdk_version#v}"
+            branch="${language}/${SPEC}"
+            previous_branch_sha="$(fetch_existing_sdk_branch "$branch")"
+            sdk_branch_sha="$(create_sdk_branch_commit "$language" "$SPEC" "$base_sha" "$sdk_version" "$SPEC_VERSION" "$previous_branch_sha")"
+            git tag -a "$tag" "$sdk_branch_sha" \
+              -m "Release ${tag} based on spec/${SPEC}/v${SPEC_VERSION}"
+
+            sdk_branches+=("${branch}=${sdk_branch_sha}")
+          done
+
+          {
+            echo "base_sha=$base_sha"
+            echo "sdk_tags=$SDK_TAGS"
+            echo "sdk_branches=${sdk_branches[*]}"
+          } >>"$GITHUB_OUTPUT"
+
+      - name: Push SDK branches and tags
+        if: ${{ inputs.dry_run == false }}
+        shell: bash
+        env:
+          SDK_TAGS: ${{ steps.tag.outputs.sdk_tags }}
+          SDK_BRANCHES: ${{ steps.tag.outputs.sdk_branches }}
+        run: |
+          set -euo pipefail
+
+          for pair in $SDK_BRANCHES; do
+            branch="${pair%%=*}"
+            sha="${pair#*=}"
+            git push origin ":refs/tags/${branch}" >/dev/null 2>&1 || true
+            git push origin "${sha}:refs/heads/${branch}"
+          done
+          for tag in $SDK_TAGS; do
+            git push origin "$tag"
+          done
+
+      - name: Print dry-run result
+        if: ${{ inputs.dry_run }}
+        env:
+          BASE_SHA: ${{ steps.tag.outputs.base_sha }}
+          LANGS: ${{ steps.release.outputs.langs }}
+          SDK_TAGS: ${{ steps.tag.outputs.sdk_tags }}
+          SDK_BRANCHES: ${{ steps.tag.outputs.sdk_branches }}
+        run: |
+          echo "Dry run completed."
+          echo "Base commit: ${BASE_SHA}"
+          echo "Languages: ${LANGS}"
+          echo "SDK branches: ${SDK_BRANCHES}"
+          echo "SDK tags: ${SDK_TAGS}"
+
+      # TODO: later add GitHub release tab creation
