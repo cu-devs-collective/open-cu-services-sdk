@@ -1,0 +1,46 @@
+{
+  "name": "@cu-devs-collective/open-cu-services-lmsapi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open CU Services LMS API TypeScript SDK (based on spec/lmsapi/v0.1.0)",
+  "bugs": {
+    "url": "https://github.com/cu-devs-collective/open-cu-services-sdk/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Vadim Romanov",
+    "email": "vadim@centraluniversity.dev",
+    "url": "https://about.centraluniversity.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cu-devs-collective/open-cu-services-sdk.git",
+    "directory": "typescript/lmsapi"
+  },
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "generate": "openapi-ts -f openapi-ts.config.ts",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.96.1",
+    "typescript": "6.0.3"
+  },
+  "packageManager": "pnpm@10.31.0"
+}
