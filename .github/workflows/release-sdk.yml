@@ -18,7 +18,7 @@ on:
         description: Guard OpenAPI info.version
         required: true
       dry_run:
-        description: Generate, verify and tag locally without pushing
+        description: Generate and verify without pushing
         required: true
         type: boolean
         default: false

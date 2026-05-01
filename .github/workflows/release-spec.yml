@@ -23,7 +23,7 @@ on:
           - minor
           - major
       dry_run:
-        description: Generate and verify locally without publishing
+        description: Generate and verify without pushing
         required: true
         type: boolean
         default: false
