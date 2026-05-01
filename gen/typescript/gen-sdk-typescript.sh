@@ -69,12 +69,18 @@ PnpmVersion: $(yaml_escape "$PNPM_VERSION")
 EOF
 }
 
-write_gitignore_file() {
+write_git_metadata_files() {
     local out_dir="$1"
 
-    local file="${out_dir}/.gitignore"
-    local tmpl="${TEMPLATE_DIR}/common/gitignore.tmpl"
-    render_template "$tmpl" "$file" <<'EOF'
+    local gitignore_file="${out_dir}/.gitignore"
+    local gitignore_tmpl="${TEMPLATE_DIR}/common/gitignore.tmpl"
+    render_template "$gitignore_tmpl" "$gitignore_file" <<'EOF'
+{}
+EOF
+
+    local gitattributes_file="${out_dir}/.gitattributes"
+    local gitattributes_tmpl="${TEMPLATE_DIR}/common/gitattributes.tmpl"
+render_template "$gitattributes_tmpl" "$gitattributes_file" <<'EOF'
 {}
 EOF
 }
@@ -149,7 +155,7 @@ sdk_generate() {
 
     # 1) write package files
     write_package_json_file "$OUT_DIR"
-    write_gitignore_file "$OUT_DIR"
+    write_git_metadata_files "$OUT_DIR"
     write_tsconfig_file "$OUT_DIR"
     local spec_rel="../../spec/${SPEC_PATH#"${SPEC_BASE}"/}"
     write_openapi_ts_config_file "$OUT_DIR" "$spec_rel"
