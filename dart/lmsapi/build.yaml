@@ -1,0 +1,16 @@
+targets:
+  $default:
+    sources:
+      - $package$
+      - pubspec.yaml
+      - lib/**
+    builders:
+      swagger_dart_code_generator:
+        options:
+          input_folder: lib/swaggers
+          output_folder: lib/generated
+          with_base_url: false
+          separate_models: true
+          override_equals_and_hashcode: true
+          use_path_for_request_names: false
+          override_to_string: true

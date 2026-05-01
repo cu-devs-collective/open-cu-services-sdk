@@ -1,0 +1,24 @@
+name: open_cu_services_lmsapi
+version: "0.1.0"
+publish_to: none
+description: Open CU Services LMS API Dart SDK (based on spec/lmsapi/v0.1.0)
+homepage: https://github.com/cu-devs-collective/open-cu-services-sdk
+repository: https://github.com/cu-devs-collective/open-cu-services-sdk
+issue_tracker: https://github.com/cu-devs-collective/open-cu-services-sdk/issues
+
+environment:
+  sdk: "^3.11.0"
+
+dependencies:
+  archive: "^4.0.9"
+  chopper: "^8.5.0"
+  collection: "^1.19.1"
+  http: "^1.6.0"
+  json_annotation: "^4.11.0"
+  sodium: "^4.0.2"
+
+dev_dependencies:
+  swagger_dart_code_generator: "4.1.1"
+  build_runner: "2.13.1"
+  chopper_generator: "8.6.1"
+  json_serializable: "6.13.1"
