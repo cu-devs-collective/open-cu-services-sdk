@@ -6,6 +6,8 @@ info:
   description: >
     Reverse engineered OpenAPI specification for the CU LMS API.
   version: 0.0.0
+  x-re:
+    releaseDate: 2026-05-01
   license:
     name: MIT
     # yamllint disable-line rule:line-length
