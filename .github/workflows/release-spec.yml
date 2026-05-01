@@ -299,7 +299,7 @@ jobs:
     needs: prepare
     if: ${{ inputs.dry_run == false }}
     runs-on: ubuntu-latest
-    environment: release-approval
+    environment: release-spec
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
