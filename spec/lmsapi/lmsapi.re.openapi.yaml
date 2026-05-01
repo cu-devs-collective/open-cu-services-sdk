@@ -5,7 +5,7 @@ info:
   title: CU LMS API
   description: >
     Reverse engineered OpenAPI specification for the CU LMS API.
-  version: 0.0.0
+  version: 0.1.0
   x-re:
     releaseDate: 2026-05-01
   license:
