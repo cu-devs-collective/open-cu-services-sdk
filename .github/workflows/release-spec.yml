@@ -92,13 +92,6 @@ jobs:
       - name: Install tools to lint specs
         run: make install-tools-lint-specs
 
-      - name: Lint specs
-        env:
-          SPEC: ${{ inputs.spec }}
-        run: |
-          make lint-specs \
-            OPENAPI_SPEC_FILES="spec/${SPEC}/${SPEC}.re.openapi.yaml"
-
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
@@ -163,6 +156,91 @@ jobs:
               | tail -n 1
           }
 
+          update_spec_release_fields() {
+            local spec_path="$1"
+            local spec_version="$2"
+            local release_date="$3"
+
+            python3 - "$spec_path" "$spec_version" "$release_date" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+
+          path = Path(sys.argv[1])
+          spec_version = sys.argv[2]
+          release_date = sys.argv[3]
+          lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+
+          def indent_of(line):
+              return len(line) - len(line.lstrip(" "))
+
+          top_level_re = re.compile(r"^[A-Za-z0-9_.-]+:")
+          info_start = None
+          for index, line in enumerate(lines):
+              if re.match(r"^info:\s*(?:#.*)?(?:\r?\n)?$", line):
+                  info_start = index
+                  break
+
+          if info_start is None:
+              raise SystemExit(f"Missing top-level info block in {path}")
+
+          info_end = len(lines)
+          for index in range(info_start + 1, len(lines)):
+              line = lines[index]
+              if line.strip() and not line.lstrip().startswith("#") and top_level_re.match(line):
+                  info_end = index
+                  break
+
+          version_updated = False
+          x_re_start = None
+          x_re_indent = None
+          for index in range(info_start + 1, info_end):
+              line = lines[index]
+              if re.match(r"^\s+version\s*:", line):
+                  lines[index] = re.sub(
+                      r"^(\s*version\s*:\s*).*?(\s*(?:#.*)?)?(\r?\n)?$",
+                      rf"\g<1>{spec_version}\2\3",
+                      line,
+                  )
+                  version_updated = True
+              if re.match(r"^\s+x-re\s*:\s*(?:#.*)?(?:\r?\n)?$", line):
+                  x_re_start = index
+                  x_re_indent = indent_of(line)
+
+          if not version_updated:
+              raise SystemExit(f"Missing info.version in {path}")
+
+          release_date_updated = False
+          if x_re_start is not None:
+              x_re_end = info_end
+              for index in range(x_re_start + 1, info_end):
+                  line = lines[index]
+                  if line.strip() and not line.lstrip().startswith("#") and indent_of(line) <= x_re_indent:
+                      x_re_end = index
+                      break
+
+              for index in range(x_re_start + 1, x_re_end):
+                  line = lines[index]
+                  if re.match(r"^\s+releaseDate\s*:", line):
+                      lines[index] = re.sub(
+                          r"^(\s*releaseDate\s*:\s*).*?(\s*(?:#.*)?)?(\r?\n)?$",
+                          rf"\g<1>{release_date}\2\3",
+                          line,
+                      )
+                      release_date_updated = True
+                      break
+
+          path.write_text("".join(lines), encoding="utf-8")
+          print(f"Updated info.version to {spec_version}")
+          if release_date_updated:
+              print(f"Updated info.x-re.releaseDate to {release_date}")
+          elif x_re_start is not None:
+              print("info.x-re.releaseDate is absent, leaving it unchanged")
+          else:
+              print("info.x-re is absent, leaving releaseDate unchanged")
+          PY
+          }
+
           spec="$INPUT_SPEC"
           spec_path="spec/${spec}/${spec}.re.openapi.yaml"
           if [[ ! -f "$spec_path" ]]; then
@@ -214,7 +292,8 @@ jobs:
             sdk_tags+=("$sdk_tag")
           done
 
-          SPEC_VERSION="$spec_version" bin/yq -i '.info.version = strenv(SPEC_VERSION)' "$spec_path"
+          release_date="$(TZ=Europe/Moscow date +%F)"
+          update_spec_release_fields "$spec_path" "$spec_version" "$release_date"
 
           {
             echo "spec=$spec"
@@ -232,6 +311,13 @@ jobs:
           echo "Languages: $langs"
           echo "SDK versions: ${sdk_versions[*]}"
           echo "SDK tags: ${sdk_tags[*]}"
+
+      - name: Lint release spec
+        env:
+          SPEC: ${{ steps.release.outputs.spec }}
+        run: |
+          make lint-specs \
+            OPENAPI_SPEC_FILES="spec/${SPEC}/${SPEC}.re.openapi.yaml"
 
       - name: Generate and verify SDKs
         shell: bash
@@ -282,14 +368,15 @@ jobs:
           path: release-workspace.tgz
           if-no-files-found: error
 
-      - name: Print dry-run result
-        if: ${{ inputs.dry_run }}
+      - name: Print release summary
         env:
+          DRY_RUN: ${{ inputs.dry_run }}
           SPEC_TAG: ${{ steps.release.outputs.spec_tag }}
           LANGS: ${{ steps.release.outputs.langs }}
           SDK_TAGS: ${{ steps.release.outputs.sdk_tags }}
         run: |
-          echo "Dry run completed."
+          echo "# Release summary"
+          echo "Is dry run: ${DRY_RUN}"
           echo "Spec tag: ${SPEC_TAG}"
           echo "Languages: ${LANGS}"
           echo "SDK tags: ${SDK_TAGS}"

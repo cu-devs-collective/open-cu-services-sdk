@@ -321,15 +321,16 @@ jobs:
             git push origin "$tag"
           done
 
-      - name: Print dry-run result
-        if: ${{ inputs.dry_run }}
+      - name: Print release summary
         env:
+          DRY_RUN: ${{ inputs.dry_run }}
           BASE_SHA: ${{ steps.tag.outputs.base_sha }}
           LANGS: ${{ steps.release.outputs.langs }}
           SDK_TAGS: ${{ steps.tag.outputs.sdk_tags }}
           SDK_BRANCHES: ${{ steps.tag.outputs.sdk_branches }}
         run: |
-          echo "Dry run completed."
+          echo "# Release summary"
+          echo "Is dry run: ${DRY_RUN}"
           echo "Base commit: ${BASE_SHA}"
           echo "Languages: ${LANGS}"
           echo "SDK branches: ${SDK_BRANCHES}"
