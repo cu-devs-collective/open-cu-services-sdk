@@ -1,0 +1,40 @@
+[project]
+name = "open-cu-services-lmsapi"
+version = "0.1.0"
+description = "Open CU Services LMS API Python SDK (based on spec/lmsapi/v0.1.0)"
+authors = [
+  { name = "Vadim Romanov", email = "vadim@centraluniversity.dev" }
+]
+maintainers = [
+  { name = "CU Devs Collective" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+  "httpx==0.28.1",
+  "attrs==26.1.0",
+  "python-dateutil==2.9.0.post0",
+]
+
+[project.urls]
+Homepage = "https://github.com/cu-devs-collective/open-cu-services-sdk"
+Repository = "https://github.com/cu-devs-collective/open-cu-services-sdk"
+Issues = "https://github.com/cu-devs-collective/open-cu-services-sdk/issues"
+
+[tool.uv.build-backend]
+module-name = "open_cu_services_lmsapi"
+module-root = ""
+
+[build-system]
+requires = ["uv_build>=0.11.7,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
