@@ -14,6 +14,7 @@ in the SDK branches and version tags:
 ### CU LMS API (`lmsapi`)
 
 [![golang/lmsapi latest tag badge](https://badgen.net/static/golang%2Flmsapi/v0.1.0/00ADD8)](https://github.com/cu-devs-collective/open-cu-services-sdk/tree/golang/lmsapi/v0.1.0/golang/lmsapi)
+[![Go Reference](https://pkg.go.dev/badge/github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi.svg)](https://pkg.go.dev/github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi)
 
 <!-- markdownlint-disable MD013-->
 | Field                                       | Value                                                              |
