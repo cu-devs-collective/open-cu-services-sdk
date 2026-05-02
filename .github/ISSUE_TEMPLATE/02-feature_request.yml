@@ -86,7 +86,7 @@ body:
         Отметьте все подходящие области, относящиеся к этому улучшению.
       options:
         - label: OpenAPI specification / Спецификация OpenAPI
-        - label: Client or SDK / Клиент или SDK
+        - label: Clients or SDK / Клиенты или SDK
         - label: Go client
         - label: TypeScript client
         - label: Python client
@@ -94,6 +94,7 @@ body:
         - label: Examples / Примеры
         - label: Codegeneration / Кодогенерация
         - label: Documentation / Документация
+        - label: Other / Другое
 
   - type: dropdown
     id: compatibility
