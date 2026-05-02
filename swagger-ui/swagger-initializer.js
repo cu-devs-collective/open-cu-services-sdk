@@ -57,17 +57,23 @@ const requestPreviewPlugin = function () {
 };
 
 function createRequestPreviewFetch() {
-  return function requestPreviewFetch() {
-    return Promise.resolve(new Response(
-      "Request generated locally. No HTTP request was sent.",
-      {
-        status: 599,
-        statusText: "Request Not Sent",
-        headers: {
-          "content-type": "text/plain"
-        }
-      }
-    ));
+  return function requestPreviewFetch(request) {
+    const responseText = "Request generated locally. No HTTP request was sent.";
+    const interceptedRequest = request.requestInterceptor
+      ? request.requestInterceptor(request)
+      : Promise.resolve(request);
+
+    return interceptedRequest.then((mutatedRequest) => ({
+      ok: true,
+      url: mutatedRequest.url,
+      status: 599,
+      statusText: "Request Not Sent",
+      headers: {
+        "content-type": "text/plain"
+      },
+      text: responseText,
+      data: responseText
+    }));
   };
 }
 
