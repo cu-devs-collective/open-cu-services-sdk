@@ -1,6 +1,6 @@
 name: Feature request / Предложить улучшение
 description: Suggest an improvement for the SDK, OpenAPI spec, examples, or generators.
-title: "[FEATURE]: "
+title: "[FEATURE]: <title>"
 labels: [ enhancement ]
 
 body:
@@ -9,9 +9,27 @@ body:
       value: |
         Use this form to suggest a new feature, improvement, documentation update, example, or generator/client enhancement.
 
+        Please replace `<title>` in the issue title before submitting.
+
         ---
 
         Используйте эту форму, чтобы предложить новую возможность, улучшение, обновление документации, пример или доработку генератора/клиента.
+
+        Перед отправкой замените `<title>` в заголовке issue.
+
+  - type: checkboxes
+    id: title-notice
+    attributes:
+      label: Title / Заголовок
+      description: |
+        Make the title short and specific.
+
+        ---
+
+        Сделайте заголовок коротким и конкретным.
+      options:
+        - label: I replaced `<title>` in the issue title. / Я заменил(а) `<title>` в заголовке issue.
+          required: true
 
   - type: textarea
     id: summary
