@@ -1,0 +1,106 @@
+name: Feature request / Предложить улучшение
+description: Suggest an improvement for the SDK, OpenAPI spec, examples, or generators.
+title: "[FEATURE]: "
+labels: [ enhancement ]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to suggest a new feature, improvement, documentation update, example, or generator/client enhancement.
+
+        ---
+
+        Используйте эту форму, чтобы предложить новую возможность, улучшение, обновление документации, пример или доработку генератора/клиента.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary / Краткое описание
+      description: |
+        What would you like to add or change?
+
+        ---
+
+        Что вы хотите добавить или изменить?
+      placeholder: |
+        Add support for ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Проблема
+      description: |
+        What limitation, workflow, or use case does this solve?
+
+        ---
+
+        Какое ограничение, workflow или юзкейс это решает?
+      placeholder: |
+        Currently it is hard to ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed solution / Предлагаемое решение
+      description: |
+        Describe the desired behavior, codegenerated code shape, or documentation change.
+
+        ---
+
+        Опишите желаемое поведение, изменение кодогенерации или изменение документации.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: affected-areas
+    attributes:
+      label: Affected area / Где нужно изменение
+      description: |
+        Mark all areas that apply to this enhancement.
+
+        ---
+
+        Отметьте все подходящие области, относящиеся к этому улучшению.
+      options:
+        - label: OpenAPI specification / Спецификация OpenAPI
+        - label: Client or SDK / Клиент или SDK
+        - label: Go client
+        - label: TypeScript client
+        - label: Python client
+        - label: Dart client
+        - label: Examples / Примеры
+        - label: Codegeneration / Кодогенерация
+        - label: Documentation / Документация
+
+  - type: dropdown
+    id: compatibility
+    attributes:
+      label: Compatibility / Совместимость
+      description: |
+        Could this require a breaking change?
+
+        ---
+
+        Может ли это потребовать критическое изменение (breaking change)?
+      options:
+        - This should be backward-compatible / Это должно быть обратно совместимо
+        - This may require a breaking change / Это может потребовать критическое изменение (breaking change)
+        - Not sure / Не уверен(а)
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context / Дополнительный контекст
+      description: |
+        Links, examples, screenshots, API references, related issues, or implementation notes.
+
+        ---
+
+        Ссылки, примеры, скриншоты, API references, связанные issue или заметки по реализации.
