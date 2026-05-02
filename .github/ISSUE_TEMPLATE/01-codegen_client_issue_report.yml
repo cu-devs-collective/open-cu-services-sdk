@@ -1,0 +1,127 @@
+name: Codegen client issue report / Сообщить об ошибке кодогенерированного клиента
+description: Report a bug in a codegenerated SDK client.
+title: "[CODEGEN-CLIENT]: <sdkId> <operationId>"
+labels: [ bug, codegen-client ]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for bugs that appear in a codegenerated SDK client.
+
+        Используйте эту форму для ошибок в кодогенерированном SDK клиента.
+
+  - type: checkboxes
+    id: notice
+    attributes:
+      label: Notice
+      description: |
+        Before submitting, read [Reporting Issues for Codegen Clients](../../README.md#reporting-issues-for-codegen-clients).
+
+        **Please replace `<sdkId>` and `<operationId>` in the issue title before submitting.**
+
+        Перед отправкой прочитайте раздел ["Как сообщить об ошибках в кодогенерированных клиентах"](../../README.ru.md#как-сообщить-об-ошибках-в-кодосгенерированных-клиентах).
+
+        **Перед отправкой замените `<sdkId>` и `<operationId>` в заголовке issue.**
+      options:
+        - label: I have read the reporting guide. / Я ознакомлен(а) с разделом.
+          required: true
+
+  - type: dropdown
+    id: sdk-id
+    attributes:
+      label: SDK
+      description: |
+        ID of the codegenerated SDK where the issue appears.
+
+        Идентификатор кодогенерированного SDK, где проявляется ошибка.
+      options:
+        - lmsapi (CU LMS API)
+    validations:
+      required: true
+
+  - type: input
+    id: operation-id
+    attributes:
+      label: operationId or endpoint
+      description: |
+        Client function name (operationId name from OpenAPI spec) or endpoint, where the issue happens.
+
+        Название функции клиента (название operationId из спеки OpenAPI) или ручка, где происходит ошибка.
+      placeholder: longreadMaterialsById / GET /micro-lms/longreads/{longreadId}/materials
+    validations:
+      required: true
+
+  - type: dropdown
+    id: client-language
+    attributes:
+      label: Client language
+      description: |
+        Which codegenerated client do you use?
+
+        Какой кодогенерированный клиент вы используете?
+      options:
+        - Go
+        - TypeScript
+        - Python
+        - Dart
+    validations:
+      required: true
+
+  - type: input
+    id: client-version
+    attributes:
+      label: Client version
+      description: |
+        Client version (package version). Please check that the issue is reproducible on the latest available version before submitting.
+
+        Версия используемого клиента (версия пакета). Пожалуйста, проверьте перед отправкой, что ошибка воспроизводится на последней доступной версии.
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: runtime-version
+    attributes:
+      label: Runtime and package manager
+      description: |
+        Runtime and package manager versions, if relevant.
+
+        Версии runtime и package manager, если применимо.
+      placeholder: Go 1.24.2 / Node.js 22 + pnpm 10 / Python 3.13 + uv / Dart 3.7
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: |
+        What is wrong?
+
+        Краткое описание проблемы.
+      placeholder: |
+        The codegenerated client fails to decode ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: debug-response-logline
+    attributes:
+      label: Debug response logline or logs
+      description: |
+        If the client supports maintainer debug response loglines, paste the logline here or attach it as a log file. A debug response logline usually starts with `log_v1_` followed by base64url data, the prefix version can be different.
+
+        **Remove possible personal data or other identificators before posting any logs.**
+
+        Если клиент поддерживает debug response logline для разработчиков, вставьте эту строку лога сюда или прикрепите как файл. Обычно строка debug response начинается с `log_v1_`, после чего идут base64url-данные, версия префикса может отличаться.
+
+        **Перед публикацией логов, удалите возможные персональные данные или другие идентификационные данные.**
+      render: text
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: |
+        Links, screenshots, related issues, or details about a suspected problem.
+
+        Ссылки, скриншоты, связанные issue или дополнительные детали о предполагаемой проблеме.
