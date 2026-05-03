@@ -13,19 +13,12 @@ in the SDK branches and version tags:
 
 ### CU LMS API (`lmsapi`)
 
-[![dart/lmsapi latest tag badge](https://badgen.net/static/dart%2Flmsapi/v0.1.0/00B4AB)](https://github.com/cu-devs-collective/open-cu-services-sdk/tree/dart/lmsapi/v0.1.0/dart/lmsapi)
+[![Latest Release](https://badgen.net/static/Latest%20Release/0.1.0/orange)](https://github.com/cu-devs-collective/open-cu-services-sdk/tree/dart/lmsapi/v0.1.0/dart/lmsapi)
+[![Spec](https://badgen.net/static/Spec/v0.1.0/blue)](https://cu-devs-collective.github.io/open-cu-services-sdk/api-docs/?url=https://raw.githubusercontent.com/cu-devs-collective/open-cu-services-sdk/spec/lmsapi/v0.1.0/spec/lmsapi/lmsapi.re.openapi.yaml)
+[![Debug Response Support v2](https://badgen.net/static/Debug%20Response%20Support/v2/green)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/README.md#reporting-issues-for-codegen-clients)
+[![License MIT](https://badgen.net/badge/License/MIT/blue)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/LICENSE)
 
-<!-- markdownlint-disable MD013-->
-| Field                                       | Value                                                                      |
-| ------------------------------------------- | -------------------------------------------------------------------------- |
-| SDK ID                                      | `lmsapi`                                                                   |
-| Package name                                | `open_cu_services_lmsapi`                                                  |
-| Latest version                              | `0.1.0`                                                                    |
-| Dart SDK                                    | ![Dart SDK ^3.11.0](https://badgen.net/static/Dart%20SDK/%5E3.11.0/0175C2) |
-| Published to [pub](https://pub.dev/)        | ❌                                                                         |
-| Supports maintainer debug response loglines | ✅                                                                         |
-| Maintainer debug response logline prefix    | `log_v2_`                                                                  |
-<!-- markdownlint-enable MD013-->
+![Dart SDK ^3.11.0](https://badgen.net/static/Dart%20SDK/%5E3.11.0/00B4AB)
 
 ## Installation
 
