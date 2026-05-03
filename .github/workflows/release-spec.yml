@@ -387,14 +387,13 @@ jobs:
     if: ${{ inputs.dry_run == false }}
     runs-on: ubuntu-latest
     environment: release-spec
-    env:
-      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
           fetch-tags: true
+          persist-credentials: false
 
       - name: Download release workspace
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -404,107 +403,241 @@ jobs:
       - name: Restore release workspace
         run: tar -xzf release-workspace.tgz
 
-      - name: Create release commit, SDK branches and tags
-        id: tag
-        shell: bash
+      - name: Create cudevbot token
+        id: cudevbot
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          app-id: ${{ vars.CUDEVBOT_APP_ID }}
+          private-key: ${{ secrets.CUDEVBOT_PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Publish release commit, SDK branches and tags
+        id: publish
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           SPEC: ${{ needs.prepare.outputs.spec }}
           SPEC_VERSION: ${{ needs.prepare.outputs.spec_version }}
           SPEC_TAG: ${{ needs.prepare.outputs.spec_tag }}
           SDK_TAGS: ${{ needs.prepare.outputs.sdk_tags }}
-        run: |
-          set -euo pipefail
+        with:
+          github-token: ${{ steps.cudevbot.outputs.token }}
+          script: |
+            const cp = require("node:child_process");
+            const fs = require("node:fs");
+            const os = require("node:os");
+            const path = require("node:path");
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            const spec = process.env.SPEC;
+            const specVersion = process.env.SPEC_VERSION;
+            const specTag = process.env.SPEC_TAG;
+            const sdkTags = process.env.SDK_TAGS ? process.env.SDK_TAGS.split(/\s+/).filter(Boolean) : [];
+            const targetBranch = process.env.GITHUB_REF_NAME;
+            const { owner, repo } = context.repo;
 
-          add_sdk_files_to_index() {
-            local language="$1"
-            local spec="$2"
-            local index_file="$3"
+            function git(args, options = {}) {
+              return cp.execFileSync("git", args, { encoding: "utf8", ...options }).trim();
+            }
 
-            GIT_INDEX_FILE="$index_file" git add "${language}/${spec}"
-          }
+            function gitZ(args, options = {}) {
+              const output = cp.execFileSync("git", args, options);
+              if (!output.length) {
+                return [];
+              }
+              return output.subarray(0, output.at(-1) === 0 ? -1 : undefined).toString("utf8").split("\0").filter(Boolean);
+            }
 
-          fetch_existing_sdk_branch() {
-            local branch="$1"
-            if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
-              git fetch origin "refs/heads/${branch}:refs/remotes/origin/${branch}"
-              git rev-parse "refs/remotes/origin/${branch}"
-            fi
-          }
+            function stagedFiles(root) {
+              const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "release-index-"));
+              const indexFile = path.join(tempDir, "index");
+              const env = { ...process.env, GIT_INDEX_FILE: indexFile };
+              try {
+                git(["read-tree", "--empty"], { env });
+                cp.execFileSync("git", ["add", "--all", "--force", "--", root], { env });
+                return gitZ(["ls-files", "--stage", "-z", "--", root], { env }).map((row) => {
+                  const [meta, filePath] = row.split("\t");
+                  return { mode: meta.split(" ")[0], path: filePath };
+                });
+              } finally {
+                fs.rmSync(tempDir, { recursive: true, force: true });
+              }
+            }
 
-          create_sdk_branch_commit() {
-            local language="$1"
-            local spec="$2"
-            local base_sha="$3"
-            local sdk_version="$4"
-            local spec_version="$5"
-            local previous_branch_sha="${6:-}"
-            local index_file
-            index_file="$(mktemp)"
+            function basePaths(baseRef, root) {
+              return new Set(gitZ(["ls-tree", "-r", "--name-only", "-z", baseRef, "--", root]));
+            }
 
-            GIT_INDEX_FILE="$index_file" git read-tree "$base_sha"
-            rm -f .gitignore "${language}/.gitignore"
-            GIT_INDEX_FILE="$index_file" git update-index \
-              --remove \
-              -- "${language}/.gitignore" >/dev/null 2>&1 || true
-            add_sdk_files_to_index "$language" "$spec" "$index_file"
+            async function createBlob(filePath, mode) {
+              const content = mode === "120000"
+                ? Buffer.from(fs.readlinkSync(filePath), "utf8").toString("base64")
+                : fs.readFileSync(filePath).toString("base64");
+              const { data } = await github.rest.git.createBlob({
+                owner,
+                repo,
+                content,
+                encoding: "base64",
+              });
+              return data.sha;
+            }
 
-            local tree
-            tree="$(GIT_INDEX_FILE="$index_file" git write-tree)"
-            local -a parents=(-p "$base_sha")
-            if [[ -n "$previous_branch_sha" ]]; then
-              parents+=(-p "$previous_branch_sha")
-            fi
-            git commit-tree "$tree" \
-              "${parents[@]}" \
-              -m "chore(release): SDK ${language}/${spec} v${sdk_version}" -m "SDK based on spec/${spec}/v${spec_version}"
-          }
+            async function createTreeFromRoots(baseTree, deletionBaseRef, roots, extraDeletions = []) {
+              const tree = [];
+              for (const filePath of extraDeletions) {
+                tree.push({ path: filePath, sha: null });
+              }
 
-          git add "spec/${SPEC}/${SPEC}.re.openapi.yaml"
-          git commit -m "chore(release): spec ${SPEC} v${SPEC_VERSION}"
-          release_sha="$(git rev-parse HEAD)"
+              for (const root of roots) {
+                const files = stagedFiles(root);
+                if (!files.length) {
+                  throw new Error(`No releasable files found under ${root}`);
+                }
 
-          git tag -a "$SPEC_TAG" "$release_sha" -m "Release spec ${SPEC} v${SPEC_VERSION}"
-          sdk_branches=()
-          for tag in $SDK_TAGS; do
-            language="${tag%%/*}"
-            sdk_version="${tag##*/}"
-            sdk_version="${sdk_version#v}"
-            sdk_branch="${language}/${SPEC}"
-            previous_branch_sha="$(fetch_existing_sdk_branch "$sdk_branch")"
-            sdk_branch_sha="$(create_sdk_branch_commit "$language" "$SPEC" "$release_sha" "$sdk_version" "$SPEC_VERSION" "$previous_branch_sha")"
-            git tag -d "$sdk_branch" >/dev/null 2>&1 || true
-            git tag -a "$tag" "$sdk_branch_sha" -m "Release ${tag} based on spec/${SPEC}/v${SPEC_VERSION}"
+                const addedPaths = new Set(files.map((file) => file.path));
+                if (deletionBaseRef) {
+                  for (const filePath of basePaths(deletionBaseRef, root)) {
+                    if (!addedPaths.has(filePath)) {
+                      tree.push({ path: filePath, sha: null });
+                    }
+                  }
+                }
 
-            sdk_branches+=("${sdk_branch}=${sdk_branch_sha}")
-          done
+                for (const file of files) {
+                  tree.push({
+                    path: file.path,
+                    mode: file.mode,
+                    type: "blob",
+                    sha: await createBlob(file.path, file.mode),
+                  });
+                }
+              }
 
-          {
-            echo "release_sha=$release_sha"
-            echo "sdk_branches=${sdk_branches[*]}"
-          } >>"$GITHUB_OUTPUT"
+              const { data } = await github.rest.git.createTree({
+                owner,
+                repo,
+                base_tree: baseTree,
+                tree,
+              });
+              return data.sha;
+            }
 
-      - name: Push release commit and tags
-        shell: bash
-        env:
-          SPEC_TAG: ${{ needs.prepare.outputs.spec_tag }}
-          SDK_TAGS: ${{ needs.prepare.outputs.sdk_tags }}
-          SDK_BRANCHES: ${{ steps.tag.outputs.sdk_branches }}
-        run: |
-          set -euo pipefail
+            function ensureVerified(object, kind, label) {
+              if (object.verification?.verified === true) {
+                return;
+              }
+              throw new Error(`GitHub did not verify ${kind} ${label}: ${object.verification?.reason ?? "missing verification response"}`);
+            }
 
-          git push origin "HEAD:${GITHUB_REF_NAME}"
-          git push origin "$SPEC_TAG"
-          for pair in $SDK_BRANCHES; do
-            branch="${pair%%=*}"
-            sha="${pair#*=}"
-            git push origin ":refs/tags/${branch}" >/dev/null 2>&1 || true
-            git push origin "${sha}:refs/heads/${branch}"
-          done
-          for tag in $SDK_TAGS; do
-            git push origin "$tag"
-          done
+            async function createCommit(message, tree, parents, label) {
+              const { data } = await github.rest.git.createCommit({
+                owner,
+                repo,
+                message,
+                tree,
+                parents,
+              });
+              ensureVerified(data, "commit", label);
+              return data.sha;
+            }
+
+            async function getRef(ref) {
+              try {
+                const { data } = await github.rest.git.getRef({ owner, repo, ref });
+                return data;
+              } catch (error) {
+                if (error.status === 404) {
+                  return null;
+                }
+                throw error;
+              }
+            }
+
+            async function assertTagAbsent(tag) {
+              if (await getRef(`tags/${tag}`)) {
+                throw new Error(`Tag already exists: ${tag}`);
+              }
+            }
+
+            async function createOrUpdateRef(ref, sha) {
+              if (await getRef(ref)) {
+                await github.rest.git.updateRef({ owner, repo, ref, sha, force: false });
+              } else {
+                await github.rest.git.createRef({ owner, repo, ref: `refs/${ref}`, sha });
+              }
+            }
+
+            async function deleteRef(ref) {
+              try {
+                await github.rest.git.deleteRef({ owner, repo, ref });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+              }
+            }
+
+            async function createTag(tag, message, targetSha) {
+              const { data } = await github.rest.git.createTag({
+                owner,
+                repo,
+                tag,
+                message,
+                object: targetSha,
+                type: "commit",
+              });
+              ensureVerified(data, "tag", tag);
+              await github.rest.git.createRef({ owner, repo, ref: `refs/tags/${tag}`, sha: data.sha });
+            }
+
+            async function remoteBranchSha(branch) {
+              const ref = await getRef(`heads/${branch}`);
+              return ref?.object?.sha ?? "";
+            }
+
+            async function createSdkBranchCommit(language, baseSha, baseTree, deletionBaseRef, sdkVersion) {
+              const branch = `${language}/${spec}`;
+              const previousBranchSha = await remoteBranchSha(branch);
+              const tree = await createTreeFromRoots(baseTree, deletionBaseRef, [branch], [`${language}/.gitignore`]);
+              const parents = previousBranchSha ? [baseSha, previousBranchSha] : [baseSha];
+              const sha = await createCommit(
+                `chore(release): SDK ${language}/${spec} v${sdkVersion}\n\nSDK based on spec/${spec}/v${specVersion}`,
+                tree,
+                parents,
+                `${language}/${spec} v${sdkVersion}`,
+              );
+              await deleteRef(`tags/${branch}`);
+              await createOrUpdateRef(`heads/${branch}`, sha);
+              return { branch, sha };
+            }
+
+            await assertTagAbsent(specTag);
+            for (const tag of sdkTags) {
+              await assertTagAbsent(tag);
+            }
+
+            const baseSha = git(["rev-parse", "HEAD"]);
+            const baseTree = git(["rev-parse", "HEAD^{tree}"]);
+            const specPath = `spec/${spec}/${spec}.re.openapi.yaml`;
+            const specTree = await createTreeFromRoots(baseTree, baseSha, [specPath]);
+            const releaseSha = await createCommit(
+              `chore(release): spec ${spec} v${specVersion}`,
+              specTree,
+              [baseSha],
+              `spec ${spec} v${specVersion}`,
+            );
+
+            await createOrUpdateRef(`heads/${targetBranch}`, releaseSha);
+            await createTag(specTag, `Release spec ${spec} v${specVersion}`, releaseSha);
+
+            const { data: releaseCommit } = await github.rest.git.getCommit({ owner, repo, commit_sha: releaseSha });
+            const sdkBranches = [];
+            for (const tag of sdkTags) {
+              const language = tag.split("/")[0];
+              const sdkVersion = tag.split("/").at(-1).replace(/^v/, "");
+              const { branch, sha } = await createSdkBranchCommit(language, releaseSha, releaseCommit.tree.sha, baseSha, sdkVersion);
+              await createTag(tag, `Release ${tag} based on spec/${spec}/v${specVersion}`, sha);
+              sdkBranches.push(`${branch}=${sha}`);
+            }
+
+            core.setOutput("release_sha", releaseSha);
+            core.setOutput("sdk_branches", sdkBranches.join(" "));
 
       # TODO: later add GitHub release tab creation
