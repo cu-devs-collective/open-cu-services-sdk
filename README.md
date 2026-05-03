@@ -16,6 +16,7 @@
 - [Project Goal](#project-goal)
 - [Quick Start](#quick-start)
 - [Available SDKs](#available-sdks)
+- [Versioning](#versioning)
 - [Reporting Issues for Codegen Clients](#reporting-issues-for-codegen-clients)
 - [Repository Layout](#repository-layout)
 - [Development](#development)
@@ -40,6 +41,10 @@ languages.
 | CU LMS API | `lmsapi` | [![Spec](https://badgen.net/static/Spec/v0.1.0/blue?icon=openapiinitiative)](https://cu-devs-collective.github.io/open-cu-services-sdk/api-docs/?url=https://raw.githubusercontent.com/cu-devs-collective/open-cu-services-sdk/spec/lmsapi/v0.1.0/spec/lmsapi/lmsapi.re.openapi.yaml) | [![Go](https://badgen.net/static/Go/v0.1.0/555?labelColor=00ADD8&icon=go)](./golang/README.md#cu-lms-api-lmsapi) <br> [![TypeScript](https://badgen.net/static/TypeScript/v0.1.0/555?labelColor=3178C6&icon=typescript)](./typescript/README.md#cu-lms-api-lmsapi) <br> [![Python](https://badgen.net/static/Python/v0.1.0/555?labelColor=3572A5&icon=python)](./python/README.md#cu-lms-api-lmsapi) <br> [![Dart](https://badgen.net/static/Dart/v0.1.0/555?labelColor=00B4AB&icon=dart)](./dart/README.md#cu-lms-api-lmsapi) |
 <!-- markdownlint-enable MD013 MD033 -->
 
+## Versioning
+
+// TODO
+
 ## Reporting Issues for Codegen Clients
 
 **English** | [Русский](README.ru.md#как-сообщить-об-ошибках-в-кодосгенерированных-клиентах)
@@ -48,7 +53,19 @@ languages.
 
 ## Repository Layout
 
-// TODO
+This project is a monorepo with the following structure:
+
+```text
+.github/       GitHub CI workflows and repo automation
+dart/          Dart SDKs output path for codegen
+examples/      Runnable examples for SDKs in different languages
+gen/           SDK codegen scripts, templates and pinned dependencies
+golang/        Go SDKs output path for codegen
+python/        Python SDKs output path for codegen
+spec/          Reverse engineered OpenAPI specifications
+tools/         Tools for codegen and patching
+typescript/    TypeScript SDKs output path for codegen
+```
 
 ## Development
 
