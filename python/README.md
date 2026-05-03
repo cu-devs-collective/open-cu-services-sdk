@@ -13,12 +13,12 @@ in the SDK branches and version tags:
 
 ### CU LMS API (`lmsapi`)
 
-[![Latest Release](https://badgen.net/static/Latest%20Release/0.1.0/orange)](https://github.com/cu-devs-collective/open-cu-services-sdk/tree/python/lmsapi/v0.1.0/python/lmsapi)
+[![Latest Release](https://badgen.net/static/Latest%20Release/v0.1.0/orange)](https://github.com/cu-devs-collective/open-cu-services-sdk/tree/python/lmsapi/v0.1.0/python/lmsapi)
 [![Spec](https://badgen.net/static/Spec/v0.1.0/blue)](https://cu-devs-collective.github.io/open-cu-services-sdk/api-docs/?url=https://raw.githubusercontent.com/cu-devs-collective/open-cu-services-sdk/spec/lmsapi/v0.1.0/spec/lmsapi/lmsapi.re.openapi.yaml)
 [![Debug Response Support](https://badgen.net/static/Debug%20Response%20Support/no/red)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/README.md#reporting-issues-for-codegen-clients)
-[![License MIT](https://badgen.net/badge/License/MIT/blue)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/LICENSE)
+[![License](https://badgen.net/badge/License/MIT/blue)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/LICENSE)
 
-![Python >=3.10](https://badgen.net/static/Python/%3E%3D3.10/3572A5)
+![Python](https://badgen.net/static/Python/%3E%3D3.10/3572A5)
 
 ## Installation
 
