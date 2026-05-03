@@ -13,19 +13,12 @@ in the SDK branches and version tags:
 
 ### CU LMS API (`lmsapi`)
 
-[![python/lmsapi latest tag badge](https://badgen.net/static/python%2Flmsapi/v0.1.0/3572A5)](https://github.com/cu-devs-collective/open-cu-services-sdk/tree/python/lmsapi/v0.1.0/python/lmsapi)
+[![Latest Release](https://badgen.net/static/Latest%20Release/0.1.0/orange)](https://github.com/cu-devs-collective/open-cu-services-sdk/tree/python/lmsapi/v0.1.0/python/lmsapi)
+[![Spec](https://badgen.net/static/Spec/v0.1.0/blue)](https://cu-devs-collective.github.io/open-cu-services-sdk/api-docs/?url=https://raw.githubusercontent.com/cu-devs-collective/open-cu-services-sdk/spec/lmsapi/v0.1.0/spec/lmsapi/lmsapi.re.openapi.yaml)
+[![Debug Response Support](https://badgen.net/static/Debug%20Response%20Support/no/red)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/README.md#reporting-issues-for-codegen-clients)
+[![License MIT](https://badgen.net/badge/License/MIT/blue)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/LICENSE)
 
-<!-- markdownlint-disable MD013-->
-| Field                                       | Value                                                                |
-| ------------------------------------------- | -------------------------------------------------------------------- |
-| SDK ID                                      | `lmsapi`                                                             |
-| Package name                                | `open-cu-services-lmsapi`                                            |
-| Import name                                 | `open_cu_services_lmsapi`                                            |
-| Latest version                              | `0.1.0`                                                              |
-| Python                                      | ![Python >=3.10](https://badgen.net/static/Python/%3E%3D3.10/3572A5) |
-| Published to [PyPI](https://pypi.org/)      | ❌                                                                   |
-| Supports maintainer debug response loglines | ❌                                                                   |
-<!-- markdownlint-enable MD013-->
+![Python >=3.10](https://badgen.net/static/Python/%3E%3D3.10/3572A5)
 
 ## Installation
 
