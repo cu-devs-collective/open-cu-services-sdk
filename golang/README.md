@@ -13,26 +13,23 @@ in the SDK branches and version tags:
 
 ### CU LMS API (`lmsapi`)
 
-[![golang/lmsapi latest tag badge](https://badgen.net/static/golang%2Flmsapi/v0.1.0/00ADD8)](https://github.com/cu-devs-collective/open-cu-services-sdk/tree/golang/lmsapi/v0.1.0/golang/lmsapi)
-[![Go Reference](https://pkg.go.dev/badge/github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi.svg)](https://pkg.go.dev/github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi)
+[![Latest Release](https://badgen.net/static/Latest%20Release/v0.1.0/orange)](https://github.com/cu-devs-collective/open-cu-services-sdk/tree/golang/lmsapi/v0.1.0/golang/lmsapi)
+[![Spec](https://badgen.net/static/Spec/v0.1.0/blue)](https://cu-devs-collective.github.io/open-cu-services-sdk/api-docs/?url=https://raw.githubusercontent.com/cu-devs-collective/open-cu-services-sdk/spec/lmsapi/v0.1.0/spec/lmsapi/lmsapi.re.openapi.yaml)
+[![Debug Response Support v1](https://badgen.net/static/Debug%20Response%20Support/v1/green)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/README.md#reporting-issues-for-codegen-clients)
+[![License MIT](https://badgen.net/badge/License/MIT/blue)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/LICENSE)
 
-<!-- markdownlint-disable MD013-->
-| Field                                       | Value                                                              |
-| ------------------------------------------- | ------------------------------------------------------------------ |
-| SDK ID                                      | `lmsapi`                                                           |
-| Module path                                 | `github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi` |
-| Latest version                              | `v0.1.0`                                                           |
-| Go                                          | ![Go 1.25.0](https://badgen.net/static/Go/1.25.0/00ADD8)           |
-| Published as Go module                      | ✅                                                                 |
-| Supports maintainer debug response loglines | ✅                                                                 |
-| Maintainer debug response logline prefix    | `log_v1_`                                                          |
-<!-- markdownlint-enable MD013-->
+![Go 1.25](https://badgen.net/static/Go/1.25/00ADD8)
+[![Go Reference](https://pkg.go.dev/badge/github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi.svg)](https://pkg.go.dev/github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi)
 
 ## Installation
 
 Add the module to your Go project:
 
 ```bash
+# Latest version
+go get github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi@latest
+
+# Tagged version
 go get github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi@v0.1.0
 ```
 
