@@ -27,11 +27,18 @@
 
 ## Quick Start
 
-// TODO
+Pick an SDK implementation from the [Available SDKs](#available-sdks) and follow
+its README for installation and usage.
+See the [examples](./examples/) to learn how the SDKs are used in different
+languages.
 
 ## Available SDKs
 
-// TODO
+<!-- markdownlint-disable MD013 MD033 -->
+| Name       | SDK ID   | Specification                                                                                                                                                                                                                                                                         | Implementations                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CU LMS API | `lmsapi` | [![Spec](https://badgen.net/static/Spec/v0.1.0/blue?icon=openapiinitiative)](https://cu-devs-collective.github.io/open-cu-services-sdk/api-docs/?url=https://raw.githubusercontent.com/cu-devs-collective/open-cu-services-sdk/spec/lmsapi/v0.1.0/spec/lmsapi/lmsapi.re.openapi.yaml) | [![Go](https://badgen.net/static/Go/v0.1.0/555?labelColor=00ADD8&icon=go)](./golang/README.md#cu-lms-api-lmsapi) <br> [![TypeScript](https://badgen.net/static/TypeScript/v0.1.0/555?labelColor=3178C6&icon=typescript)](./typescript/README.md#cu-lms-api-lmsapi) <br> [![Python](https://badgen.net/static/Python/v0.1.0/555?labelColor=3572A5&icon=python)](./python/README.md#cu-lms-api-lmsapi) <br> [![Dart](https://badgen.net/static/Dart/v0.1.0/555?labelColor=00B4AB&icon=dart)](./dart/README.md#cu-lms-api-lmsapi) |
+<!-- markdownlint-enable MD013 MD033 -->
 
 ## Reporting Issues for Codegen Clients
 
