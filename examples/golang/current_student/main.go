@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	// Loads bffCookie from env variable CU_LMS_BFF_COOKIE
 	client, err := lmsapi.NewDefaultClientFromEnv()
 	if err != nil {
 		log.Fatalf("lmsapi.NewDefaultClientFromEnv error: %v", err)
