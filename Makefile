@@ -3,16 +3,19 @@ PATH      := $(PATH):$(LOCAL_BIN)
 GO        ?= go
 GEN_SDK   := $(CURDIR)/gen/gen-sdk.sh
 
-GOYAMLLINT_VERSION := v1.38.0
-VACUUM_VERSION     := v0.26.1
-GOMPLATE_VERSION   := v5.0.0
-YQ_VERSION         := v4.53.2
+GOYAMLLINT_VERSION           := v1.38.0
+VACUUM_VERSION               := v0.26.1
+GOMPLATE_VERSION             := v5.0.0
+YQ_VERSION                   := v4.53.2
+EDITORCONFIG_CHECKER_VERSION := v3.6.1
 
 YAMLLINT := $(LOCAL_BIN)/yamllint
 
 VACUUM           := $(LOCAL_BIN)/vacuum
 VACUUM_RULESET   := .spectral.yaml
 VACUUM_LINT_ARGS := lint -b -d --no-clip -n warn --remote=false --min-score 100 -r $(VACUUM_RULESET)
+
+EDITORCONFIG_CHECKER := $(LOCAL_BIN)/editorconfig-checker
 
 OPENAPI_SPEC_FILES := spec/**/*openapi.yaml
 
@@ -33,6 +36,10 @@ install-tools-lint-specs: check-go $(LOCAL_BIN)
 	GOBIN=$(LOCAL_BIN) $(GO) install github.com/daveshanley/vacuum@$(VACUUM_VERSION)
 	GOBIN=$(LOCAL_BIN) $(GO) install github.com/wasilibs/go-yamllint/cmd/yamllint@$(GOYAMLLINT_VERSION)
 
+.PHONY: install-tools-lint-other
+install-tools-lint-other: check-go $(LOCAL_BIN)
+	GOBIN=$(LOCAL_BIN) $(GO) install github.com/editorconfig-checker/editorconfig-checker/v3/cmd/editorconfig-checker@$(EDITORCONFIG_CHECKER_VERSION)
+
 .PHONY: install-tools-generate
 install-tools-generate: check-go $(LOCAL_BIN)
 	GOBIN=$(LOCAL_BIN) $(GO) install github.com/hairyhenderson/gomplate/v5/cmd/gomplate@$(GOMPLATE_VERSION)
@@ -41,23 +48,27 @@ install-tools-generate: check-go $(LOCAL_BIN)
 	cd tools/patchers/goclientpatcher && GOBIN=$(LOCAL_BIN) $(GO) install
 
 .PHONY: install-tools
-install-tools: install-tools-lint-specs install-tools-generate
+install-tools: install-tools-lint-specs install-tools-lint-other install-tools-generate
 
 .PHONY: install
 install: install-tools
 
 .PHONY: lint
-lint: lint-specs
+lint: lint-specs lint-other
 
 .PHONY: lint-specs
-lint-specs: lint-yamllint lint-vacuum
+lint-specs: lint-specs-yamllint lint-specs-vacuum
 
-.PHONY: lint-yamllint
-lint-yamllint:
+.PHONY: lint-other
+lint-other:
+	@$(EDITORCONFIG_CHECKER)
+
+.PHONY: lint-specs-yamllint
+lint-specs-yamllint:
 	@$(YAMLLINT) $(OPENAPI_SPEC_FILES)
 
-.PHONY: lint-vacuum
-lint-vacuum:
+.PHONY: lint-specs-vacuum
+lint-specs-vacuum:
 	@$(VACUUM) $(VACUUM_LINT_ARGS) $(OPENAPI_SPEC_FILES)
 
 .PHONY: generate
