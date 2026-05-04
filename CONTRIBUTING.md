@@ -2,31 +2,35 @@
 
 **English** | [Русский](CONTRIBUTING.ru.md)
 
-Thank you for your interest in contributing to the **Open CU Services** project!
+Thank you for your interest in contributing to the **Open CU Services Project**!
 
 This guide explains how to contribute to this repository.
 It is intended for anyone who wants to open an **Issue** or **Pull Request**.
 
-Please take some time to read this document. It may save both your time and the
-maintainers' time in the future.
-
-Thank you! 🤝
+> [!NOTE]
+> Please take some time to read this document. It may save both your time and the
+> maintainers' time in the future.
+>
+> Thank you! 🤝
 
 ## Before You Start
 
-// TODO
+Before starting to work on a feature or a bug fix, please comment on a relevant
+**Issue**, open a new one or [discuss with us on Telegram](https://t.me/cu_devs_collective_chat).
 
 ### Security Vulnerabilities
 
-// TODO
+Do not open a public Issue to report about a security vulnerability.
+Please follow our [Security Policy](SECURITY.md) and report responsibly.
 
-### AI-assisted contributions
+### AI-assisted Contributions
 
-// TODO
+If you use AI tools when contributing, please see our [AI Policy](AI_POLICY.md),
+this is important.
 
 ### Additional Help
 
-// TODO
+If you run any trouble, reach out with our [community on Telegram](https://t.me/cu_devs_collective_chat).
 
 ## Opening an Issue
 
