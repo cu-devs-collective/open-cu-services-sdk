@@ -129,7 +129,40 @@ Expected `LANG` values for languages:
 
 **English** | [Русский](README.ru.md#как-сообщить-об-ошибках-в-кодосгенерированных-клиентах)
 
-// TODO
+Specifications are being reverse engineered independently and are not official
+documentation. A significant effort is made to make them as close to the backend
+API as OpenAPI standard allows.
+
+Because of this, every SDK response is being validated against spec schemas.
+This provides strong-typing for SDKs, but comes at a cost: even a small backend
+API change breaks the whole response schema validation and cause the client to
+return an error. This design is made on purpose to make invalid responses be
+rejected entirely. This design may change in the future.
+
+To reduce MTTD (Mean Time to Detect), MTTR (Mean Time to Resolution), and
+TTM (Time to Market), this project has a feature named as *Debug Response Loglines*.
+This feature is supported by some SDK implementations (you can find out on
+corresponding SDK README for details).
+
+**Debug Response Loglines** (or **Debug Response** for short) - are specially-crafted
+logs that help maintainers inspect validation issues. They include SDK metadata,
+the validation error, and the full response. Only data required for validation is
+included: no cookies or any other authentication data is stored. The logline data
+is encrypted with the repository public key and can only be decrypted by maintainers.
+This means you can safely include Debug Response Loglines in public issues.
+
+Data shared through Debug Response Loglines is used only for fixing specification
+issues and nothing else. Access to private keys is restricted to responsible maintainers.
+
+Debug Response Logline is a string of the following format:
+logline version prefix (like `log_v1_`) and continuous `base64url`-string appended.
+For example: `log_v1_VGhpcyBpcyBhbiBleGFtcGxlIGxvbCwgYWN0dWFsIGxvZ2xpbmUgaXMgZW5jcnlwdGVk`.
+
+> [!WARNING]
+> If your client does not support Debug Responses, it is your responsibility to
+> include the relevant log details and removing all sensitive information before
+> posting logs publicly. This includes personal data and any private university
+> data such as identificators.
 
 ## Repository Layout
 
@@ -182,7 +215,7 @@ make generate-golang
 
 ## Contributing
 
-Contributions are welcome for OpenAPI spec fixes, SDK generator improvements,
-examples and documentation.
+Contributions are welcome for adding features, OpenAPI spec fixes,
+SDK generator improvements, examples and documentation.
 
 If you would like to contribute, please read [CONTRIBUTING.md](CONTRIBUTING.md).
