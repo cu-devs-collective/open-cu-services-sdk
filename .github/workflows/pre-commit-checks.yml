@@ -24,7 +24,7 @@ jobs:
           python-version: "3.x"
 
       - name: Install pre-commit
-        run: python3 -m pip install --upgrade pip pre-commit
+        run: python3 -m pip install --upgrade pip && python3 -m pip install pre-commit
 
       - name: Install tools to lint specs
         run: make install-tools-lint-specs
