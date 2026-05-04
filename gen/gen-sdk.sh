@@ -33,17 +33,19 @@ list_langs() {
     (( found )) || echo "  (none found)"
 }
 
+indent2() { printf '%*s' 2 ''; }
+
 usage() {
     cat >&2 <<EOF
 Usage:
-  $(basename "$0") --help
-  $(basename "$0") <lang> [-- <generator-args...>]
+$(indent2)$(basename "$0") --help
+$(indent2)$(basename "$0") <lang> [-- <generator-args...>]
 
 Orchestrator for SDK generation scripts for languages.
 Args are being forwarded to selected script.
 
 Common generator args:
-  --sdk-id <id>       Run SDK generation only for specified SDK ID. Argument can be repeated.
+$(indent2)--sdk-id <id>       Run SDK generation only for specified SDK ID. Argument can be repeated.
 
 Available languages:
 $(list_langs)

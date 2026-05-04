@@ -11,21 +11,23 @@ SDK_GEN_COMMON_SH_LOADED=1
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*" >&2; }
 
+indent2() { printf '%*s' 2 ''; }
+
 sdk_gen_usage() {
     local language="${SDK_GEN_LANGUAGE:-SDK}"
 
     cat >&2 <<EOF
 Usage:
-  $(basename "$0") [--sdk-id <id> ...]
+$(indent2)$(basename "$0") [--sdk-id <id> ...]
 
 Generate ${language} SDKs.
 
 Options:
-  --sdk-id <id>       Run SDK generation only for specified SDK ID. Argument can be repeated.
-  -h, --help          Show this help.
+$(indent2)--sdk-id <id>       Run SDK generation only for specified SDK ID. Argument can be repeated.
+$(indent2)-h, --help          Show this help.
 
 Default SDK IDs:
-  ${SPEC_KEYS_TO_GENERATE[*]}
+$(indent2)${SPEC_KEYS_TO_GENERATE[*]}
 EOF
 }
 

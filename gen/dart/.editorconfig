@@ -1,0 +1,3 @@
+[fixups.sh]
+# Script uses 2 space identation for YAML fixups
+indent_size = unset
