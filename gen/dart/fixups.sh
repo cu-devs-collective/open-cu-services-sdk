@@ -78,6 +78,8 @@ ErrorTypeMappings:
     TypeName: "BaseBadRequestError"
   - StatusCode: 401
     TypeName: "BaseUnauthorizedError"
+  - StatusCode: 403
+    TypeName: "BaseForbiddenError"
   - StatusCode: 404
     TypeName: "BaseNotFoundError"
 DefaultErrorType: "BaseProblemError"
