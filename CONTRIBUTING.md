@@ -34,7 +34,13 @@ If you run any trouble, reach out with our [community on Telegram](https://t.me/
 
 ## Opening an Issue
 
-// TODO
+You can choose to use English or Russian to write and comment Issues.
+
+Please use the [Issues search](https://github.com/cu-devs-collective/open-cu-services-sdk/issues?q=is%3Aissue)
+functionality to make sure that you are not submitting duplicates, and that a
+similar report or request has not already been resolved or rejected.
+
+Create a new issue by using [one of these templates](https://github.com/cu-devs-collective/open-cu-services-sdk/issues/new/choose).
 
 ## Setup Development Environment
 
