@@ -3,5 +3,6 @@
         "build.buildFlags": [
             "-tags=tools"
         ]
-    }
+    },
+    "markdown.extension.toc.updateOnSave": false
 }
