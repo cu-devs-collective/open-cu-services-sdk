@@ -23,9 +23,11 @@ async def main() -> int:
                 indent=2, ensure_ascii=False))
             return 0
 
-        print("current_student response"
-              + f" response.status_code={response.status_code}"
-              + f" response.parsed={type(response.parsed).__name__}:")
+        print(
+            "current_student response"
+            + f" response.status_code={response.status_code}"
+            + f" response.parsed={type(response.parsed).__name__}:",
+        )
         if response.parsed:
             print(json.dumps(
                 response.parsed.to_dict(),
