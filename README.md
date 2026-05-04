@@ -24,7 +24,38 @@
 
 ## Project Goal
 
-// TODO
+Project started as a hobby of one student to reverse engineer CU LMS API
+(because he enjoys to reverse engineer stuff in his free time).
+
+Later, it became clear that many CU students were not satisfied with the quality
+of the official LMS, as it is *not as good as it could be*. The community also
+wanted tools that could improve their LMS experience and adapt it to their needs.
+
+Research of such attempts was made to come to a conclusion, that those are not
+suited to be named as production-grade foundations. Many relied heavily on
+AI-generated logic: specifications were generated without strong typing guarantees
+or comments, and client code was often not deterministic. This makes it difficult
+for such tools to earn trust and be safely used by the university community.
+
+This is not meant to blame anyone working on open-source alternatives. Instead,
+those efforts are valuable and deserve thanks. They helped make the problem
+clear: CU LMS is proprietary software with a closed API, and stabilizing
+reverse engineered integrations is difficult for individual hobbyists.
+
+That is why the Open CU Services Project was born: to provide an open effort for
+stabilizing reverse engineered CU Services specifications and giving the CU developers
+community reliable SDKs.
+
+Developers should be able to build tools using SDKs instead of reverse
+engineering the APIs themselves. Maintaining that reverse engineering layer is
+the responsibility of this project.
+
+SDKs are codegenerated (not to be confused with AI-generated) from reverse
+engineered specs. This allows the project to provide deterministic and reliable
+SDKs that can be considered production-grade.
+
+Stability is the project's top priority, so client SDKs should not be expected
+to support all available endpoints from the start.
 
 ## Quick Start
 
@@ -69,6 +100,7 @@ such as:
 <!-- markdownlint-disable MD013 -->
 - schema fixes within existing endpoints (including situations when API was changed on backend)
 - SDK template or generation changes
+- Periodic SDK dependency updates
 <!-- markdownlint-enable MD013 -->
 
 > [!WARNING]
@@ -146,9 +178,9 @@ corresponding SDK README for details).
 
 **Debug Response Loglines** (or **Debug Response** for short) - are specially-crafted
 logs that help maintainers inspect validation issues. They include SDK metadata,
-the validation error, and the full response. Only data required for validation is
-included: no cookies or any other authentication data is stored. The logline data
-is encrypted with the repository public key and can only be decrypted by maintainers.
+the validation error, and the full response body. Only data required for validation
+is included: no cookies or any other authentication data is stored. The logline
+data is encrypted with the repository public key and can only be decrypted by maintainers.
 This means you can safely include Debug Response Loglines in public issues.
 
 Data shared through Debug Response Loglines is used only for fixing specification
@@ -215,7 +247,7 @@ make generate-golang
 
 ## Contributing
 
-Contributions are welcome for adding features, OpenAPI spec fixes,
+Contributions are welcome for opening issues, adding features, OpenAPI spec fixes,
 SDK generator improvements, examples and documentation.
 
 If you would like to contribute, please read [CONTRIBUTING.md](CONTRIBUTING.md).
