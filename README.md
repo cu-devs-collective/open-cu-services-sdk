@@ -149,7 +149,36 @@ typescript/    TypeScript SDKs output path for codegen
 
 ## Development
 
-// TODO
+You should have `Go 1.25` or later installed for local development.
+`Python` is also required to install [pre-commit](https://pre-commit.com/#install).
+
+Of course, for different language SDKs to generate, you'll also need their
+required tooling. If any required tool is missing, the generation process
+will print what needs to be installed.
+
+Install local tooling:
+
+```sh
+make install-tools
+```
+
+Lint OpenAPI specs:
+
+```sh
+make lint-specs
+```
+
+Generate all SDKs:
+
+```sh
+make generate
+```
+
+Generate one SDK language by appending its `LANG` value [from list](#language-sdk-release-versioning):
+
+```sh
+make generate-golang
+```
 
 ## Contributing
 
