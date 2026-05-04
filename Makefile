@@ -67,6 +67,11 @@ lint-specs: lint-specs-yamllint lint-specs-vacuum lint-specs-api-re-standard
 lint-other:
 	@$(EDITORCONFIG_CHECKER)
 
+# This is expected to run manually
+.PHONY: lint-docs
+lint-docs:
+	@$(PRE_COMMIT_BIN) run --hook-stage manual lint-docs --all-files
+
 .PHONY: lint-specs-yamllint
 lint-specs-yamllint:
 	@$(YAMLLINT) $(OPENAPI_SPEC_FILES)

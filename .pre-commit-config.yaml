@@ -1,25 +1,34 @@
 repos:
-- repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 13614ab716a3113145f1294ed259d9fbe5678ff3 # 0.37.1
-  hooks:
-  - id: check-jsonschema
-    alias: lint-specs-api-re-standard
-    name: Check API RE Standard Schema
-    args:
-    - --schemafile
-    - https://raw.githubusercontent.com/API-RE/api-re-standard/master/schemas/v0.1.0/oas_3.0_schema_2024-10-18.yaml
-    files: ^spec/.*openapi\.yaml$
-    stages: [ manual ]
-- repo: local
-  hooks:
-  - id: make-lint-specs
-    name: make lint-specs
-    entry: make lint-specs
-    language: system
-    pass_filenames: false
-    files: ^(spec/.*openapi\.yaml)$
-  - id: make-lint-other
-    name: make lint-other
-    entry: make lint-other
-    language: system
-    pass_filenames: false
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 13614ab716a3113145f1294ed259d9fbe5678ff3 # 0.37.1
+    hooks:
+      - id: check-jsonschema
+        alias: lint-specs-api-re-standard
+        name: Check API RE Standard Schema
+        args:
+          - --schemafile
+          - https://raw.githubusercontent.com/API-RE/api-re-standard/master/schemas/v0.1.0/oas_3.0_schema_2024-10-18.yaml
+        files: ^spec/.*openapi\.yaml$
+        stages: [ manual ]
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: 996abf60411a8d954288ac9856aae7602b80cbda # v0.22.1
+    hooks:
+      - id: markdownlint-cli2
+        alias: lint-docs
+        name: Lint Docs
+        files: ^(?!(golang|typescript)/.*/).*\.md$
+        stages: [ manual ]
+        require_serial: true
+  - repo: local
+    hooks:
+      - id: make-lint-specs
+        name: make lint-specs
+        entry: make lint-specs
+        language: system
+        pass_filenames: false
+        files: ^spec/.*openapi\.yaml$
+      - id: make-lint-other
+        name: make lint-other
+        entry: make lint-other
+        language: system
+        pass_filenames: false
