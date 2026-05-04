@@ -44,7 +44,29 @@ Create a new issue by using [one of these templates](https://github.com/cu-devs-
 
 ## Setup Development Environment
 
-// TODO
+General development requirements, git validation hooks setup and codegeneration
+commands are documented in [Development section](README.md#development).
+
+If you use VS Code as your code editor, it is recommended to open the
+project there and install recommended extensions from `.vscode/extensions.json`.
+
+For other code editors, check if `EditorConfig` is [supported by default](https://editorconfig.org/#pre-installed),
+or if it [requires a plugin](https://editorconfig.org/#download) for it.
+VS Code support is included in the recommended extensions.
+
+Install pre-commit hooks:
+
+```bash
+pre-commit install
+```
+
+`markdownlint` is used to lint Markdown files, but it requires `Node`,
+so its installation is optional. `markdownlint` can be installed automatically
+by `pre-commit` when running documentation lints:
+
+```bash
+make lint-docs
+```
 
 ## Making Changes
 
