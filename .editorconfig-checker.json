@@ -1,0 +1,3 @@
+{
+  "Exclude": ["^(golang|typescript|python|dart)/[^/]+/"]
+}

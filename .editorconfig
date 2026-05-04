@@ -11,7 +11,7 @@ insert_final_newline = true
 
 [*.json{,.tmpl}]
 indent_size = 2
-insert_final_newline = false
+insert_final_newline = unset
 
 [.vscode/**.json]
 indent_size = 4
