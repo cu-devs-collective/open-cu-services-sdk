@@ -26,8 +26,8 @@ jobs:
       - name: Install pre-commit
         run: python3 -m pip install --upgrade pip && python3 -m pip install pre-commit
 
-      - name: Install tools to lint specs
-        run: make install-tools-lint-specs
+      - name: Install tools to lint
+        run: make install-tools-lint
 
       - name: Run pre-commit hooks
         run: python3 -m pre_commit run --all-files --show-diff-on-failure

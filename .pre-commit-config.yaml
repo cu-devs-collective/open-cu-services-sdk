@@ -7,3 +7,8 @@ repos:
     language: system
     pass_filenames: false
     files: ^(spec/.*openapi\.yaml)$
+  - id: make-lint-other
+    name: make lint-other
+    entry: make lint-other
+    language: system
+    pass_filenames: false

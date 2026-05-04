@@ -40,6 +40,9 @@ install-tools-lint-specs: check-go $(LOCAL_BIN)
 install-tools-lint-other: check-go $(LOCAL_BIN)
 	GOBIN=$(LOCAL_BIN) $(GO) install github.com/editorconfig-checker/editorconfig-checker/v3/cmd/editorconfig-checker@$(EDITORCONFIG_CHECKER_VERSION)
 
+.PHONY: install-tools-lint
+install-tools-lint: install-tools-lint-specs install-tools-lint-other
+
 .PHONY: install-tools-generate
 install-tools-generate: check-go $(LOCAL_BIN)
 	GOBIN=$(LOCAL_BIN) $(GO) install github.com/hairyhenderson/gomplate/v5/cmd/gomplate@$(GOMPLATE_VERSION)
@@ -48,7 +51,7 @@ install-tools-generate: check-go $(LOCAL_BIN)
 	cd tools/patchers/goclientpatcher && GOBIN=$(LOCAL_BIN) $(GO) install
 
 .PHONY: install-tools
-install-tools: install-tools-lint-specs install-tools-lint-other install-tools-generate
+install-tools: install-tools-lint install-tools-generate
 
 .PHONY: install
 install: install-tools
