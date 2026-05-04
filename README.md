@@ -182,4 +182,7 @@ make generate-golang
 
 ## Contributing
 
-// TODO
+Contributions are welcome for OpenAPI spec fixes, SDK generator improvements,
+examples and documentation.
+
+If you would like to contribute, please read [CONTRIBUTING.md](CONTRIBUTING.md).
