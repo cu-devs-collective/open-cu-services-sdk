@@ -2,6 +2,7 @@
     "recommendations": [
         "redhat.vscode-yaml",
         "Arjun.swagger-viewer",
-        "EditorConfig.EditorConfig"
+        "EditorConfig.EditorConfig",
+        "davidanson.vscode-markdownlint"
     ]
 }
