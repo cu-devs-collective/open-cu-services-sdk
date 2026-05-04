@@ -1,7 +1,8 @@
-LOCAL_BIN ?= $(CURDIR)/bin
-PATH      := $(PATH):$(LOCAL_BIN)
-GO        ?= go
-GEN_SDK   := $(CURDIR)/gen/gen-sdk.sh
+LOCAL_BIN      ?= $(CURDIR)/bin
+PATH           := $(PATH):$(LOCAL_BIN)
+GO             ?= go
+PRE_COMMIT_BIN ?= pre-commit
+GEN_SDK        := $(CURDIR)/gen/gen-sdk.sh
 
 GOYAMLLINT_VERSION           := v1.38.0
 VACUUM_VERSION               := v0.26.1
@@ -60,7 +61,7 @@ install: install-tools
 lint: lint-specs lint-other
 
 .PHONY: lint-specs
-lint-specs: lint-specs-yamllint lint-specs-vacuum
+lint-specs: lint-specs-yamllint lint-specs-vacuum lint-specs-api-re-standard
 
 .PHONY: lint-other
 lint-other:
@@ -73,6 +74,10 @@ lint-specs-yamllint:
 .PHONY: lint-specs-vacuum
 lint-specs-vacuum:
 	@$(VACUUM) $(VACUUM_LINT_ARGS) $(OPENAPI_SPEC_FILES)
+
+.PHONY: lint-specs-api-re-standard
+lint-specs-api-re-standard:
+	@$(PRE_COMMIT_BIN) run --hook-stage manual lint-specs-api-re-standard --files $(OPENAPI_SPEC_FILES)
 
 .PHONY: generate
 generate: generate-golang generate-python generate-typescript generate-dart

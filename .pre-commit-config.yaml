@@ -1,4 +1,15 @@
 repos:
+- repo: https://github.com/python-jsonschema/check-jsonschema
+  rev: 13614ab716a3113145f1294ed259d9fbe5678ff3 # 0.37.1
+  hooks:
+  - id: check-jsonschema
+    alias: lint-specs-api-re-standard
+    name: Check API RE Standard Schema
+    args:
+    - --schemafile
+    - https://raw.githubusercontent.com/API-RE/api-re-standard/master/schemas/v0.1.0/oas_3.0_schema_2024-10-18.yaml
+    files: ^spec/.*openapi\.yaml$
+    stages: [ manual ]
 - repo: local
   hooks:
   - id: make-lint-specs
