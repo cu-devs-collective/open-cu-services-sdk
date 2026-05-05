@@ -70,6 +70,9 @@ make lint-docs
 
 ## Making Changes
 
+**If you use AI tools while preparing a contribution**, make sure your work follows
+our [AI Policy](AI_POLICY.md).
+
 The project uses [Conventional Commits](https://www.conventionalcommits.org) for
 commit messages. Please read its guide if you are not familiar with it.
 
@@ -145,6 +148,37 @@ Russian duplicate versions should stay consistent with the original English vers
 and should be translated naturally (not machine-translated), so that they can be
 understood without reading the original version.
 
-### Submitting Changes
+## Submitting Changes
 
-// TODO
+Before opening a Pull Request:
+
+- For small changes, such as typo fixes or minor documentation corrections,
+  discussion in the community chat is enough.
+- For larger changes, make sure the change was discussed in an Issue comments
+  or community chat.
+- Run the relevant lints:
+  - For specification changes, run `make lint-specs`
+  - For documentation changes, run `make lint-docs`
+  - For all other changes, run `make lint-other`
+- Check that no private data or secrets were commited.
+
+The Pull Request title should follow [Conventional Commits](https://www.conventionalcommits.org),
+as well as all commit messages. You can check the commit history for examples of
+how to come up with a commit message text.
+
+In the Pull Ruquest description include:
+
+- What was changed
+- Why it was changed
+- What was affected (e.g. specifications, SDKs, or examples)
+- Any known follow-up work
+
+If your Pull Request is meant to close an existing Issue (e.g. #123), include
+it at the end of the Pull Request description so it can be closed automatically
+after the Pull Request is merged:
+
+```markdown
+...
+
+Fixes #123
+```
