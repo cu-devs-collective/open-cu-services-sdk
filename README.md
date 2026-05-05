@@ -126,8 +126,8 @@ in the corresponding section.
 Breaking change expectation for release depends on the version increment:
 
 - `MAJOR` - breaking changes are expected
-- `MAJOR` - breaking changes are likely, but uncommon
-- `MINOR` - breaking changes are rare
+- `MINOR` - breaking changes are likely, but uncommon
+- `PATCH` - breaking changes are rare
 
 ### Releases Versioning
 
