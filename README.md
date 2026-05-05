@@ -235,13 +235,14 @@ Lint OpenAPI specs:
 make lint-specs
 ```
 
-Generate all SDKs:
+Run codegeneration of all SDKs:
 
 ```sh
 make generate
 ```
 
-Generate one SDK language by appending its `LANG` value [from list](#language-sdk-release-versioning):
+Or codegenerate one SDK language at a time by appending its `LANG` value [from list](#language-sdk-release-versioning)
+like this:
 
 ```sh
 make generate-golang
