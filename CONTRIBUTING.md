@@ -70,17 +70,80 @@ make lint-docs
 
 ## Making Changes
 
+The project uses [Conventional Commits](https://www.conventionalcommits.org) for
+commit messages. Please read its guide if you are not familiar with it.
+
+Please note that `feat` and `fix` commit types are for actual code changes that
+affect logic.
+
 ### Code Change Guidelines
 
-// TODO
+Only English is allowed in code and comments, specifically American English
+spelling (for example "color" and not "colour").
+
+Russian is allowed only when working with data that is Russian by nature, for
+example for filtering courses by their Russian names.
+
+Code changes should be scoped to the issue or feature you are working on.
+
+When changing codegen code or templates, you should run generation and review
+the generated diff before opening a Pull Request.
+
+Your code must not contain any private university data or personal data.
 
 ### Specs Change Guidelines
 
-// TODO
+When editing specifications, follow these rules:
+
+- Use English for descriptions and comments. Russian may be used only for
+  example values.
+- Versioning metadata like `info.version` should not be changed manually, as it
+  is intended to be updated by the releaser.
+- Choose stable `operationId` values and component names, as those become
+  codegenerated SDK function and type names.
+- Schemas should be modeled as precisely as possible to match the backend logic.
+  Field order, required fields, nullability, enums and other shapes should be
+  specified in the specification.
+- Always add useful descriptions for endpoints and responses. For schemas, add
+  a description when the object is not obvious.
+- [API-RE Standard](https://github.com/API-RE/api-re-standard) should be used
+  for adding Reverse Engineering (RE) metadata. RE metadata should be added when
+  it explains observations, confidence, or notes about an object.
+- Schema shape must be based **ONLY on observations** of seen data, not on
+  assumptions. After creating a shape, you should carefully validate it against
+  seen responses or test it against multiple responses to confirm that it is valid.
+
+Specifications are carefully crafted to guarantee their observations-based origin,
+while also allowing other developers to use them as unofficial documentation.
+Because of that, reverse engineering of specs is not a fast process and requires
+significant experience.
+
+If you are not an experienced reverse engineer, it is recommended **not** to contribute
+to specifications, as there is a high chance that such contributions will not be
+accepted.
 
 ### Documentation Change Guidelines
 
-// TODO
+Unlike code, some of the documentation is also written separately in Russian.
+Russian versions use the `ru.md` extension.
+
+It is worth noting that **not all documentation files are duplicated in Russian**.
+The only files that do follow this are the ones found in the project root,
+that can be came across by people who are not comfortable reading in English,
+(`README.md`, `CONTRIBUTING.md`, `AI_POLICY.md`, but for example not `SECURITY.md`).
+
+All other documentation should be written in English only, as English is the main
+language of the project. We understand that this may sound unusual, as most
+project users are native Russian speakers. However, this strong decision is made
+to keep the repository consistent and easier to maintain.
+
+If you update English documentation and a Russian duplicate exists, please update
+the Russian version as well if you can. If not, mention the missing translation
+in your Pull Request.
+
+Russian duplicate versions should stay consistent with the original English versions
+and should be translated naturally (not machine-translated), so that they can be
+understood without reading the original version.
 
 ### Submitting Changes
 
