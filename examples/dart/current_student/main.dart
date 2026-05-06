@@ -4,7 +4,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:open_cu_services_lmsapi/open_cu_services_lmsapi.dart' as lmsapi;
 
-Future<int> main() async {
+Future<void> main() async {
+  exitCode = await run();
+  exit(exitCode);
+}
+
+Future<int> run() async {
   final bffCookie = Platform.environment["CU_LMS_BFF_COOKIE"] ?? "";
   if (bffCookie.isEmpty) {
     throw ArgumentError("CU_LMS_BFF_COOKIE is not set in env");
@@ -17,9 +22,8 @@ Future<int> main() async {
   );
 
   try {
-    final response = await client.currentStudent().timeout(
-      const Duration(seconds: 30),
-    );
+    const futureTimeout = Duration(seconds: 10);
+    final response = await client.currentStudent().timeout(futureTimeout);
 
     if (response.error case final error?) {
       if (error is Error) {
@@ -29,7 +33,7 @@ Future<int> main() async {
         print(
           "currentStudent response with"
           " statusCode=${response.statusCode},"
-          " runtimeType=${response.error.runtimeType}:",
+          " runtimeType=${error.runtimeType}:",
         );
         print(
           const JsonEncoder.withIndent(
