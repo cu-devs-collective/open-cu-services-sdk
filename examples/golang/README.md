@@ -18,3 +18,5 @@ setx CU_LMS_BFF_COOKIE "change-to-bff-cookie-from-lms"
 
 - [`current_student/main.go`](./current_student/main.go) - fetching the current
   student
+- [`list_student_courses_full/main.go`](./list_student_courses_full/main.go) -
+  fetching the courses in which student is enrolled, with full error handling
