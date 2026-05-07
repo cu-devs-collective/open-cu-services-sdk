@@ -16,9 +16,9 @@ setx CU_LMS_BFF_COOKIE "change-to-bff-cookie-from-lms"
 
 ## CU LMS API (`lmsapi`) Examples
 
-- [`current_student/main.go`](./current_student/main.go) - fetching the current
+- [`./current_student/main.go`](./current_student/main.go) - fetching the current
   student
-- [`list_student_courses_full/main.go`](./list_student_courses_full/main.go) -
+- [`./list_student_courses_full/main.go`](./list_student_courses_full/main.go) -
   fetching the courses in which student is enrolled, with full error handling
-- [`download_all_course_longreads_cli/`](./download_all_course_longreads_cli/) -
-  matching a course by name and downloading its longread PDF files into folder
+- [`./download_all_course_longreads_cli/`](./download_all_course_longreads_cli/)
+  \- matching a course by name and downloading its longread PDF files into folder
