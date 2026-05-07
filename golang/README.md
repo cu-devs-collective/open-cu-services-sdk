@@ -13,13 +13,15 @@ in the SDK branches and version tags:
 
 ### CU LMS API (`lmsapi`)
 
+<!-- Here are repo release-specific badges. -->
 [![Latest Release](https://badgen.net/static/Latest%20Release/v0.1.0/orange)](https://github.com/cu-devs-collective/open-cu-services-sdk/tree/golang/lmsapi/v0.1.0/golang/lmsapi)
 [![Spec](https://badgen.net/static/Spec/v0.1.0/blue)](https://cu-devs-collective.github.io/open-cu-services-sdk/api-docs/?url=https://raw.githubusercontent.com/cu-devs-collective/open-cu-services-sdk/spec/lmsapi/v0.1.0/spec/lmsapi/lmsapi.re.openapi.yaml)
 [![Debug Response Support](https://badgen.net/static/Debug%20Response%20Support/v1/green)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/README.md#reporting-issues-for-codegen-clients)
-[![License](https://badgen.net/badge/License/MIT/blue)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/LICENSE)
 
-![Go](https://badgen.net/static/Go/1.25/00ADD8)
+<!-- Here are package-specific badges. -->
 [![Go Reference](https://pkg.go.dev/badge/github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi.svg)](https://pkg.go.dev/github.com/cu-devs-collective/open-cu-services-sdk/golang/lmsapi)
+![Go](https://badgen.net/static/Go/1.25/00ADD8)
+[![License](https://badgen.net/badge/License/MIT/blue)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/LICENSE)
 
 ## Installation
 

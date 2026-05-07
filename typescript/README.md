@@ -13,13 +13,16 @@ in the SDK branches and version tags:
 
 ### CU LMS API (`lmsapi`)
 
+<!-- Here are repo release-specific badges. -->
 [![Latest Release](https://badgen.net/static/Latest%20Release/v0.1.0/orange)](https://github.com/cu-devs-collective/open-cu-services-sdk/tree/typescript/lmsapi/v0.1.0/typescript/lmsapi)
 [![Spec](https://badgen.net/static/Spec/v0.1.0/blue)](https://cu-devs-collective.github.io/open-cu-services-sdk/api-docs/?url=https://raw.githubusercontent.com/cu-devs-collective/open-cu-services-sdk/spec/lmsapi/v0.1.0/spec/lmsapi/lmsapi.re.openapi.yaml)
 [![Debug Response Support](https://badgen.net/static/Debug%20Response%20Support/no/red)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/README.md#reporting-issues-for-codegen-clients)
-[![License](https://badgen.net/badge/License/MIT/blue)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/LICENSE)
 
+<!-- Here are package-specific badges. -->
+<!-- TODO: add npm package here on registry release. -->
 ![TypeScript](https://badgen.net/static/TypeScript/6.0.3/3178C6)
 ![pnpm](https://badgen.net/static/pnpm/10.31.0/F69220)
+[![License](https://badgen.net/badge/License/MIT/blue)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/LICENSE)
 
 ## Installation
 
