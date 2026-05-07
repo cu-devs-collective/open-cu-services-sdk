@@ -6,7 +6,10 @@ export default defineConfig({
   output: {
     path: "src",
     clean: true,
-    indexFile: true
+    indexFile: true,
+    module: {
+      extension: ".js"
+    }
   },
   plugins: [
     "@hey-api/client-fetch",

@@ -2,8 +2,12 @@
 {
   "name": {{ printf "%q" .PackageName }},
   "version": {{ printf "%q" .PackageVersion }}, {{- /* The real version is set on release. */}}
-  "private": true,
   "description": {{ printf "%q" (printf "%s (based on %s)" .PackageDescription .SpecRef) }},
+  "keywords": [
+    "central-university",
+    "sdk",
+    "typescript"
+  ],
   "bugs": {
     "url": "https://github.com/cu-devs-collective/open-cu-services-sdk/issues"
   },
@@ -23,18 +27,57 @@
     "dist"
   ],
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js",
+      "default": "./dist/client/index.js"
+    },
+    "./client.gen": {
+      "types": "./dist/client.gen.d.ts",
+      "import": "./dist/client.gen.js",
+      "default": "./dist/client.gen.js"
+    },
+    "./sdk.gen": {
+      "types": "./dist/sdk.gen.d.ts",
+      "import": "./dist/sdk.gen.js",
+      "default": "./dist/sdk.gen.js"
+    },
+    "./types.gen": {
+      "types": "./dist/types.gen.d.ts",
+      "import": "./dist/types.gen.js",
+      "default": "./dist/types.gen.js"
+    },
+    "./zod.gen": {
+      "types": "./dist/zod.gen.d.ts",
+      "import": "./dist/zod.gen.js",
+      "default": "./dist/zod.gen.js"
+    },
+    "./package.json": {
+      "default": "./package.json"
     }
   },
   "sideEffects": false,
   "scripts": {
     "generate": "openapi-ts -f openapi-ts.config.ts",
-    "build": "tsc -p tsconfig.json"
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "pnpm run clean && tsc -p tsconfig.json",
+    "check:esm": "node --input-type=module -e \"await import('./dist/index.js')\"", {{- /* Check that Node ESM can be imported. */}}
+    "pack:dry-run": "pnpm pack --dry-run", {{- /* Check that npm tarball contains expected files. */}}
+    "prepack": "pnpm run build && pnpm run check:esm"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "zod": {{ printf "%q" .ZodVersion }}

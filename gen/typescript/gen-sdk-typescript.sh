@@ -123,7 +123,7 @@ EOF
 ensure_default_export() {
     local out_dir="$1"
     local index_file="${out_dir}/src/index.ts"
-    local export_line='export * from "./default";'
+    local export_line='export * from "./default.js";'
 
     grep -Fqx "$export_line" "$index_file" || printf '\n%s\n' "$export_line" >>"$index_file"
 }
@@ -137,7 +137,7 @@ verify_sdk() {
     fi
 
     info "Verifying TypeScript SDK"
-    (cd "$out_dir" && pnpm run build)
+    (cd "$out_dir" && pnpm run build && pnpm run check:esm && pnpm pack --dry-run >/dev/null)
 }
 
 sdk_generate() {
