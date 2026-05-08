@@ -19,17 +19,23 @@ in the SDK branches and version tags:
 [![Debug Response Support](https://badgen.net/static/Debug%20Response%20Support/no/red)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/README.md#reporting-issues-for-codegen-clients)
 
 <!-- Here are package-specific badges. -->
-<!-- TODO: add npm package here on registry release. -->
-![TypeScript](https://badgen.net/static/TypeScript/6.0.3/3178C6)
-![pnpm](https://badgen.net/static/pnpm/10.31.0/F69220)
+[![npm](https://badgen.net/npm/v/@cu-devs-collective/open-cu-services-lmsapi)](https://www.npmjs.com/package/@cu-devs-collective/open-cu-services-lmsapi)
+![Node.js](https://badgen.net/static/Node.js/%3E%3D20/339933)
 [![License](https://badgen.net/badge/License/MIT/blue)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/LICENSE)
 
 ## Installation
 
-**The package is not published to npm yet**. To install it from the repository tag,
-use a package manager that supports git dependencies with a subdirectory path.
+Install the package from [npm](https://www.npmjs.com/package/@cu-devs-collective/open-cu-services-lmsapi):
 
-Recommended package manager is [`pnpm`](https://pnpm.io/).
+```sh
+npm install @cu-devs-collective/open-cu-services-lmsapi
+```
+
+### Install from a Git repository tag
+
+If you need to install a specific repository tag, use a package manager
+that supports git dependencies with a subdirectory path. Recommended package
+manager for this flow is [`pnpm`](https://pnpm.io/).
 
 Add the dependency to your `package.json`:
 
@@ -47,7 +53,10 @@ Then install dependencies:
 pnpm install
 ```
 
-See [`examples/typescript`](../examples/typescript) for runnable examples.
+## Examples
+
+See [`examples/typescript`](../examples/typescript/README.md#cu-lms-api-lmsapi-examples)
+for runnable examples.
 
 ## Development
 
