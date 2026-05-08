@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@cu-devs-collective/open-cu-services-lmsapi':
-        specifier: git+https://github.com/cu-devs-collective/open-cu-services-sdk#typescript/lmsapi/v0.1.0&path:/typescript/lmsapi
+        specifier: '>=0.1.0-npm.0 <0.2.0'
         version: https://codeload.github.com/cu-devs-collective/open-cu-services-sdk/tar.gz/b5fa05f47aecef72d8e3dd66133322e509995420#path:/typescript/lmsapi
     devDependencies:
       '@types/node':

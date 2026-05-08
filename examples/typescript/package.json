@@ -4,12 +4,15 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "current-student": "pnpm run build && tsx current_student/main.ts"
+    "current-student": "tsc -p tsconfig.json && tsx current_student/main.ts"
   },
   "dependencies": {
+    "@cu-devs-collective/open-cu-services-lmsapi": ">=0.1.0-npm.0 <0.2.0"
+  },
+  "//(comment: git tag) dependencies": {
     "@cu-devs-collective/open-cu-services-lmsapi": "git+https://github.com/cu-devs-collective/open-cu-services-sdk#typescript/lmsapi/v0.1.0&path:/typescript/lmsapi"
   },
-  "//(comment) dependencies": {
+  "//(comment: local) dependencies": {
     "@cu-devs-collective/open-cu-services-lmsapi": "file:../../typescript/lmsapi"
   },
   "devDependencies": {
