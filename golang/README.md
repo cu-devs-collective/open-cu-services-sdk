@@ -3,8 +3,8 @@
 The `master` branch does not store source code of SDKs, instead code is stored
 in the SDK branches and version tags:
 
-- latest SDK branch: `golang/<sdk-id>`, for example `golang/lmsapi`
-- versioned SDK tag: `golang/<sdk-id>/v<version>`, for example
+- latest SDK branch: `golang/{SDK_ID}`, for example `golang/lmsapi`
+- versioned SDK tag: `golang/{SDK_ID}/v{VERSION}`, for example
   `golang/lmsapi/v0.1.0`
 
 ## Available SDKs

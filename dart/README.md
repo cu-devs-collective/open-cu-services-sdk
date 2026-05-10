@@ -3,8 +3,8 @@
 The `master` branch does not store source code of SDKs, instead code is stored
 in the SDK branches and version tags:
 
-- latest SDK branch: `dart/<sdk-id>`, for example `dart/lmsapi`
-- versioned SDK tag: `dart/<sdk-id>/v<version>`, for example
+- latest SDK branch: `dart/{SDK_ID}`, for example `dart/lmsapi`
+- versioned SDK tag: `dart/{SDK_ID}/v{VERSION}`, for example
   `dart/lmsapi/v0.1.0`
 
 ## Available SDKs
@@ -19,21 +19,29 @@ in the SDK branches and version tags:
 [![Debug Response Support](https://badgen.net/static/Debug%20Response%20Support/v2/green)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/README.md#reporting-issues-for-codegen-clients)
 
 <!-- Here are package-specific badges. -->
-<!-- TODO: add pub package here on registry release. -->
+[![pub](https://badgen.net/pub/v/open_cu_services_lmsapi)](https://pub.dev/packages/open_cu_services_lmsapi)
 ![Dart SDK](https://badgen.net/static/Dart%20SDK/%5E3.11.0/00B4AB)
 [![License](https://badgen.net/badge/License/MIT/blue)](https://github.com/cu-devs-collective/open-cu-services-sdk/blob/master/LICENSE)
 
 ## Installation
 
+Install the package from [pub](https://pub.dev/packages/open_cu_services_lmsapi):
+
+```sh
+dart pub add open_cu_services_lmsapi
+```
+
+### Install from a Git repository tag
+
 Add the dependency to your `pubspec.yaml`:
 
 ```yaml
-# Add to dependencies block in your pubspec.yaml
-open_cu_services_lmsapi:
-  git:
-    url: https://github.com/cu-devs-collective/open-cu-services-sdk.git
-    ref: dart/lmsapi/v0.1.0
-    path: dart/lmsapi
+dependencies:
+  open_cu_services_lmsapi:
+    git:
+      url: https://github.com/cu-devs-collective/open-cu-services-sdk.git
+      ref: dart/lmsapi/v0.1.0
+      path: dart/lmsapi
 ```
 
 Then fetch dependencies:
@@ -42,7 +50,10 @@ Then fetch dependencies:
 dart pub get
 ```
 
-See [`examples/dart`](../examples/dart) for runnable examples.
+## Examples
+
+See [`examples/dart`](../examples/dart/README.md#cu-lms-api-lmsapi-examples)
+for runnable examples.
 
 ## Development
 

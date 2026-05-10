@@ -3,8 +3,8 @@
 The `master` branch does not store source code of SDKs, instead code is stored
 in the SDK branches and version tags:
 
-- latest SDK branch: `python/<sdk-id>`, for example `python/lmsapi`
-- versioned SDK tag: `python/<sdk-id>/v<version>`, for example
+- latest SDK branch: `python/{SDK_ID}`, for example `python/lmsapi`
+- versioned SDK tag: `python/{SDK_ID}/v{VERSION}`, for example
   `python/lmsapi/v0.1.0`
 
 ## Available SDKs

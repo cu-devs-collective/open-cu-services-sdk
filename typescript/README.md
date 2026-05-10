@@ -3,8 +3,8 @@
 The `master` branch does not store source code of SDKs, instead code is stored
 in the SDK branches and version tags:
 
-- latest SDK branch: `typescript/<sdk-id>`, for example `typescript/lmsapi`
-- versioned SDK tag: `typescript/<sdk-id>/v<version>`, for example
+- latest SDK branch: `typescript/{SDK_ID}`, for example `typescript/lmsapi`
+- versioned SDK tag: `typescript/{SDK_ID}/v{VERSION}`, for example
   `typescript/lmsapi/v0.1.0`
 
 ## Available SDKs
