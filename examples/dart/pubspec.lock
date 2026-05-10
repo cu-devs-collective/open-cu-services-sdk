@@ -148,12 +148,11 @@ packages:
   open_cu_services_lmsapi:
     dependency: "direct main"
     description:
-      path: "dart/lmsapi"
-      ref: "dart/lmsapi/v0.1.0"
-      resolved-ref: "56e2d3ec3b73181ab7c7a18802e0234eb2b7f31d"
-      url: "https://github.com/cu-devs-collective/open-cu-services-sdk.git"
-    source: git
-    version: "0.1.0"
+      name: open_cu_services_lmsapi
+      sha256: "2bc2603b14baa8909b232f8280a873cca423da62f57a1ed51f9e16b31e5f4190"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0-pub.0"
   path:
     dependency: transitive
     description:

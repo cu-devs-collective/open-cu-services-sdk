@@ -8,11 +8,12 @@ environment:
 
 dependencies:
   http: ^1.6.0
-  open_cu_services_lmsapi:
-    git:
-      url: https://github.com/cu-devs-collective/open-cu-services-sdk.git
-      ref: dart/lmsapi/v0.1.0
-      path: dart/lmsapi
+  open_cu_services_lmsapi: ^0.1.0-pub.0
+  # open_cu_services_lmsapi:
+  #   git:
+  #     url: https://github.com/cu-devs-collective/open-cu-services-sdk.git
+  #     ref: dart/lmsapi/v0.1.0
+  #     path: dart/lmsapi
 
 # dependency_overrides:
 #   open_cu_services_lmsapi:
