@@ -10,11 +10,11 @@ dependencies:
   chopper: ^8.5.0
   collection: "^1.19.1"
   http: "^1.6.0"
-  json_annotation: "^4.11.0"
+  json_annotation: ^4.11.0
   sodium: ^4.0.2
 
 dev_dependencies:
   swagger_dart_code_generator: "4.1.1"
-  build_runner: 2.13.1
-  chopper_generator: 8.6.1
-  json_serializable: 6.13.1
+  build_runner: 2.15.0
+  chopper_generator: 8.6.2
+  json_serializable: 6.14.0
