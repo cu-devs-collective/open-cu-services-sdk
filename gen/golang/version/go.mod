@@ -3,7 +3,7 @@ module github.com/cu-devs-collective/open-cu-services-sdk/gen/golang/version
 go 1.25.0
 
 require (
-	github.com/klauspost/compress v1.19.0
+	github.com/klauspost/compress v1.19.1
 	github.com/ogen-go/ogen v1.23.0
 	golang.org/x/crypto v0.54.0
 )
